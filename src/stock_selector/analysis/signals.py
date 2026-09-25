@@ -502,6 +502,108 @@ def _analyze_horizon(
             "未知",
         ),
         "sentiment_block_new_entries": sentiment_block_new_entries,
+        **_sentiment_fields(sentiment_context),
+        "analyst_score": analyst_score,
+        "analyst_label": _context_text(analyst_context, "analyst_label", "unknown"),
+        "analyst_label_zh": _context_text(analyst_context, "analyst_label_zh", "未知"),
+        "analyst_risk_level": analyst_risk_level,
+        "analyst_risk_level_zh": _context_text(
+            analyst_context,
+            "analyst_risk_level_zh",
+            "未知",
+        ),
+        "analyst_block_new_entries": analyst_block_new_entries,
+        **_analyst_fields(analyst_context),
+        "valuation_score": valuation_score,
+        "valuation_label": _context_text(valuation_context, "valuation_label", "unknown"),
+        "valuation_label_zh": _context_text(valuation_context, "valuation_label_zh", "未知"),
+        "valuation_risk_level": valuation_risk_level,
+        "valuation_risk_level_zh": _context_text(
+            valuation_context,
+            "valuation_risk_level_zh",
+            "未知",
+        ),
+        "valuation_block_new_entries": valuation_block_new_entries,
+        **_valuation_fields(valuation_context),
+        "sector_score": sector_score,
+        **_sector_fields(sector_context),
+        "fundamental_quality": fundamental_quality,
+        **_fundamental_fields(fundamental_context),
+        "signal_timing": "generated_after_latest_close",
+        "earliest_execution": "next_trading_session",
+        "latest_price": latest_price,
+        "entry_type": entry_type,
+        "entry_price": entry_price,
+        "current_distance_to_entry_pct": entry_distance_pct,
+        "entry_distance_pct": entry_distance_pct,
+        "entry_distance_note": entry_plan["entry_distance_note"],
+        "entry_distance_note_zh": entry_plan["entry_distance_note_zh"],
+        "chase_status": entry_plan["chase_status"],
+        "chase_status_zh": entry_plan["chase_status_zh"],
+        "entry_plan": entry_plan["entry_plan"],
+        "entry_plan_zh": entry_plan["entry_plan_zh"],
+        "stop_loss": stop_loss,
+        "take_profit": take_profit,
+        "risk_reward": risk_reward,
+        "risk_per_share": risk_per_share,
+        **_entry_backtest_fields(entry_backtest),
+        "backtest_reliability_level": backtest_reliability["level"],
+        "backtest_reliability_level_zh": backtest_reliability["level_zh"],
+        "backtest_reliability_note": backtest_reliability["note"],
+        "backtest_reliability_note_zh": backtest_reliability["note_zh"],
+        **_backtest_trust_fields(backtest_trust),
+        **_price_health_fields(price_health),
+        "support": support,
+        "resistance": resistance,
+        "trend_ma": trend_ma,
+        "trend_distance": trend_distance,
+        "trend_slope": trend_slope,
+        "momentum": momentum,
+        "atr": atr,
+        "volume_ratio": volume_ratio,
+        "history_days": history_days,
+        "passes_universe": bool(score_snapshot["passes_universe"]),
+        "score_date": score_snapshot["score_date"],
+        "score": score_snapshot["score"],
+        "score_percentile": score_snapshot["score_percentile"],
+        "market_status": _context_text(market_context, "market_status", "neutral"),
+        "market_note": _context_text(
+            market_context,
+            "note",
+            "Market data unavailable; neutral score 50 is used.",
+        ),
+        "market_note_zh": _context_text(
+            market_context,
+            "note_zh",
+            "大盘数据不可用，使用中性分数50。",
+        ),
+        "market_warning": _context_text(market_context, "warning", ""),
+        "event_risk_level": event_risk_level,
+        **_event_risk_fields(event_risk_context),
+        "relative_strength_note": _context_text(
+            relative_strength_context,
+            "note",
+            "Relative strength data unavailable; neutral score 50 is used.",
+        ),
+        "relative_strength_note_zh": _context_text(
+            relative_strength_context,
+            "note_zh",
+            "相对强弱数据不可用，使用中性分数50。",
+        ),
+        "relative_strength_warning": _context_text(relative_strength_context, "warning", ""),
+        "vs_spy_return": _context_float(relative_strength_context, "vs_spy_return", np.nan),
+        "vs_qqq_return": _context_float(relative_strength_context, "vs_qqq_return", np.nan),
+        "rationale": rationale,
+        "rationale_zh": rationale_zh,
+        "action_explanation": action_explanation,
+        "action_explanation_zh": action_explanation_zh,
+        "plain_summary": plain_summary,
+        "plain_summary_zh": plain_summary_zh,
+    }
+
+def _sentiment_fields(sentiment_context: object) -> dict[str, object]:
+    """Row fields `positive_news_level` … `sentiment_warning` taken from `sentiment_context`."""
+    return {
         "positive_news_level": _context_text(sentiment_context, "positive_news_level", "unknown"),
         "positive_news_level_zh": _context_text(
             sentiment_context,
@@ -558,16 +660,11 @@ def _analyze_horizon(
             "近期新闻标题不可用；使用中性分数50。",
         ),
         "sentiment_warning": _context_text(sentiment_context, "sentiment_warning", ""),
-        "analyst_score": analyst_score,
-        "analyst_label": _context_text(analyst_context, "analyst_label", "unknown"),
-        "analyst_label_zh": _context_text(analyst_context, "analyst_label_zh", "未知"),
-        "analyst_risk_level": analyst_risk_level,
-        "analyst_risk_level_zh": _context_text(
-            analyst_context,
-            "analyst_risk_level_zh",
-            "未知",
-        ),
-        "analyst_block_new_entries": analyst_block_new_entries,
+    }
+
+def _analyst_fields(analyst_context: object) -> dict[str, object]:
+    """Row fields `analyst_upside` … `analyst_data_coverage` taken from `analyst_context`."""
+    return {
         "analyst_upside": _context_float(analyst_context, "analyst_upside", np.nan),
         "recommendation_mean": _context_float(analyst_context, "recommendation_mean", np.nan),
         "recommendation_key": _context_text(analyst_context, "recommendation_key", ""),
@@ -585,16 +682,11 @@ def _analyze_horizon(
         ),
         "analyst_warning": _context_text(analyst_context, "analyst_warning", ""),
         "analyst_data_coverage": _context_float(analyst_context, "data_coverage", 0.0),
-        "valuation_score": valuation_score,
-        "valuation_label": _context_text(valuation_context, "valuation_label", "unknown"),
-        "valuation_label_zh": _context_text(valuation_context, "valuation_label_zh", "未知"),
-        "valuation_risk_level": valuation_risk_level,
-        "valuation_risk_level_zh": _context_text(
-            valuation_context,
-            "valuation_risk_level_zh",
-            "未知",
-        ),
-        "valuation_block_new_entries": valuation_block_new_entries,
+    }
+
+def _valuation_fields(valuation_context: object) -> dict[str, object]:
+    """Row fields `valuation_forward_pe` … `valuation_data_coverage` taken from `valuation_context`."""
+    return {
         "valuation_forward_pe": _context_float(valuation_context, "valuation_forward_pe", np.nan),
         "valuation_trailing_pe": _context_float(valuation_context, "valuation_trailing_pe", np.nan),
         "valuation_peg_ratio": _context_float(valuation_context, "valuation_peg_ratio", np.nan),
@@ -630,7 +722,11 @@ def _analyze_horizon(
         ),
         "valuation_warning": _context_text(valuation_context, "valuation_warning", ""),
         "valuation_data_coverage": _context_float(valuation_context, "data_coverage", 0.0),
-        "sector_score": sector_score,
+    }
+
+def _sector_fields(sector_context: object) -> dict[str, object]:
+    """Row fields `sector_status` … `sector_relative_strength` taken from `sector_context`."""
+    return {
         "sector_status": _context_text(sector_context, "sector_status", "unknown"),
         "sector": _context_text(sector_context, "sector", ""),
         "industry": _context_text(sector_context, "industry", ""),
@@ -652,7 +748,11 @@ def _analyze_horizon(
             "sector_relative_strength",
             np.nan,
         ),
-        "fundamental_quality": fundamental_quality,
+    }
+
+def _fundamental_fields(fundamental_context: object) -> dict[str, object]:
+    """Row fields `fundamental_quality_zh` … `fundamental_revenue_growth_trend` taken from `fundamental_context`."""
+    return {
         "fundamental_quality_zh": _context_text(
             fundamental_context,
             "fundamental_quality_zh",
@@ -717,23 +817,11 @@ def _analyze_horizon(
         "fundamental_revenue_growth_trend": _context_text(
             fundamental_context, "revenue_growth_trend", "unknown"
         ),
-        "signal_timing": "generated_after_latest_close",
-        "earliest_execution": "next_trading_session",
-        "latest_price": latest_price,
-        "entry_type": entry_type,
-        "entry_price": entry_price,
-        "current_distance_to_entry_pct": entry_distance_pct,
-        "entry_distance_pct": entry_distance_pct,
-        "entry_distance_note": entry_plan["entry_distance_note"],
-        "entry_distance_note_zh": entry_plan["entry_distance_note_zh"],
-        "chase_status": entry_plan["chase_status"],
-        "chase_status_zh": entry_plan["chase_status_zh"],
-        "entry_plan": entry_plan["entry_plan"],
-        "entry_plan_zh": entry_plan["entry_plan_zh"],
-        "stop_loss": stop_loss,
-        "take_profit": take_profit,
-        "risk_reward": risk_reward,
-        "risk_per_share": risk_per_share,
+    }
+
+def _entry_backtest_fields(entry_backtest: object) -> dict[str, object]:
+    """Row fields `backtest_execution_model` … `entry_backtest_note_zh` taken from `entry_backtest`."""
+    return {
         "backtest_execution_model": entry_backtest["backtest_execution_model"],
         "backtest_execution_model_zh": entry_backtest["backtest_execution_model_zh"],
         "backtest_time_stop_days": entry_backtest["backtest_time_stop_days"],
@@ -809,10 +897,11 @@ def _analyze_horizon(
         "pullback_average_return": entry_backtest["pullback_average_return"],
         "entry_backtest_note": entry_backtest["entry_backtest_note"],
         "entry_backtest_note_zh": entry_backtest["entry_backtest_note_zh"],
-        "backtest_reliability_level": backtest_reliability["level"],
-        "backtest_reliability_level_zh": backtest_reliability["level_zh"],
-        "backtest_reliability_note": backtest_reliability["note"],
-        "backtest_reliability_note_zh": backtest_reliability["note_zh"],
+    }
+
+def _backtest_trust_fields(backtest_trust: object) -> dict[str, object]:
+    """Row fields `backtest_trust_score` … `backtest_trust_note_zh` taken from `backtest_trust`."""
+    return {
         "backtest_trust_score": backtest_trust["score"],
         "backtest_trust_level": backtest_trust["level"],
         "backtest_trust_level_zh": backtest_trust["level_zh"],
@@ -822,6 +911,11 @@ def _analyze_horizon(
         "backtest_return_evidence_score": backtest_trust["return_evidence_score"],
         "backtest_trust_note": backtest_trust["note"],
         "backtest_trust_note_zh": backtest_trust["note_zh"],
+    }
+
+def _price_health_fields(price_health: object) -> dict[str, object]:
+    """Row fields `price_health_score` … `price_health_note_zh` taken from `price_health`."""
+    return {
         "price_health_score": price_health["score"],
         "price_health_level": price_health["level"],
         "price_health_level_zh": price_health["level_zh"],
@@ -836,32 +930,11 @@ def _analyze_horizon(
         "price_adjustment_anomaly_count": price_health["adjustment_anomaly_count"],
         "price_health_note": price_health["note"],
         "price_health_note_zh": price_health["note_zh"],
-        "support": support,
-        "resistance": resistance,
-        "trend_ma": trend_ma,
-        "trend_distance": trend_distance,
-        "trend_slope": trend_slope,
-        "momentum": momentum,
-        "atr": atr,
-        "volume_ratio": volume_ratio,
-        "history_days": history_days,
-        "passes_universe": bool(score_snapshot["passes_universe"]),
-        "score_date": score_snapshot["score_date"],
-        "score": score_snapshot["score"],
-        "score_percentile": score_snapshot["score_percentile"],
-        "market_status": _context_text(market_context, "market_status", "neutral"),
-        "market_note": _context_text(
-            market_context,
-            "note",
-            "Market data unavailable; neutral score 50 is used.",
-        ),
-        "market_note_zh": _context_text(
-            market_context,
-            "note_zh",
-            "大盘数据不可用，使用中性分数50。",
-        ),
-        "market_warning": _context_text(market_context, "warning", ""),
-        "event_risk_level": event_risk_level,
+    }
+
+def _event_risk_fields(event_risk_context: object) -> dict[str, object]:
+    """Row fields `event_risk_level_zh` … `event_risk_warning` taken from `event_risk_context`."""
+    return {
         "event_risk_level_zh": _context_text(event_risk_context, "event_risk_level_zh", "未知"),
         "next_earnings_date": _context_text(event_risk_context, "next_earnings_date", ""),
         "days_until_earnings": _context_float(event_risk_context, "days_until_earnings", np.nan),
@@ -878,25 +951,6 @@ def _analyze_horizon(
             "暂时无法取得下一次财报日期；不进行事件风险降级。",
         ),
         "event_risk_warning": _context_text(event_risk_context, "event_risk_warning", ""),
-        "relative_strength_note": _context_text(
-            relative_strength_context,
-            "note",
-            "Relative strength data unavailable; neutral score 50 is used.",
-        ),
-        "relative_strength_note_zh": _context_text(
-            relative_strength_context,
-            "note_zh",
-            "相对强弱数据不可用，使用中性分数50。",
-        ),
-        "relative_strength_warning": _context_text(relative_strength_context, "warning", ""),
-        "vs_spy_return": _context_float(relative_strength_context, "vs_spy_return", np.nan),
-        "vs_qqq_return": _context_float(relative_strength_context, "vs_qqq_return", np.nan),
-        "rationale": rationale,
-        "rationale_zh": rationale_zh,
-        "action_explanation": action_explanation,
-        "action_explanation_zh": action_explanation_zh,
-        "plain_summary": plain_summary,
-        "plain_summary_zh": plain_summary_zh,
     }
 
 
