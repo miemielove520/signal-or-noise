@@ -229,6 +229,9 @@ def run_walk_forward_validation(
                 analysis["screening_profile_zh"] = profile_name_zh
             except Exception:
                 continue
+            # One event per horizon row. All horizons of a (date, ticker) share the same
+            # forward returns, so pooled counts over-state independent samples by up to
+            # 3x (see results/REPORT.md, section 6).
             for row in analysis.itertuples(index=False):
                 rows.append(
                     _event_row(
@@ -380,277 +383,305 @@ def run_walk_forward_validation(
         + historical_threshold_recommendations_report
     )
 
-    if output_dir is not None:
-        path = Path(output_dir)
-        path.mkdir(parents=True, exist_ok=True)
-        events.to_csv(path / "walk_forward_events.csv", index=False)
-        summary.to_csv(path / "walk_forward_summary.csv", index=False)
-        ticker_ranking.to_csv(path / "ticker_validation_ranking.csv", index=False)
-        sample_sufficiency.to_csv(path / "sample_sufficiency_guidance.csv", index=False)
-        profile_summary.to_csv(path / "profile_validation_summary.csv", index=False)
-        overfitting_risk.to_csv(path / "overfitting_risk_report.csv", index=False)
-        segment_summary.to_csv(path / "segment_validation_summary.csv", index=False)
-        market_regime_summary.to_csv(path / "market_regime_validation_summary.csv", index=False)
-        market_regime_policy.to_csv(path / "market_regime_policy.csv", index=False)
-        probability_calibration.to_csv(path / "probability_calibration.csv", index=False)
-        portfolio_summary.to_csv(path / "portfolio_validation_summary.csv", index=False)
-        portfolio_rebalances.to_csv(path / "portfolio_rebalances.csv", index=False)
-        portfolio_equity_summary.to_csv(path / "portfolio_equity_summary.csv", index=False)
-        portfolio_equity_curve.to_csv(path / "portfolio_equity_curve.csv", index=False)
-        benchmark_summary.to_csv(path / "benchmark_comparison_summary.csv", index=False)
-        benchmark_curve.to_csv(path / "benchmark_comparison_curve.csv", index=False)
-        benchmark_policy.to_csv(path / "benchmark_policy.csv", index=False)
-        benchmark_tightening.to_csv(path / "benchmark_tightening_recommendations.csv", index=False)
-        tightening_impact.to_csv(path / "tightening_impact_validation.csv", index=False)
-        threshold_sensitivity.to_csv(path / "threshold_sensitivity_grid.csv", index=False)
-        minimum_sample_guard.to_csv(path / "minimum_sample_guard.csv", index=False)
-        for name, frame in win_rate_dashboard.items():
-            frame.to_csv(path / f"win_rate_{name}.csv", index=False)
-        profile_health_dashboard.to_csv(path / "profile_health_dashboard.csv", index=False)
-        profile_action_recommendations.to_csv(
-            path / "profile_action_recommendations.csv",
-            index=False,
-        )
-        profile_blocker_dashboard.to_csv(path / "profile_blocker_dashboard.csv", index=False)
-        historical_win_rate_gate.to_csv(path / "historical_win_rate_gate.csv", index=False)
-        historical_threshold_recommendations.to_csv(
-            path / "historical_threshold_recommendations.csv",
-            index=False,
-        )
-        profile_calibration.to_csv(path / "profile_rule_calibration.csv", index=False)
-        calibration.to_csv(path / "rule_calibration.csv", index=False)
-        suggested_config_text = render_suggested_screening_config(
-            screening_config=config,
+    result = WalkForwardResult(
+            events=events,
+            summary=summary,
+            ticker_ranking=ticker_ranking,
+            sample_sufficiency=sample_sufficiency,
+            profile_summary=profile_summary,
+            segment_summary=segment_summary,
+            market_regime_summary=market_regime_summary,
+            market_regime_policy=market_regime_policy,
             profile_calibration=profile_calibration,
+            calibration=calibration,
+            report=report,
+            probability_calibration=probability_calibration,
+            portfolio_summary=portfolio_summary,
+            portfolio_rebalances=portfolio_rebalances,
+            portfolio_equity_summary=portfolio_equity_summary,
+            portfolio_equity_curve=portfolio_equity_curve,
+            benchmark_summary=benchmark_summary,
+            benchmark_curve=benchmark_curve,
             benchmark_policy=benchmark_policy,
             benchmark_tightening=benchmark_tightening,
+            tightening_impact=tightening_impact,
+            threshold_sensitivity=threshold_sensitivity,
             minimum_sample_guard=minimum_sample_guard,
+            win_rate_dashboard=win_rate_dashboard,
+            win_rate_dashboard_report=win_rate_dashboard_report,
+            historical_win_rate_gate=historical_win_rate_gate,
+            historical_win_rate_gate_report=historical_win_rate_gate_report,
             historical_threshold_recommendations=historical_threshold_recommendations,
+            historical_threshold_recommendations_report=(
+                historical_threshold_recommendations_report
+            ),
+            profile_health_dashboard=profile_health_dashboard,
+            profile_health_dashboard_report=profile_health_dashboard_report,
+            profile_action_recommendations=profile_action_recommendations,
+            profile_action_recommendations_report=profile_action_recommendations_report,
+            profile_blocker_dashboard=profile_blocker_dashboard,
+            profile_blocker_dashboard_report=profile_blocker_dashboard_report,
+            survivorship_bias_report=survivorship_bias_report,
         )
-        (path / "suggested_screening.toml").write_text(
-            suggested_config_text,
-            encoding="utf-8",
+    if output_dir is not None:
+        _write_walk_forward_outputs(
+            result,
+            output_dir,
+            config=config,
+            overfitting_risk=overfitting_risk,
+            normalized_tickers=normalized_tickers,
+            selected_horizons=selected_horizons,
+            forward_windows=forward_windows,
+            step_days=step_days,
+            min_history_days=min_history_days,
+            screening_thresholds=screening_thresholds,
         )
-        (path / "walk_forward_report.md").write_text(report, encoding="utf-8")
-        (path / "win_rate_dashboard.md").write_text(
-            win_rate_dashboard_report,
-            encoding="utf-8",
-        )
-        write_json(
-            path / "win_rate_dashboard.json",
-            win_rate_dashboard_payload(win_rate_dashboard),
-        )
-        (path / "profile_health_dashboard.md").write_text(
-            profile_health_dashboard_report,
-            encoding="utf-8",
-        )
-        write_json(
-            path / "profile_health_dashboard.json",
-            {"rows": dataframe_records(profile_health_dashboard)},
-        )
-        (path / "profile_action_recommendations.md").write_text(
-            profile_action_recommendations_report,
-            encoding="utf-8",
-        )
-        write_json(
-            path / "profile_action_recommendations.json",
-            {"rows": dataframe_records(profile_action_recommendations)},
-        )
-        (path / "profile_blocker_dashboard.md").write_text(
-            profile_blocker_dashboard_report,
-            encoding="utf-8",
-        )
-        write_json(
-            path / "profile_blocker_dashboard.json",
-            {"rows": dataframe_records(profile_blocker_dashboard)},
-        )
-        (path / "historical_win_rate_gate.md").write_text(
-            historical_win_rate_gate_report,
-            encoding="utf-8",
-        )
-        write_json(
-            path / "historical_win_rate_gate.json",
-            {"rows": dataframe_records(historical_win_rate_gate)},
-        )
-        (path / "historical_threshold_recommendations.md").write_text(
-            historical_threshold_recommendations_report,
-            encoding="utf-8",
-        )
-        write_json(
-            path / "historical_threshold_recommendations.json",
-            {"rows": dataframe_records(historical_threshold_recommendations)},
-        )
-        write_json(
-            path / "validation_result.json",
-            {
-                "tickers": list(normalized_tickers),
-                "horizons": list(selected_horizons),
-                "forward_windows": list(forward_windows),
-                "step_days": step_days,
-                "min_history_days": min_history_days,
-                "event_count": len(events),
-                "events": dataframe_records(events),
-                "summary": dataframe_records(summary),
-                "ticker_ranking": dataframe_records(ticker_ranking),
-                "sample_sufficiency": dataframe_records(sample_sufficiency),
-                "profile_summary": dataframe_records(profile_summary),
-                "segment_summary": dataframe_records(segment_summary),
-                "market_regime_summary": dataframe_records(market_regime_summary),
-                "market_regime_policy": dataframe_records(market_regime_policy),
-                "probability_calibration": dataframe_records(probability_calibration),
-                "portfolio_summary": dataframe_records(portfolio_summary),
-                "portfolio_rebalances": dataframe_records(portfolio_rebalances),
-                "portfolio_equity_summary": dataframe_records(portfolio_equity_summary),
-                "portfolio_equity_curve": dataframe_records(portfolio_equity_curve),
-                "benchmark_summary": dataframe_records(benchmark_summary),
-                "benchmark_curve": dataframe_records(benchmark_curve),
-                "benchmark_policy": dataframe_records(benchmark_policy),
-                "benchmark_tightening": dataframe_records(benchmark_tightening),
-                "tightening_impact": dataframe_records(tightening_impact),
-                "threshold_sensitivity": dataframe_records(threshold_sensitivity),
-                "minimum_sample_guard": dataframe_records(minimum_sample_guard),
-                "win_rate_dashboard": win_rate_dashboard_payload(win_rate_dashboard),
-                "profile_health_dashboard": dataframe_records(profile_health_dashboard),
-                "profile_action_recommendations": dataframe_records(
-                    profile_action_recommendations
-                ),
-                "profile_blocker_dashboard": dataframe_records(profile_blocker_dashboard),
-                "historical_win_rate_gate": dataframe_records(historical_win_rate_gate),
-                "historical_threshold_recommendations": dataframe_records(
-                    historical_threshold_recommendations
-                ),
-                "profile_calibration": dataframe_records(profile_calibration),
-                "calibration": dataframe_records(calibration),
-                "screening_thresholds": (screening_thresholds or ScreeningThresholds()).to_dict(),
-                "screening_config": config.to_dict(),
-                "survivorship_bias_report": survivorship_bias_report,
-                "output_files": {
-                    "markdown_report": str(path / "walk_forward_report.md"),
-                    "events_csv": str(path / "walk_forward_events.csv"),
-                    "summary_csv": str(path / "walk_forward_summary.csv"),
-                    "ticker_ranking_csv": str(path / "ticker_validation_ranking.csv"),
-                    "sample_sufficiency_csv": str(path / "sample_sufficiency_guidance.csv"),
-                    "profile_summary_csv": str(path / "profile_validation_summary.csv"),
-                    "segment_summary_csv": str(path / "segment_validation_summary.csv"),
-                    "market_regime_summary_csv": str(
-                        path / "market_regime_validation_summary.csv"
-                    ),
-                    "market_regime_policy_csv": str(path / "market_regime_policy.csv"),
-                    "probability_calibration_csv": str(path / "probability_calibration.csv"),
-                    "portfolio_summary_csv": str(path / "portfolio_validation_summary.csv"),
-                    "portfolio_rebalances_csv": str(path / "portfolio_rebalances.csv"),
-                    "portfolio_equity_summary_csv": str(path / "portfolio_equity_summary.csv"),
-                    "portfolio_equity_curve_csv": str(path / "portfolio_equity_curve.csv"),
-                    "benchmark_summary_csv": str(path / "benchmark_comparison_summary.csv"),
-                    "benchmark_curve_csv": str(path / "benchmark_comparison_curve.csv"),
-                    "benchmark_policy_csv": str(path / "benchmark_policy.csv"),
-                    "benchmark_tightening_csv": str(
-                        path / "benchmark_tightening_recommendations.csv"
-                    ),
-                    "tightening_impact_csv": str(path / "tightening_impact_validation.csv"),
-                    "threshold_sensitivity_csv": str(path / "threshold_sensitivity_grid.csv"),
-                    "minimum_sample_guard_csv": str(path / "minimum_sample_guard.csv"),
-                    "win_rate_dashboard_md": str(path / "win_rate_dashboard.md"),
-                    "win_rate_dashboard_json": str(path / "win_rate_dashboard.json"),
-                    "win_rate_overall_csv": str(path / "win_rate_overall.csv"),
-                    "win_rate_by_horizon_csv": str(path / "win_rate_by_horizon.csv"),
-                    "win_rate_by_entry_type_csv": str(path / "win_rate_by_entry_type.csv"),
-                    "win_rate_by_profile_csv": str(path / "win_rate_by_profile.csv"),
-                    "win_rate_by_quality_gate_csv": str(
-                        path / "win_rate_by_quality_gate.csv"
-                    ),
-                    "profile_health_dashboard_md": str(
-                        path / "profile_health_dashboard.md"
-                    ),
-                    "profile_health_dashboard_json": str(
-                        path / "profile_health_dashboard.json"
-                    ),
-                    "profile_health_dashboard_csv": str(
-                        path / "profile_health_dashboard.csv"
-                    ),
-                    "profile_action_recommendations_md": str(
-                        path / "profile_action_recommendations.md"
-                    ),
-                    "profile_action_recommendations_json": str(
-                        path / "profile_action_recommendations.json"
-                    ),
-                    "profile_action_recommendations_csv": str(
-                        path / "profile_action_recommendations.csv"
-                    ),
-                    "profile_blocker_dashboard_md": str(
-                        path / "profile_blocker_dashboard.md"
-                    ),
-                    "profile_blocker_dashboard_json": str(
-                        path / "profile_blocker_dashboard.json"
-                    ),
-                    "profile_blocker_dashboard_csv": str(
-                        path / "profile_blocker_dashboard.csv"
-                    ),
-                    "historical_win_rate_gate_md": str(
-                        path / "historical_win_rate_gate.md"
-                    ),
-                    "historical_win_rate_gate_json": str(
-                        path / "historical_win_rate_gate.json"
-                    ),
-                    "historical_win_rate_gate_csv": str(
-                        path / "historical_win_rate_gate.csv"
-                    ),
-                    "historical_threshold_recommendations_md": str(
-                        path / "historical_threshold_recommendations.md"
-                    ),
-                    "historical_threshold_recommendations_json": str(
-                        path / "historical_threshold_recommendations.json"
-                    ),
-                    "historical_threshold_recommendations_csv": str(
-                        path / "historical_threshold_recommendations.csv"
-                    ),
-                    "profile_calibration_csv": str(path / "profile_rule_calibration.csv"),
-                    "suggested_screening_toml": str(path / "suggested_screening.toml"),
-                    "calibration_csv": str(path / "rule_calibration.csv"),
-                    "json": str(path / "validation_result.json"),
-                },
-            },
-        )
+    return result
 
-    return WalkForwardResult(
-        events=events,
-        summary=summary,
-        ticker_ranking=ticker_ranking,
-        sample_sufficiency=sample_sufficiency,
-        profile_summary=profile_summary,
-        segment_summary=segment_summary,
-        market_regime_summary=market_regime_summary,
-        market_regime_policy=market_regime_policy,
-        profile_calibration=profile_calibration,
-        calibration=calibration,
-        report=report,
-        probability_calibration=probability_calibration,
-        portfolio_summary=portfolio_summary,
-        portfolio_rebalances=portfolio_rebalances,
-        portfolio_equity_summary=portfolio_equity_summary,
-        portfolio_equity_curve=portfolio_equity_curve,
-        benchmark_summary=benchmark_summary,
-        benchmark_curve=benchmark_curve,
-        benchmark_policy=benchmark_policy,
-        benchmark_tightening=benchmark_tightening,
-        tightening_impact=tightening_impact,
-        threshold_sensitivity=threshold_sensitivity,
-        minimum_sample_guard=minimum_sample_guard,
-        win_rate_dashboard=win_rate_dashboard,
-        win_rate_dashboard_report=win_rate_dashboard_report,
-        historical_win_rate_gate=historical_win_rate_gate,
-        historical_win_rate_gate_report=historical_win_rate_gate_report,
-        historical_threshold_recommendations=historical_threshold_recommendations,
-        historical_threshold_recommendations_report=(
-            historical_threshold_recommendations_report
-        ),
-        profile_health_dashboard=profile_health_dashboard,
-        profile_health_dashboard_report=profile_health_dashboard_report,
-        profile_action_recommendations=profile_action_recommendations,
-        profile_action_recommendations_report=profile_action_recommendations_report,
-        profile_blocker_dashboard=profile_blocker_dashboard,
-        profile_blocker_dashboard_report=profile_blocker_dashboard_report,
-        survivorship_bias_report=survivorship_bias_report,
+
+def _write_walk_forward_outputs(
+    result: WalkForwardResult,
+    output_dir: str | Path,
+    *,
+    config: ScreeningConfig,
+    overfitting_risk: pd.DataFrame,
+    normalized_tickers: tuple[str, ...],
+    selected_horizons: tuple[str, ...],
+    forward_windows: tuple[int, ...],
+    step_days: int,
+    min_history_days: int,
+    screening_thresholds: ScreeningThresholds | None,
+) -> None:
+    """Write every validation table, report and the run manifest under ``output_dir``."""
+    path = Path(output_dir)
+    path.mkdir(parents=True, exist_ok=True)
+    result.events.to_csv(path / "walk_forward_events.csv", index=False)
+    result.summary.to_csv(path / "walk_forward_summary.csv", index=False)
+    result.ticker_ranking.to_csv(path / "ticker_validation_ranking.csv", index=False)
+    result.sample_sufficiency.to_csv(path / "sample_sufficiency_guidance.csv", index=False)
+    result.profile_summary.to_csv(path / "profile_validation_summary.csv", index=False)
+    overfitting_risk.to_csv(path / "overfitting_risk_report.csv", index=False)
+    result.segment_summary.to_csv(path / "segment_validation_summary.csv", index=False)
+    result.market_regime_summary.to_csv(path / "market_regime_validation_summary.csv", index=False)
+    result.market_regime_policy.to_csv(path / "market_regime_policy.csv", index=False)
+    result.probability_calibration.to_csv(path / "probability_calibration.csv", index=False)
+    result.portfolio_summary.to_csv(path / "portfolio_validation_summary.csv", index=False)
+    result.portfolio_rebalances.to_csv(path / "portfolio_rebalances.csv", index=False)
+    result.portfolio_equity_summary.to_csv(path / "portfolio_equity_summary.csv", index=False)
+    result.portfolio_equity_curve.to_csv(path / "portfolio_equity_curve.csv", index=False)
+    result.benchmark_summary.to_csv(path / "benchmark_comparison_summary.csv", index=False)
+    result.benchmark_curve.to_csv(path / "benchmark_comparison_curve.csv", index=False)
+    result.benchmark_policy.to_csv(path / "benchmark_policy.csv", index=False)
+    result.benchmark_tightening.to_csv(path / "benchmark_tightening_recommendations.csv", index=False)
+    result.tightening_impact.to_csv(path / "tightening_impact_validation.csv", index=False)
+    result.threshold_sensitivity.to_csv(path / "threshold_sensitivity_grid.csv", index=False)
+    result.minimum_sample_guard.to_csv(path / "minimum_sample_guard.csv", index=False)
+    for name, frame in result.win_rate_dashboard.items():
+        frame.to_csv(path / f"win_rate_{name}.csv", index=False)
+    result.profile_health_dashboard.to_csv(path / "profile_health_dashboard.csv", index=False)
+    result.profile_action_recommendations.to_csv(
+        path / "profile_action_recommendations.csv",
+        index=False,
+    )
+    result.profile_blocker_dashboard.to_csv(path / "profile_blocker_dashboard.csv", index=False)
+    result.historical_win_rate_gate.to_csv(path / "historical_win_rate_gate.csv", index=False)
+    result.historical_threshold_recommendations.to_csv(
+        path / "historical_threshold_recommendations.csv",
+        index=False,
+    )
+    result.profile_calibration.to_csv(path / "profile_rule_calibration.csv", index=False)
+    result.calibration.to_csv(path / "rule_calibration.csv", index=False)
+    suggested_config_text = render_suggested_screening_config(
+        screening_config=config,
+        profile_calibration=result.profile_calibration,
+        benchmark_policy=result.benchmark_policy,
+        benchmark_tightening=result.benchmark_tightening,
+        minimum_sample_guard=result.minimum_sample_guard,
+        historical_threshold_recommendations=result.historical_threshold_recommendations,
+    )
+    (path / "suggested_screening.toml").write_text(
+        suggested_config_text,
+        encoding="utf-8",
+    )
+    (path / "walk_forward_report.md").write_text(result.report, encoding="utf-8")
+    (path / "win_rate_dashboard.md").write_text(
+        result.win_rate_dashboard_report,
+        encoding="utf-8",
+    )
+    write_json(
+        path / "win_rate_dashboard.json",
+        win_rate_dashboard_payload(result.win_rate_dashboard),
+    )
+    (path / "profile_health_dashboard.md").write_text(
+        result.profile_health_dashboard_report,
+        encoding="utf-8",
+    )
+    write_json(
+        path / "profile_health_dashboard.json",
+        {"rows": dataframe_records(result.profile_health_dashboard)},
+    )
+    (path / "profile_action_recommendations.md").write_text(
+        result.profile_action_recommendations_report,
+        encoding="utf-8",
+    )
+    write_json(
+        path / "profile_action_recommendations.json",
+        {"rows": dataframe_records(result.profile_action_recommendations)},
+    )
+    (path / "profile_blocker_dashboard.md").write_text(
+        result.profile_blocker_dashboard_report,
+        encoding="utf-8",
+    )
+    write_json(
+        path / "profile_blocker_dashboard.json",
+        {"rows": dataframe_records(result.profile_blocker_dashboard)},
+    )
+    (path / "historical_win_rate_gate.md").write_text(
+        result.historical_win_rate_gate_report,
+        encoding="utf-8",
+    )
+    write_json(
+        path / "historical_win_rate_gate.json",
+        {"rows": dataframe_records(result.historical_win_rate_gate)},
+    )
+    (path / "historical_threshold_recommendations.md").write_text(
+        result.historical_threshold_recommendations_report,
+        encoding="utf-8",
+    )
+    write_json(
+        path / "historical_threshold_recommendations.json",
+        {"rows": dataframe_records(result.historical_threshold_recommendations)},
+    )
+    write_json(
+        path / "validation_result.json",
+        {
+            "tickers": list(normalized_tickers),
+            "horizons": list(selected_horizons),
+            "forward_windows": list(forward_windows),
+            "step_days": step_days,
+            "min_history_days": min_history_days,
+            "event_count": len(result.events),
+            "events": dataframe_records(result.events),
+            "summary": dataframe_records(result.summary),
+            "ticker_ranking": dataframe_records(result.ticker_ranking),
+            "sample_sufficiency": dataframe_records(result.sample_sufficiency),
+            "profile_summary": dataframe_records(result.profile_summary),
+            "segment_summary": dataframe_records(result.segment_summary),
+            "market_regime_summary": dataframe_records(result.market_regime_summary),
+            "market_regime_policy": dataframe_records(result.market_regime_policy),
+            "probability_calibration": dataframe_records(result.probability_calibration),
+            "portfolio_summary": dataframe_records(result.portfolio_summary),
+            "portfolio_rebalances": dataframe_records(result.portfolio_rebalances),
+            "portfolio_equity_summary": dataframe_records(result.portfolio_equity_summary),
+            "portfolio_equity_curve": dataframe_records(result.portfolio_equity_curve),
+            "benchmark_summary": dataframe_records(result.benchmark_summary),
+            "benchmark_curve": dataframe_records(result.benchmark_curve),
+            "benchmark_policy": dataframe_records(result.benchmark_policy),
+            "benchmark_tightening": dataframe_records(result.benchmark_tightening),
+            "tightening_impact": dataframe_records(result.tightening_impact),
+            "threshold_sensitivity": dataframe_records(result.threshold_sensitivity),
+            "minimum_sample_guard": dataframe_records(result.minimum_sample_guard),
+            "win_rate_dashboard": win_rate_dashboard_payload(result.win_rate_dashboard),
+            "profile_health_dashboard": dataframe_records(result.profile_health_dashboard),
+            "profile_action_recommendations": dataframe_records(
+                result.profile_action_recommendations
+            ),
+            "profile_blocker_dashboard": dataframe_records(result.profile_blocker_dashboard),
+            "historical_win_rate_gate": dataframe_records(result.historical_win_rate_gate),
+            "historical_threshold_recommendations": dataframe_records(
+                result.historical_threshold_recommendations
+            ),
+            "profile_calibration": dataframe_records(result.profile_calibration),
+            "calibration": dataframe_records(result.calibration),
+            "screening_thresholds": (screening_thresholds or ScreeningThresholds()).to_dict(),
+            "screening_config": config.to_dict(),
+            "survivorship_bias_report": result.survivorship_bias_report,
+            "output_files": {
+                "markdown_report": str(path / "walk_forward_report.md"),
+                "events_csv": str(path / "walk_forward_events.csv"),
+                "summary_csv": str(path / "walk_forward_summary.csv"),
+                "ticker_ranking_csv": str(path / "ticker_validation_ranking.csv"),
+                "sample_sufficiency_csv": str(path / "sample_sufficiency_guidance.csv"),
+                "profile_summary_csv": str(path / "profile_validation_summary.csv"),
+                "segment_summary_csv": str(path / "segment_validation_summary.csv"),
+                "market_regime_summary_csv": str(
+                    path / "market_regime_validation_summary.csv"
+                ),
+                "market_regime_policy_csv": str(path / "market_regime_policy.csv"),
+                "probability_calibration_csv": str(path / "probability_calibration.csv"),
+                "portfolio_summary_csv": str(path / "portfolio_validation_summary.csv"),
+                "portfolio_rebalances_csv": str(path / "portfolio_rebalances.csv"),
+                "portfolio_equity_summary_csv": str(path / "portfolio_equity_summary.csv"),
+                "portfolio_equity_curve_csv": str(path / "portfolio_equity_curve.csv"),
+                "benchmark_summary_csv": str(path / "benchmark_comparison_summary.csv"),
+                "benchmark_curve_csv": str(path / "benchmark_comparison_curve.csv"),
+                "benchmark_policy_csv": str(path / "benchmark_policy.csv"),
+                "benchmark_tightening_csv": str(
+                    path / "benchmark_tightening_recommendations.csv"
+                ),
+                "tightening_impact_csv": str(path / "tightening_impact_validation.csv"),
+                "threshold_sensitivity_csv": str(path / "threshold_sensitivity_grid.csv"),
+                "minimum_sample_guard_csv": str(path / "minimum_sample_guard.csv"),
+                "win_rate_dashboard_md": str(path / "win_rate_dashboard.md"),
+                "win_rate_dashboard_json": str(path / "win_rate_dashboard.json"),
+                "win_rate_overall_csv": str(path / "win_rate_overall.csv"),
+                "win_rate_by_horizon_csv": str(path / "win_rate_by_horizon.csv"),
+                "win_rate_by_entry_type_csv": str(path / "win_rate_by_entry_type.csv"),
+                "win_rate_by_profile_csv": str(path / "win_rate_by_profile.csv"),
+                "win_rate_by_quality_gate_csv": str(
+                    path / "win_rate_by_quality_gate.csv"
+                ),
+                "profile_health_dashboard_md": str(
+                    path / "profile_health_dashboard.md"
+                ),
+                "profile_health_dashboard_json": str(
+                    path / "profile_health_dashboard.json"
+                ),
+                "profile_health_dashboard_csv": str(
+                    path / "profile_health_dashboard.csv"
+                ),
+                "profile_action_recommendations_md": str(
+                    path / "profile_action_recommendations.md"
+                ),
+                "profile_action_recommendations_json": str(
+                    path / "profile_action_recommendations.json"
+                ),
+                "profile_action_recommendations_csv": str(
+                    path / "profile_action_recommendations.csv"
+                ),
+                "profile_blocker_dashboard_md": str(
+                    path / "profile_blocker_dashboard.md"
+                ),
+                "profile_blocker_dashboard_json": str(
+                    path / "profile_blocker_dashboard.json"
+                ),
+                "profile_blocker_dashboard_csv": str(
+                    path / "profile_blocker_dashboard.csv"
+                ),
+                "historical_win_rate_gate_md": str(
+                    path / "historical_win_rate_gate.md"
+                ),
+                "historical_win_rate_gate_json": str(
+                    path / "historical_win_rate_gate.json"
+                ),
+                "historical_win_rate_gate_csv": str(
+                    path / "historical_win_rate_gate.csv"
+                ),
+                "historical_threshold_recommendations_md": str(
+                    path / "historical_threshold_recommendations.md"
+                ),
+                "historical_threshold_recommendations_json": str(
+                    path / "historical_threshold_recommendations.json"
+                ),
+                "historical_threshold_recommendations_csv": str(
+                    path / "historical_threshold_recommendations.csv"
+                ),
+                "profile_calibration_csv": str(path / "profile_rule_calibration.csv"),
+                "suggested_screening_toml": str(path / "suggested_screening.toml"),
+                "calibration_csv": str(path / "rule_calibration.csv"),
+                "json": str(path / "validation_result.json"),
+            },
+        },
     )
 
 
