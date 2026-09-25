@@ -68,8 +68,9 @@ flowchart LR
 | `data.py`, `real_data.py`, `sec_data.py` | Pluggable price providers, SEC companyfacts, caching |
 | `audit.py` | Price-data quality checks (gaps, stale prices, bad OHLC) |
 | `factors.py`, `fundamentals.py`, `valuation.py`, `sentiment.py` | Factor construction |
-| `analysis.py`, `scanner.py` | Scoring, gates, entry/exit plans |
-| `walk_forward.py` | Walk-forward validation, calibration, overfitting report |
+| `analysis/` | Per-ticker analysis: `horizons`, `indicators`, `backtest` (entry backtests), `signals` (scores, actions, entry plans), `screening` (quality gates, calibration), `summaries`, `render` |
+| `scanner.py` | Runs the analysis across the universe and ranks candidates |
+| `walk_forward/` | Walk-forward validation: `events` (replay signals), `summaries`, `portfolio` (top-N replays vs benchmark), `policy` (tightening, sensitivity, sample guard), `calibration` (thresholds, overfitting report), `report` |
 | `paper.py`, `paper_tracker.py`, `paper_audit.py` | Paper trading, equity tracking, readiness verdicts |
 | `historical_universe.py` | Point-in-time universe membership (survivorship bias) |
 | `stats_tests.py` | Stationary bootstrap, rank IC, Brier skill, reliability, multiple-testing thresholds |
