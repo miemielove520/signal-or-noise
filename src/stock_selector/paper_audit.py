@@ -11,7 +11,7 @@ from uuid import uuid4
 import numpy as np
 import pandas as pd
 
-from .json_io import dataframe_records, json_safe, write_json
+from .json_io import json_safe, write_json
 
 
 RUN_COLUMNS = [

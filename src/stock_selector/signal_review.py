@@ -608,7 +608,6 @@ def _build_due_summary(due_items: pd.DataFrame, history: pd.DataFrame) -> pd.Dat
             ]
         )
     due_now = _due_items_by_status(due_items, "due_now")
-    pending = due_items[due_items["review_status"].isin(["pending", "pending_unknown"])]
     next_due = due_items.copy()
     next_due["_estimated"] = pd.to_datetime(next_due["estimated_review_date"], errors="coerce")
     next_due = next_due.dropna(subset=["_estimated"]).sort_values("_estimated")

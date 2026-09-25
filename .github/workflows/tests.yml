@@ -17,7 +17,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - name: Install
-        run: pip install -e ".[ml,research]"
+        run: pip install -e ".[ml,research,dev]"
+      - name: Static check
+        run: python -m pyflakes src tests scripts research *.py
       - name: Run tests
         run: python -m unittest discover -s tests
       - name: Reproduce statistical post-mortem
