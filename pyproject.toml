@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stock-selector"
+version = "0.1.0"
+description = "Research framework for multi-factor stock selection."
+requires-python = ">=3.11"
+dependencies = [
+  "numpy",
+  "pandas",
+  "yfinance",
+]
+
+[project.optional-dependencies]
+ml = ["scikit-learn"]
+dev = ["pytest"]
+
+[project.scripts]
+stock-selector = "stock_selector.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

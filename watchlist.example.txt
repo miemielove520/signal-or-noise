@@ -1,0 +1,5 @@
+# Holdings to analyze daily — one ticker per line; lines starting with # are ignored.
+# 持仓列表 — 一行一个代码，# 开头的行会被忽略。
+# Copy to watchlist.txt (git-ignored) and edit.
+AAPL
+MSFT

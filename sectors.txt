@@ -1,0 +1,2 @@
+# 板块 ETF / Sector ETFs — 显示板块表现与资金轮动（哪个板块在涨=钱往哪流）。
+XLK XLF XLE XLV XLY XLP XLI XLU XLB XLRE XLC SMH

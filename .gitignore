@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+outputs/
+.DS_Store
+
+# Downloaded/regenerable data caches (keep the committed sample_*.csv files)
+data/real_prices/
+data/real_snapshots/
+data/sec/
+
+# Local secrets (API tokens, personal info) — daily_update.env.example is the template
+daily_update.env
+
+# Personal holdings — never commit. Copy the *.example files and edit locally.
+portfolio.csv
+watchlist.txt

@@ -1,0 +1,6 @@
+ticker,sector,industry,country,exchange
+ALFA,Technology,Software,US,SAMPLE
+BRAV,Industrials,Machinery,US,SAMPLE
+CHAR,Consumer,Retail,US,SAMPLE
+DELT,Technology,Semiconductors,US,SAMPLE
+ECHO,Healthcare,Medical Devices,US,SAMPLE

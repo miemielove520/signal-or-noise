@@ -1,0 +1,302 @@
+[screening_thresholds]
+data_quality_min = 70
+confidence_min = 65
+market_score_min = 55
+relative_strength_min = 45
+signal_score_min = 65
+backtest_sample_min = 10
+backtest_win_rate_min = 0.55
+backtest_average_return_min = 0.0
+max_backtest_stop_hit_rate = 0.50
+backtest_trust_score_min = 60
+recent_backtest_score_min = 45
+backtest_decay_score_min = 45
+min_backtest_avg_dollar_volume = 10000000
+max_backtest_slippage_pct = 0.006
+long_fundamental_score_min = 60
+medium_long_sector_score_min = 45
+high_probability_target_score = 65
+near_watchlist_max_missing = 2
+near_watchlist_min_score = 55
+early_watchlist_max_missing = 4
+early_watchlist_min_score = 45
+
+[profiles.ai_infrastructure]
+name_zh = "AI基建规则"
+ticker_symbols = ["NVDA", "AVGO", "AMD", "ANET", "MRVL", "SMCI", "DELL", "ARM", "TSM", "ASML", "AMAT"]
+industry_keywords = ["semiconductor equipment", "networking", "communications equipment", "computer hardware"]
+signal_score_min = 69
+market_score_min = 58
+relative_strength_min = 50
+backtest_sample_min = 12
+backtest_win_rate_min = 0.56
+max_backtest_stop_hit_rate = 0.50
+backtest_trust_score_min = 62
+recent_backtest_score_min = 48
+backtest_decay_score_min = 48
+medium_long_sector_score_min = 52
+
+[profiles.ai_infrastructure.trading]
+preferred_entry_style = "breakout"
+preferred_entry_style_zh = "突破优先"
+short_atr_stop_multiple = 1.7
+medium_atr_stop_multiple = 2.2
+long_atr_stop_multiple = 3.2
+short_target_r_multiple = 2.2
+medium_target_r_multiple = 2.8
+long_target_r_multiple = 3.4
+short_max_chase_pct = 0.05
+medium_max_chase_pct = 0.10
+long_max_chase_pct = 0.18
+short_time_stop_days = 15
+medium_time_stop_days = 45
+long_time_stop_days = 120
+trailing_stop_trigger_r = 1.5
+trailing_stop_lock_r = 0.2
+sell_rule = "volatility_trend_break"
+sell_rule_zh = "波动放大且趋势跌破时退出"
+
+[profiles.cybersecurity]
+name_zh = "网络安全规则"
+ticker_symbols = ["PANW", "CRWD", "ZS", "FTNT", "OKTA", "S", "QLYS", "NET"]
+industry_keywords = ["security", "cybersecurity"]
+signal_score_min = 68
+relative_strength_min = 52
+backtest_win_rate_min = 0.57
+max_backtest_stop_hit_rate = 0.48
+backtest_trust_score_min = 62
+recent_backtest_score_min = 48
+backtest_decay_score_min = 48
+medium_long_sector_score_min = 48
+near_watchlist_min_score = 57
+
+[profiles.cybersecurity.trading]
+preferred_entry_style = "breakout"
+preferred_entry_style_zh = "突破优先"
+short_atr_stop_multiple = 1.6
+medium_atr_stop_multiple = 2.1
+long_atr_stop_multiple = 2.8
+short_target_r_multiple = 2.1
+medium_target_r_multiple = 2.6
+long_target_r_multiple = 3.0
+short_max_chase_pct = 0.045
+medium_max_chase_pct = 0.085
+long_max_chase_pct = 0.14
+short_time_stop_days = 15
+medium_time_stop_days = 45
+long_time_stop_days = 100
+trailing_stop_trigger_r = 1.5
+trailing_stop_lock_r = 0.2
+sell_rule = "momentum_break_or_event_risk"
+sell_rule_zh = "动量跌破或事件风险升高时退出"
+
+[profiles.saas_software]
+name_zh = "SaaS软件规则"
+ticker_symbols = ["NOW", "CRM", "SNOW", "DDOG", "MDB", "ADBE", "INTU", "PLTR"]
+industry_keywords = ["software", "cloud", "application", "infrastructure", "internet content"]
+signal_score_min = 67
+relative_strength_min = 50
+backtest_win_rate_min = 0.56
+max_backtest_stop_hit_rate = 0.50
+backtest_trust_score_min = 61
+recent_backtest_score_min = 46
+backtest_decay_score_min = 46
+medium_long_sector_score_min = 47
+
+[profiles.saas_software.trading]
+preferred_entry_style = "balanced"
+preferred_entry_style_zh = "突破与回调均衡"
+short_atr_stop_multiple = 1.5
+medium_atr_stop_multiple = 2.0
+long_atr_stop_multiple = 2.8
+short_target_r_multiple = 2.0
+medium_target_r_multiple = 2.5
+long_target_r_multiple = 3.1
+short_max_chase_pct = 0.04
+medium_max_chase_pct = 0.08
+long_max_chase_pct = 0.14
+short_time_stop_days = 18
+medium_time_stop_days = 55
+long_time_stop_days = 110
+trailing_stop_trigger_r = 1.5
+trailing_stop_lock_r = 0.2
+sell_rule = "growth_trend_break"
+sell_rule_zh = "成长股趋势跌破或基本面恶化时退出"
+
+[profiles.fintech_high_beta]
+name_zh = "金融科技高波动规则"
+ticker_symbols = ["PYPL", "XYZ", "COIN", "HOOD", "SOFI", "AFRM", "UPST"]
+industry_keywords = ["fintech", "credit services", "capital markets", "payments"]
+data_quality_min = 72
+confidence_min = 68
+signal_score_min = 70
+market_score_min = 58
+relative_strength_min = 52
+backtest_sample_min = 14
+backtest_win_rate_min = 0.58
+max_backtest_stop_hit_rate = 0.52
+backtest_trust_score_min = 65
+recent_backtest_score_min = 50
+backtest_decay_score_min = 50
+near_watchlist_min_score = 58
+
+[profiles.fintech_high_beta.trading]
+preferred_entry_style = "pullback"
+preferred_entry_style_zh = "回调优先"
+short_atr_stop_multiple = 1.8
+medium_atr_stop_multiple = 2.4
+long_atr_stop_multiple = 3.2
+short_target_r_multiple = 2.4
+medium_target_r_multiple = 3.0
+long_target_r_multiple = 3.5
+short_max_chase_pct = 0.035
+medium_max_chase_pct = 0.07
+long_max_chase_pct = 0.12
+short_time_stop_days = 12
+medium_time_stop_days = 35
+long_time_stop_days = 90
+trailing_stop_trigger_r = 1.5
+trailing_stop_lock_r = 0.2
+sell_rule = "high_beta_risk_cut"
+sell_rule_zh = "高波动品种触发止损、放量破位或风险升高时退出"
+
+[profiles.defensive_quality]
+name_zh = "防御质量股规则"
+ticker_symbols = ["COST", "WMT", "PG", "KO", "PEP", "MCD", "MDLZ", "CL", "CLX"]
+sector_keywords = ["consumer defensive"]
+industry_keywords = ["household", "beverages", "discount stores", "packaged foods"]
+signal_score_min = 62
+market_score_min = 50
+relative_strength_min = 42
+backtest_win_rate_min = 0.54
+max_backtest_stop_hit_rate = 0.48
+backtest_trust_score_min = 58
+recent_backtest_score_min = 42
+backtest_decay_score_min = 42
+long_fundamental_score_min = 65
+medium_long_sector_score_min = 42
+early_watchlist_min_score = 42
+
+[profiles.defensive_quality.trading]
+preferred_entry_style = "pullback"
+preferred_entry_style_zh = "回调优先"
+short_atr_stop_multiple = 1.2
+medium_atr_stop_multiple = 1.7
+long_atr_stop_multiple = 2.4
+short_target_r_multiple = 1.8
+medium_target_r_multiple = 2.2
+long_target_r_multiple = 2.6
+short_max_chase_pct = 0.025
+medium_max_chase_pct = 0.05
+long_max_chase_pct = 0.09
+short_time_stop_days = 25
+medium_time_stop_days = 75
+long_time_stop_days = 160
+trailing_stop_trigger_r = 1.5
+trailing_stop_lock_r = 0.2
+sell_rule = "defensive_trend_or_fundamental_break"
+sell_rule_zh = "防御股趋势转弱或基本面质量下降时退出"
+
+[profiles.industrial_quality]
+name_zh = "工业质量股规则"
+ticker_symbols = ["AAON", "CARR", "LII", "TT", "JCI", "IR", "ETN", "HON", "PH"]
+sector_keywords = ["industrials"]
+industry_keywords = ["building products", "hvac", "specialty industrial machinery", "electrical equipment"]
+signal_score_min = 64
+market_score_min = 52
+relative_strength_min = 45
+backtest_win_rate_min = 0.55
+max_backtest_stop_hit_rate = 0.50
+backtest_trust_score_min = 59
+recent_backtest_score_min = 44
+backtest_decay_score_min = 44
+long_fundamental_score_min = 62
+medium_long_sector_score_min = 45
+near_watchlist_min_score = 54
+
+[profiles.industrial_quality.trading]
+preferred_entry_style = "balanced"
+preferred_entry_style_zh = "突破与回调均衡"
+short_atr_stop_multiple = 1.4
+medium_atr_stop_multiple = 1.9
+long_atr_stop_multiple = 2.6
+short_target_r_multiple = 2.0
+medium_target_r_multiple = 2.5
+long_target_r_multiple = 3.0
+short_max_chase_pct = 0.035
+medium_max_chase_pct = 0.07
+long_max_chase_pct = 0.12
+short_time_stop_days = 20
+medium_time_stop_days = 60
+long_time_stop_days = 130
+trailing_stop_trigger_r = 1.5
+trailing_stop_lock_r = 0.2
+sell_rule = "cycle_trend_break"
+sell_rule_zh = "工业周期趋势跌破或板块转弱时退出"
+
+[profiles.semiconductor]
+name_zh = "半导体规则"
+ticker_symbols = ["INTC", "QCOM", "MU", "TXN", "ADI", "LRCX", "KLAC", "MCHP"]
+industry_keywords = ["semiconductor", "chip", "integrated circuit", "hardware"]
+signal_score_min = 68
+market_score_min = 57
+relative_strength_min = 48
+backtest_sample_min = 12
+max_backtest_stop_hit_rate = 0.52
+backtest_trust_score_min = 62
+recent_backtest_score_min = 48
+backtest_decay_score_min = 48
+medium_long_sector_score_min = 50
+
+[profiles.semiconductor.trading]
+preferred_entry_style = "breakout"
+preferred_entry_style_zh = "突破优先"
+short_atr_stop_multiple = 1.7
+medium_atr_stop_multiple = 2.2
+long_atr_stop_multiple = 3.0
+short_target_r_multiple = 2.2
+medium_target_r_multiple = 2.8
+long_target_r_multiple = 3.3
+short_max_chase_pct = 0.05
+medium_max_chase_pct = 0.10
+long_max_chase_pct = 0.16
+short_time_stop_days = 15
+medium_time_stop_days = 45
+long_time_stop_days = 115
+trailing_stop_trigger_r = 1.5
+trailing_stop_lock_r = 0.2
+sell_rule = "cycle_volatility_break"
+sell_rule_zh = "半导体周期波动放大且趋势跌破时退出"
+
+[profiles.mega_cap_tech]
+name_zh = "大盘科技规则"
+ticker_symbols = ["AAPL", "MSFT", "NVDA", "AMZN", "META", "GOOGL", "GOOG", "AVGO", "ORCL"]
+signal_score_min = 66
+confidence_min = 67
+data_quality_min = 72
+backtest_win_rate_min = 0.56
+max_backtest_stop_hit_rate = 0.50
+backtest_trust_score_min = 60
+recent_backtest_score_min = 45
+backtest_decay_score_min = 45
+long_fundamental_score_min = 62
+
+[profiles.mega_cap_tech.trading]
+preferred_entry_style = "balanced"
+preferred_entry_style_zh = "突破与回调均衡"
+short_atr_stop_multiple = 1.4
+medium_atr_stop_multiple = 1.9
+long_atr_stop_multiple = 2.8
+short_target_r_multiple = 2.0
+medium_target_r_multiple = 2.5
+long_target_r_multiple = 3.2
+short_max_chase_pct = 0.04
+medium_max_chase_pct = 0.08
+long_max_chase_pct = 0.14
+short_time_stop_days = 20
+medium_time_stop_days = 60
+long_time_stop_days = 130
+trailing_stop_trigger_r = 1.5
+trailing_stop_lock_r = 0.2
+sell_rule = "mega_cap_trend_or_quality_break"
+sell_rule_zh = "大盘科技股趋势跌破或质量分恶化时退出"

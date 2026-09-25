@@ -1,0 +1,90 @@
+[data]
+prices_csv = "data/sample_prices.csv"
+fundamentals_csv = "data/sample_fundamentals.csv"
+macro_csv = "data/sample_macro.csv"
+metadata_csv = "data/sample_metadata.csv"
+date_column = "date"
+ticker_column = "ticker"
+price_column = "adj_close"
+volume_column = "volume"
+
+[universe]
+min_history_days = 60
+min_avg_dollar_volume = 1000000
+
+[factors]
+momentum_windows = [20, 60]
+volatility_window = 20
+trend_window = 50
+liquidity_window = 20
+money_flow_window = 20
+
+[scoring]
+top_n = 2
+rebalance_frequency = "M"
+# money_flow_20 is registered at weight 0.0 so the factor is computed and scored
+# (money_flow_20_z) without affecting the composite score. Set a non-zero weight
+# only after walk-forward Rank IC and redundancy checks justify it.
+factor_weights = { momentum_20 = 0.16, momentum_60 = 0.20, low_volatility_20 = 0.12, trend_50 = 0.10, liquidity_20 = 0.06, earnings_yield = 0.10, book_to_market = 0.08, free_cash_flow_yield = 0.08, roe = 0.05, gross_margin = 0.03, revenue_growth_yoy = 0.02, money_flow_20 = 0.0 }
+
+[risk]
+weighting_method = "inverse_volatility"
+volatility_lookback_days = 40
+target_annual_volatility = 0.12
+max_position_weight = 0.60
+max_sector_weight = 0.70
+sector_column = "sector"
+min_position_weight = 0.0
+annualization_days = 252
+
+[backtest]
+initial_capital = 100000
+annualization_days = 252
+risk_free_rate = 0.0
+transaction_cost_bps = 5
+execution_lag_days = 1
+
+[ml]
+feature_columns = [
+  "momentum_20",
+  "momentum_60",
+  "low_volatility_20",
+  "trend_50",
+  "liquidity_20",
+  "earnings_yield",
+  "book_to_market",
+  "free_cash_flow_yield",
+  "roe",
+  "gross_margin",
+  "low_debt_to_equity",
+  "revenue_growth_yoy",
+  "macro_fed_funds_rate",
+  "macro_cpi_yoy",
+  "macro_unemployment_rate",
+]
+label_forward_days = 20
+train_window_days = 120
+min_train_rows = 100
+min_prediction_assets = 5
+model_type = "ridge"
+ridge_alpha = 1.0
+random_state = 42
+
+[paper]
+state_csv = "data/sample_portfolio_state.csv"
+initial_cash = 100000
+min_trade_value = 100
+trade_buffer_pct = 0.001
+slippage_bps = 5
+commission_bps = 0
+allow_fractional_shares = true
+
+[monitor]
+max_data_age_days = 7
+max_average_feature_missing_rate = 0.10
+max_single_feature_missing_rate = 0.25
+drift_lookback_days = 60
+max_feature_drift_zscore = 3.0
+min_candidate_overlap = 0.50
+max_score_concentration = 0.80
+min_rank_ic_mean = 0.0
