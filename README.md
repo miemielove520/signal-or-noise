@@ -12,37 +12,40 @@ The main question is statistical, not financial:
 
 ---
 
-## Early result: the model is losing to the benchmark
+## Result: the backtest did not survive the forward test
 
-The paper portfolio started with $1,000 on 2026-07-09 and is rebalanced automatically every trading day. The rules are frozen; see [policy freeze](#experimental-protocol).
-
-| As of 2026-09-24 (52 trading days) | Value |
+| | Return |
 |---|---|
-| Model paper portfolio | **−24.7 %** |
-| Benchmark (QQQ) | **+2.5 %** |
-| Max drawdown | −29.4 % |
-| Walk-forward backtest expectation (annualized) | +26 % |
+| Walk-forward backtest, top picks (2025-03 → 2026-04) | **+99 %** (QQQ +37 %) |
+| Frozen forward test, $1,000 paper portfolio (2026-07-09 → 09-24) | **−24.7 %** |
+| QQQ over the same 51 days | +2.6 % |
+| The model's own 149-stock universe, equal weight | +3.8 % |
 
-This is the most interesting part of the project. The walk-forward backtest expected about +26 % a year, and the tracker's built-in gate now flags the paper run as **divergent** (likely overfit). The analysis below asks why the forward result is so different and whether the gap is statistically meaningful.
+![Forward test](results/figures/forward_equity.png)
 
-<!-- TODO (Oct): replace with equity-curve chart + bootstrap CI on excess return -->
+**📄 Full write-up: [results/REPORT.md](results/REPORT.md)**
 
-## Experimental protocol
+Main findings:
+
+1. **The loss is real, not noise.** A block-bootstrap 95 % CI for daily excess return vs QQQ is [−0.89 %, −0.33 %].
+2. **The backtest's own distribution makes this outcome unlikely.** Only 2.8 % of 51-day windows re-sampled from the backtest are this bad.
+3. **The live system traded a different strategy.** The backtest held picks for 20 days. The paper engine's median hold was 3 days: 115 orders and 15× turnover in 11 weeks.
+4. **The score barely ranks stocks.** Mean rank IC is about 0.05 (p > 0.1). A "significant" top-5 edge appears for only 1 of 3 scoring profiles, and it fails a Bonferroni correction for the number of configurations tried.
+5. **The win probabilities are overconfident.** The Brier skill score is −0.16 (short profile; −0.27 and −0.28 for the others), which is worse than always predicting the 52 % base rate.
+6. **The sample sizes were inflated.** Every outcome was counted 3 times (6,219 "signals" → 2,058 distinct → 14 independent dates).
+
+<p>
+<img src="results/figures/backtest_vs_forward.png" width="49%">
+<img src="results/figures/calibration.png" width="42%">
+</p>
+
+## Experimental protocol (v2)
 
 - **No lookahead.** Fundamentals are joined only when `report_date <= signal_date`. Point-in-time SEC filing history is used where available.
 - **Walk-forward validation.** Thresholds are calibrated on past windows and tested on the following window, never on the same data.
-- **Minimum sample gates.** A calibrated rule is adopted only with ≥ 30 out-of-sample trades (`walk_forward.MIN_CALIBRATION_SAMPLE_COUNT`). An overfitting-risk report tracks the ratio of samples to tunable parameters for each rule profile.
+- **Minimum sample gates.** A calibrated rule is adopted only with ≥ 30 out-of-sample trades (`walk_forward.MIN_CALIBRATION_SAMPLE_COUNT`). An overfitting-risk report tracks the ratio of samples to tunable parameters for each rule profile. *The post-mortem found that these counts pool three scorings of the same outcome; see the report, section 6.*
 - **Policy freeze.** Changing the model mid-experiment would mix two strategies into one equity curve. The strategy is therefore versioned and frozen, and every change is logged in [`docs/POLICY_LOG.md`](docs/POLICY_LOG.md). v1 was discarded after 2 days for exactly this reason.
 - **Realistic fills.** Paper buys fill above the close and sells below it (a 10 bps spread), so trading costs are real.
-
-## Statistical analysis (in progress)
-
-| Question | Method | Status |
-|---|---|---|
-| Is the underperformance distinguishable from luck? | Block-bootstrap CI on daily excess return vs QQQ | planned (Oct) |
-| Are the model's win probabilities honest? | Reliability diagram, Brier score | planned (Oct) |
-| How much did the backtest overfit? | In-sample vs out-of-sample gap, multiple-testing adjustment | planned (Oct) |
-| Does survivorship bias inflate the backtest? | Point-in-time index membership | mechanism built, data pending |
 
 ## How it works
 
@@ -69,8 +72,10 @@ flowchart LR
 | `walk_forward.py` | Walk-forward validation, calibration, overfitting report |
 | `paper.py`, `paper_tracker.py`, `paper_audit.py` | Paper trading, equity tracking, readiness verdicts |
 | `historical_universe.py` | Point-in-time universe membership (survivorship bias) |
+| `stats_tests.py` | Stationary bootstrap, rank IC, Brier skill, reliability, multiple-testing thresholds |
+| `research/forward_test.py` | The post-mortem: every number and figure in the report |
 
-About 34k lines of Python and 358 unit tests.
+About 35k lines of Python and 345 unit tests.
 
 ## Quick start
 
@@ -84,6 +89,10 @@ python3 -m venv .venv
 # Analyze one real ticker (downloads data)
 .venv/bin/python run.py AAPL
 
+# Reproduce the statistical post-mortem (reads results/data/ only)
+.venv/bin/pip install -e ".[research]"
+.venv/bin/python research/forward_test.py
+
 # Run the test suite
 .venv/bin/python -m unittest discover -s tests
 ```
@@ -96,7 +105,7 @@ To track your own holdings, copy `portfolio.example.csv` → `portfolio.csv` and
 
 - **Survivorship bias.** The backtest universe is today's list of stocks, so companies that failed or were delisted are missing. That makes the backtest look better than it should.
 - **Fundamentals are partly restated.** yfinance fundamentals are not point-in-time. SEC data is used where possible.
-- **Small forward sample.** A few months of daily returns cannot confirm or reject a strategy with confidence. The analysis reports uncertainty instead of a verdict.
+- **Small samples.** The backtest has only 14 independent signal dates, and the forward test 51 trading days. The analysis reports intervals and p-values instead of verdicts.
 - **Free data only.** The "money flow" indicators are price/volume proxies, not institutional flow data.
 
 ## About this project
