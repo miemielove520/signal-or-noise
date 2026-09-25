@@ -275,7 +275,6 @@ def _fmt(value: object, kind: str = "text") -> str:
 
 def render_dashboard_html(
     summaries: list[dict],
-    scoreboard_markdown: str | None = None,
     generated_at: str = "",
     market: list[dict] | None = None,
     prices_dir: str | Path = PRICES_DIR,
@@ -797,23 +796,6 @@ def _pctx(value: object) -> str:
         return "—"
 
 
-def _render_scoreboard(scoreboard_markdown: str | None) -> str:
-    if not scoreboard_markdown or not scoreboard_markdown.strip():
-        return '<p class="empty">还没有人机对照数据。用 <code>log_trade.py</code> 记录后运行 <code>scoreboard_report.py</code>。</p>'
-    # Render the markdown table rows as an HTML table, best-effort.
-    rows = [line for line in scoreboard_markdown.splitlines() if line.strip().startswith("|")]
-    if not rows:
-        return f'<pre>{html.escape(scoreboard_markdown[:2000])}</pre>'
-    html_rows = []
-    for i, line in enumerate(rows):
-        if set(line.replace("|", "").strip()) <= {"-", " ", ":"}:
-            continue
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        tag = "th" if i == 0 else "td"
-        html_rows.append("<tr>" + "".join(f"<{tag}>{html.escape(c)}</{tag}>" for c in cells) + "</tr>")
-    return f'<table class="board">{"".join(html_rows)}</table>'
-
-
 _CARD = """
 <div class="card {tone}">
   <div class="card-head"><span class="ticker">{ticker}</span>
@@ -1103,14 +1085,9 @@ def build_dashboard(
         paper.update(detail)
     elif detail.get("targets") or detail.get("holdings") or detail.get("cash") is not None:
         paper = detail
-    scoreboard_path = outputs / "signal_review" / "human_vs_model.md"
-    scoreboard_md = (
-        scoreboard_path.read_text(encoding="utf-8") if scoreboard_path.exists() else None
-    )
     banner = _build_page_banner(summaries, market, today, outputs)
     page = render_dashboard_html(
         summaries,
-        scoreboard_md,
         generated_at,
         market=market,
         prices_dir=prices_dir,

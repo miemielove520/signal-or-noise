@@ -73,9 +73,8 @@ echo "[$(date '+%Y-%m-%d %H:%M')] paper rebalance + mark-to-market"
 "$PYTHON" paper.py --update-state --initial-cash 1000 --allow-near-watchlist || note_fail "paper rebalance"
 "$PYTHON" paper_track.py || note_fail "paper track"
 
-# Refresh due reviews and update the model scoreboard from executed paper orders.
+# Refresh due signal reviews.
 "$PYTHON" review_due.py || note_fail "signal review due"
-"$PYTHON" scoreboard_report.py || note_fail "scoreboard report"
 
 # Key outputs must be newer than this run's start marker.
 check_fresh() {
