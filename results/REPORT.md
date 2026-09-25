@@ -113,10 +113,10 @@ The model attaches a "calibrated win probability" to every signal. If those numb
 
 **Survivorship bias.** The universe was chosen in 2026, from stocks that were well known in 2026. None of the backtest rows carry point-in-time index membership (`point_in_time_universe_member` is false everywhere). This bias is measurable in the data: one universe stock (CFLT) stopped trading *during* the forward window. A backtest built from today's list can never include a failure like that. `historical_universe.py` implements the fix, but it still needs real historical constituent data.
 
-## What I would do differently (and what comes next)
+## What I would do differently
 
 1. **Make the live system run what was tested:** hold each pick for 20 trading days and rebalance on the same schedule as the backtest.
-2. **Pre-register v3.** Before it starts, write down in `docs/POLICY_LOG.md` the rules, the benchmark, the test (block-bootstrap excess return vs QQQ) and the sample size needed to detect a realistic edge. Then do not look at the result until the pre-registered date.
+2. **Pre-register the next version.** Before it starts, write down in `docs/POLICY_LOG.md` the rules, the benchmark, the test (block-bootstrap excess return vs QQQ) and the sample size needed to detect a realistic edge. Then do not look at the result until the pre-registered date.
 3. **Count samples correctly:** count each outcome once and use dates, not rows, as the unit in every gate.
 4. **Recalibrate probabilities**, e.g. with isotonic regression fitted on past dates only, and report the Brier skill score out-of-sample.
 5. **Track the number of trials.** Log every configuration tried, so that the multiple-testing correction uses a real count instead of a guess.
