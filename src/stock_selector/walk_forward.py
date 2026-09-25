@@ -8,7 +8,14 @@ from typing import Callable, Iterable
 import numpy as np
 import pandas as pd
 
-from .analysis import HORIZON_SPECS, _entry_evidence_profile, analyze_ticker, normalize_horizons
+from .analysis import (
+    HORIZON_SPECS,
+    analyze_ticker,
+    normalize_horizons,
+)
+from .analysis.screening import (
+    _entry_evidence_profile,
+)
 from .json_io import dataframe_records, write_json
 from .real_data import build_single_ticker_scored_frame, normalize_ticker
 from .screening_config import (
