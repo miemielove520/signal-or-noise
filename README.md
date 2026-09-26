@@ -70,6 +70,7 @@ flowchart LR
 | `factors.py`, `fundamentals.py`, `valuation.py`, `sentiment.py` | Factor construction |
 | `analysis/` | Per-ticker analysis: `horizons`, `indicators`, `backtest` (entry backtests), `signals` (scores, actions, entry plans), `screening` (quality gates, calibration), `summaries`, `render` |
 | `scanner.py` | Runs the analysis across the universe and ranks candidates |
+| `console_report.py` | Terminal summary of one ticker's analysis (shared by `run.py` and `stock-selector real`) |
 | `walk_forward/` | Walk-forward validation: `events` (replay signals), `summaries`, `portfolio` (top-N replays vs benchmark), `policy` (tightening, sensitivity, sample guard), `calibration` (thresholds, overfitting report), `report` |
 | `paper.py`, `paper_tracker.py`, `paper_audit.py` | Paper trading, equity tracking, readiness verdicts |
 | `historical_universe.py` | Point-in-time universe membership (survivorship bias) |
