@@ -729,12 +729,23 @@ def compare_runs_command(args: argparse.Namespace) -> int:
     print(f"Previous run / 上一次运行: {args.previous_run}")
     print(f"Current run / 当前运行: {args.current_run}")
     print(f"Output folder / 输出文件夹: {result.output_dir}")
+    print()
+    if not result.adoption_decision.empty:
+        final = result.adoption_decision[
+            result.adoption_decision["check_name"] == "final_decision"
+        ]
+        if not final.empty:
+            row = final.iloc[0]
+            print("Config adoption decision / 配置采用结论")
+            print(f"- {row['status']} / {row['status_zh']}: {row['detail_zh']}")
+            print()
     for row in result.summary.itertuples(index=False):
         print(
             f"- {row.metric} / {row.metric_zh}: "
             f"{row.previous_value} -> {row.current_value}, "
             f"change={row.change}, {row.assessment_zh}"
         )
+    print()
     print(f"Open report: {result.output_files['markdown_report']}")
     return 0
 
@@ -765,6 +776,8 @@ def review_due_command(args: argparse.Namespace) -> int:
         else:
             print("No due tickers to refresh. / 没有需要刷新的到期股票。")
     summary = result.summary.iloc[0] if not result.summary.empty else None
+
+    print()
     print("Signal review due scan completed. / 信号复盘到期扫描完成。")
     print(f"Review root / 复盘目录: {result.review_root}")
     print(f"Output folder / 输出文件夹: {result.output_dir}")
@@ -775,10 +788,16 @@ def review_due_command(args: argparse.Namespace) -> int:
         print(f"Pending unknown / 等待信息不足: {int(summary.pending_unknown_count)}")
         if str(summary.next_due_date):
             print(f"Next due / 下一次预计复盘: {summary.next_due_date} ({summary.next_due_ticker})")
-    due_now = result.due_items[result.due_items["review_status"] == "due_now"] if not result.due_items.empty else result.due_items
+
+    due_now = (
+        result.due_items[result.due_items["review_status"] == "due_now"]
+        if not result.due_items.empty
+        else result.due_items
+    )
     if due_now.empty:
         print("No due review items now. / 当前没有已到期复盘项。")
     else:
+        print()
         print("Due review items / 已到期复盘项")
         for row in due_now.head(20).itertuples(index=False):
             print(
@@ -787,6 +806,8 @@ def review_due_command(args: argparse.Namespace) -> int:
                 f"estimated_review_date={row.estimated_review_date}, "
                 f"report={row.report_path}"
             )
+
+    print()
     print(f"Open report: {result.report_path}")
     return 0
 
