@@ -1,19 +1,18 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
 import json
 from pathlib import Path
+from typing import NoReturn
 
 from .analysis import analyze_ticker, render_ticker_analysis
 from .audit import audit_price_csv
 from .config import load_config
-from .data import download_prices_for_period_multi_source, download_yfinance_prices
-from .json_io import write_json
+from .console_report import print_ticker_report
+from .data import download_yfinance_prices
 from .monitor import build_daily_monitor, feature_drift_report, feature_missing_report
 from .paper import load_portfolio_state, run_paper_rebalance
 from .pipeline import run_ml_pipeline, run_research_pipeline
-from .console_report import print_ticker_report
 from .real_data import run_real_ticker_analysis
 from .report import render_research_report
 from .run_comparison import compare_validation_runs
@@ -21,10 +20,9 @@ from .scanner import run_high_probability_scan
 from .screening_config import load_screening_config
 from .signal_review import scan_signal_review_due_items
 from .snapshot import fetch_yfinance_snapshot
-from .universe import load_historical_universe_membership, load_universe_tickers
-from .universe_validation import run_all_builtin_universe_validations
+from .universe import load_universe_tickers
+from .validation_cli import run_validation
 from .validation_presets import apply_validation_preset, validation_preset_choices
-from .walk_forward import DEFAULT_BENCHMARK_TICKERS, run_walk_forward_validation
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -694,300 +692,11 @@ def scan_command(args: argparse.Namespace) -> int:
 
 
 def validate_command(args: argparse.Namespace) -> int:
-    run_started_at = datetime.now(timezone.utc)
-    args = apply_validation_preset(args)
-    if args.all_universes:
-        if args.tickers or args.universe_file or args.historical_universe_file:
-            raise ValueError(
-                "--all-universes cannot be combined with manual tickers, --universe-file, "
-                "or --historical-universe-file."
-            )
-        if args.preset:
-            print(f"Preset / 预设: {args.preset} - {args.preset_description_zh}")
-        screening_config = load_screening_config(args.screening_config)
-        output_dir = (
-            Path("outputs/walk_forward/all_universes")
-            if args.output_dir == "outputs/walk_forward/latest"
-            else Path(args.output_dir)
-        )
-        result = run_all_builtin_universe_validations(
-            universe_names=[args.universe] if args.universe else None,
-            period=args.period,
-            step_days=args.step_days,
-            min_history_days=args.min_history_days,
-            output_dir=output_dir,
-            screening_config=screening_config,
-            progress_callback=_print_all_universe_progress,
-        )
-        print("All-universe validation summary / 全部股票池验证摘要")
-        if not result.summary.empty:
-            first = result.summary.iloc[0]
-            print(
-                "Primary diagnostic / 主要诊断: "
-                f"{first['universe']} ({first['diagnostic_level_zh']}) - "
-                f"{first['recommendation_zh']}; "
-                f"主要卡点: {first['top_quality_gate_failures_zh']}; "
-                f"建议阈值调整: {first['suggested_threshold_changes_zh']}"
-            )
-        if not result.ranking.empty:
-            print("Best candidate universe ranking / 最佳股票池排序")
-            for row in result.ranking.head(5).itertuples(index=False):
-                print(
-                    f"- #{row.rank} {row.universe}: {row.decision_zh}, "
-                    f"score={row.ranking_score:.2f}, events={row.event_count}, "
-                    f"high_probability_sample={row.high_probability_sample_count}, "
-                    f"recommendation={row.recommendation_zh}"
-                )
-        for row in result.summary.itertuples(index=False):
-            print(
-                f"- {row.universe}: status={row.status}, tickers={row.ticker_count}, "
-                f"priority={row.optimization_priority}, diagnostic={row.diagnostic_level_zh}, "
-                f"events={row.event_count}, all_20d_win_rate={_format_optional_percent(row.all_20d_win_rate)}, "
-                "high_probability_sample="
-                f"{row.high_probability_sample_count}, "
-                "high_probability_20d_win_rate="
-                f"{_format_optional_percent(row.high_probability_20d_win_rate)}, "
-                f"recommendation={row.recommendation_zh}, "
-                f"top_blockers={row.top_quality_gate_failures_zh}, "
-                f"suggested_changes={row.suggested_threshold_changes_zh}"
-            )
-        if result.failures:
-            print("Failures / 失败项")
-            for failure in result.failures:
-                print(f"- {failure['universe']}: {failure['error']}")
-        print(f"Wrote outputs to {result.output_dir}")
-        return 0
+    return run_validation(apply_validation_preset(args), _raise_argument_error)
 
-    historical_membership = (
-        load_historical_universe_membership(args.historical_universe_file)
-        if args.historical_universe_file
-        else None
-    )
-    if historical_membership is not None and not args.tickers and not args.universe and not args.universe_file:
-        tickers = historical_membership.tickers()
-    else:
-        tickers = load_universe_tickers(
-            tickers=args.tickers,
-            universe_name=args.universe,
-            universe_file=args.universe_file,
-        )
-    screening_config = load_screening_config(args.screening_config)
-    download_tickers = _with_benchmark_tickers(tickers)
-    print(
-        "Downloading price data / 正在下载价格数据: "
-        f"{len(download_tickers)} tickers, period={args.period}, "
-        "timeout=30s, max_attempts=2",
-        flush=True,
-    )
-    price_result = download_prices_for_period_multi_source(
-        download_tickers,
-        period=args.period,
-        output_path=Path("data/real_prices")
-        / f"walk_forward_{_validation_stem(tickers, args.universe)}_{args.period}.csv",
-    )
-    _print_price_download_result(price_result)
-    print("Running walk-forward validation / 正在运行滚动验证...", flush=True)
-    result = run_walk_forward_validation(
-        prices=price_result.prices,
-        tickers=tickers,
-        step_days=args.step_days,
-        min_history_days=args.min_history_days,
-        output_dir=args.output_dir,
-        screening_config=screening_config,
-        universe_membership=historical_membership,
-        progress_callback=_print_walk_forward_progress,
-    )
-    print("Walk-forward validation summary / 滚动历史验证摘要")
-    if args.preset:
-        print(f"Preset / 预设: {args.preset} - {args.preset_description_zh}")
-    print(f"Tickers / 股票: {', '.join(tickers)}")
-    print(f"Benchmarks / 基准: {', '.join(DEFAULT_BENCHMARK_TICKERS)}")
-    print(
-        "Validation settings / 验证参数: "
-        f"period={args.period}, step_days={args.step_days}, "
-        f"min_history_days={args.min_history_days}"
-    )
-    print(f"Event rows / 信号样本行数: {len(result.events)}")
-    survivorship = result.survivorship_bias_report
-    print(
-        "Survivorship bias / 幸存者偏差: "
-        f"handled={str(bool(survivorship.get('survivorship_bias_handled'))).lower()}, "
-        f"delisted_sample={str(bool(survivorship.get('contains_delisted_tickers'))).lower()}, "
-        f"source={survivorship.get('source', 'none')}"
-    )
-    if not result.summary.empty:
-        for row in result.summary.itertuples(index=False):
-            win_rate = getattr(row, "win_rate_20d", None)
-            avg_return = getattr(row, "avg_return_20d", None)
-            print(
-                f"- {row.bucket}: sample={row.sample_count}, "
-                f"20d_win_rate={_format_optional_percent(win_rate)}, "
-                f"20d_avg_return={_format_optional_percent(avg_return)}"
-            )
-    if not result.ticker_ranking.empty:
-        print("Ticker validation ranking / 个股验证排名")
-        for row in result.ticker_ranking.head(10).itertuples(index=False):
-            win_rate = getattr(row, "win_rate_20d", None)
-            avg_return = getattr(row, "avg_return_20d", None)
-            print(
-                f"- #{row.rank} {row.ticker}: {row.ticker_decision_zh}, "
-                f"score={row.ticker_ranking_score:.2f}, sample={row.sample_count}, "
-                f"20d_win_rate={_format_optional_percent(win_rate)}, "
-                f"20d_avg_return={_format_optional_percent(avg_return)}"
-            )
-    if not result.sample_sufficiency.empty:
-        print("Sample sufficiency guidance / 样本充分性建议")
-        guidance_rows = result.sample_sufficiency[
-            result.sample_sufficiency["sample_status"] != "enough_samples"
-        ].head(10)
-        if guidance_rows.empty:
-            print("- Samples are sufficient for the current validation settings. / 当前验证样本充足。")
-        else:
-            for row in guidance_rows.itertuples(index=False):
-                print(
-                    f"- {row.scope} {row.ticker}: {row.sample_status_zh}, "
-                    f"sample={row.sample_count}/{row.target_sample_count}, "
-                    f"{row.guidance_action_zh}, {row.suggested_command_hint_zh}"
-                )
-    if not result.calibration.empty:
-        print("Rule calibration / 规则校准")
-        for row in result.calibration.itertuples(index=False):
-            print(
-                f"- {row.rule}: current={row.current_threshold}, "
-                f"suggested={row.suggested_threshold}, {row.recommendation_zh}"
-            )
-    if not result.profile_summary.empty:
-        print("Profile summary / 分类规则表现")
-        for row in result.profile_summary.itertuples(index=False):
-            win_rate = getattr(row, "win_rate_20d", None)
-            avg_return = getattr(row, "avg_return_20d", None)
-            print(
-                f"- {row.screening_profile} / {row.screening_profile_zh} "
-                f"[{row.validation_bucket}]: sample={row.sample_count}, "
-                f"20d_win_rate={_format_optional_percent(win_rate)}, "
-                f"20d_avg_return={_format_optional_percent(avg_return)}"
-            )
-    if not result.probability_calibration.empty:
-        print("Probability calibration / 概率校准")
-        for row in result.probability_calibration.itertuples(index=False):
-            actual_win_rate = getattr(row, "actual_win_rate_20d", None)
-            avg_estimated = getattr(row, "avg_estimated_probability", None)
-            error_abs = getattr(row, "calibration_error_abs", None)
-            adjustment = getattr(row, "recommended_probability_adjustment", None)
-            print(
-                f"- {row.probability_bucket} / {row.probability_bucket_zh}: "
-                f"sample={row.sample_count}, "
-                f"estimated={_format_optional_percent(avg_estimated)}, "
-                f"actual_20d={_format_optional_percent(actual_win_rate)}, "
-                f"error={_format_optional_percent(error_abs)}, "
-                f"adjustment={_format_optional_percent(adjustment)}, "
-                f"action={row.formula_action_zh}, "
-                f"quality={row.calibration_quality_zh}"
-            )
-    if not result.portfolio_summary.empty:
-        print("Portfolio validation / 组合验证")
-        for row in result.portfolio_summary.itertuples(index=False):
-            print(
-                f"- {row.portfolio_name} / {row.portfolio_name_zh}: "
-                f"rebalances={row.rebalance_count}, "
-                f"avg_positions={row.avg_position_count:.2f}, "
-                f"win_rate={_format_optional_percent(row.win_rate)}, "
-                f"avg_return={_format_optional_percent(row.avg_forward_return)}, "
-                f"compounded={_format_optional_percent(row.compounded_forward_return)}"
-            )
-    if not result.portfolio_equity_summary.empty:
-        print("Portfolio equity curve / 组合逐日净值曲线")
-        for row in result.portfolio_equity_summary.itertuples(index=False):
-            print(
-                f"- {row.portfolio_name} / {row.portfolio_name_zh}: "
-                f"days={row.daily_rows}, "
-                f"total_return={_format_optional_percent(row.total_return)}, "
-                f"max_drawdown={_format_optional_percent(row.max_drawdown)}, "
-                f"sharpe={_format_optional_number(row.sharpe)}"
-            )
-    if not result.benchmark_summary.empty:
-        print("Benchmark comparison / 基准对比")
-        for row in result.benchmark_summary.itertuples(index=False):
-            print(
-                f"- {row.portfolio_name} vs {row.benchmark_ticker}: "
-                f"portfolio={_format_optional_percent(row.portfolio_total_return)}, "
-                f"benchmark={_format_optional_percent(row.benchmark_total_return)}, "
-                f"excess={_format_optional_percent(row.excess_total_return)}, "
-                f"corr={_format_optional_number(row.daily_correlation)}"
-            )
-    if not result.benchmark_policy.empty:
-        print("Benchmark-aware rule policy / 基准感知规则建议")
-        for row in result.benchmark_policy.itertuples(index=False):
-            print(
-                f"- {row.portfolio_name} / {row.portfolio_name_zh}: "
-                f"action={row.benchmark_policy_action} / {row.benchmark_policy_action_zh}, "
-                f"bias={row.threshold_bias} / {row.threshold_bias_zh}, "
-                f"avg_excess={_format_optional_percent(row.avg_excess_total_return)}, "
-                f"note={row.policy_note_zh}"
-            )
-    if not result.benchmark_tightening.empty:
-        print("Specific tightening recommendations / 具体收紧建议")
-        for row in result.benchmark_tightening.head(10).itertuples(index=False):
-            print(
-                f"- {row.screening_profile} / {row.screening_profile_zh}: "
-                f"{row.threshold_attr} {row.current_threshold:g}->{row.suggested_threshold:g}, "
-                f"priority={row.priority_zh}, reason={row.recommendation_reason_zh}"
-            )
-    if not result.tightening_impact.empty:
-        print("Tightening impact validation / 收紧效果验证")
-        for row in result.tightening_impact.itertuples(index=False):
-            print(
-                f"- {row.screening_profile} / {row.screening_profile_zh}: "
-                f"samples={row.before_sample_count}->{row.after_sample_count}, "
-                f"win_rate={_format_optional_percent(row.before_win_rate)}"
-                f"->{_format_optional_percent(row.after_win_rate)}, "
-                f"avg_return={_format_optional_percent(row.before_avg_return)}"
-                f"->{_format_optional_percent(row.after_avg_return)}, "
-                f"decision={row.impact_decision_zh}"
-            )
-    if not result.threshold_sensitivity.empty:
-        print("Threshold sensitivity grid / 阈值敏感度网格")
-        top_rows = result.threshold_sensitivity[
-            result.threshold_sensitivity["sensitivity_decision"] != "baseline"
-        ].head(10)
-        for row in top_rows.itertuples(index=False):
-            print(
-                f"- {row.screening_profile} / {row.screening_profile_zh}: "
-                f"{row.threshold_expression_zh}, "
-                f"samples={row.sample_count}, "
-                f"win_change={_format_optional_percent(row.win_rate_change)}, "
-                f"return_change={_format_optional_percent(row.avg_return_change)}, "
-                f"decision={row.sensitivity_decision_zh}"
-            )
-    if not result.minimum_sample_guard.empty:
-        print("Minimum sample guard / 最小样本保护")
-        for row in result.minimum_sample_guard.head(10).itertuples(index=False):
-            print(
-                f"- {row.screening_profile} / {row.screening_profile_zh}: "
-                f"{row.threshold_expression_zh}, samples={row.sample_count}, "
-                f"guard={row.guard_action_zh}, reason={row.guard_reason_zh}"
-            )
-    if not result.profile_calibration.empty:
-        print("Profile rule calibration / 分类规则阈值建议")
-        for row in result.profile_calibration.itertuples(index=False):
-            print(
-                f"- {row.screening_profile} / {row.screening_profile_zh} "
-                f"{row.rule}: current={row.current_threshold}, "
-                f"suggested={row.suggested_threshold}, "
-                f"confidence={row.suggestion_confidence_zh}, {row.recommendation_zh}"
-            )
-    manifest_path = _write_validation_run_manifest(
-        output_dir=Path(args.output_dir),
-        args=args,
-        tickers=tickers,
-        download_tickers=download_tickers,
-        price_result=price_result,
-        result=result,
-        started_at=run_started_at,
-    )
-    print(f"Run manifest / 运行记录: {manifest_path}")
-    print(f"Wrote outputs to {args.output_dir}")
-    return 0
+
+def _raise_argument_error(message: str) -> NoReturn:
+    raise ValueError(message)
 
 
 def _format_optional_percent(value: object) -> str:
@@ -997,130 +706,6 @@ def _format_optional_percent(value: object) -> str:
         return f"{float(value):.2%}"
     except (TypeError, ValueError):
         return "N/A"
-
-
-def _format_optional_number(value: object) -> str:
-    try:
-        if value != value:
-            return "N/A"
-        number = float(value)
-    except (TypeError, ValueError):
-        return "N/A"
-    if abs(number) >= 1_000_000_000:
-        return f"{number / 1_000_000_000:.2f}B"
-    if abs(number) >= 1_000_000:
-        return f"{number / 1_000_000:.2f}M"
-    return f"{number:.2f}"
-
-
-def _with_benchmark_tickers(tickers: list[str]) -> list[str]:
-    combined = [*tickers, *DEFAULT_BENCHMARK_TICKERS]
-    return list(dict.fromkeys(str(ticker).upper().strip() for ticker in combined if str(ticker).strip()))
-
-
-def _print_all_universe_progress(universe_name: str, status: str, index: int, total: int) -> None:
-    status_zh = {
-        "started": "开始",
-        "completed": "完成",
-        "failed": "失败",
-    }.get(status, status)
-    print(
-        f"[{index}/{total}] {universe_name}: {status} / {status_zh}",
-        flush=True,
-    )
-
-
-def _print_price_download_result(price_result) -> None:
-    print(
-        "Price download result / 价格下载结果: "
-        f"provider={price_result.provider}, attempts={', '.join(price_result.attempts)}",
-        flush=True,
-    )
-    missing_tickers = getattr(price_result, "missing_tickers", ())
-    if missing_tickers:
-        print(
-            "Missing price tickers / 缺失价格股票: "
-            f"{', '.join(missing_tickers)}",
-            flush=True,
-        )
-    for warning in getattr(price_result, "warnings", ()):
-        print(f"Data warning / 数据警告: {warning}", flush=True)
-
-
-def _write_validation_run_manifest(
-    output_dir: Path,
-    args: argparse.Namespace,
-    tickers: list[str],
-    download_tickers: list[str],
-    price_result,
-    result,
-    started_at: datetime,
-) -> Path:
-    completed_at = datetime.now(timezone.utc)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_files = {
-        "walk_forward_report": str(output_dir / "walk_forward_report.md"),
-        "validation_result_json": str(output_dir / "validation_result.json"),
-        "events_csv": str(output_dir / "walk_forward_events.csv"),
-        "summary_csv": str(output_dir / "walk_forward_summary.csv"),
-        "ticker_ranking_csv": str(output_dir / "ticker_validation_ranking.csv"),
-        "sample_sufficiency_csv": str(output_dir / "sample_sufficiency_guidance.csv"),
-        "profile_summary_csv": str(output_dir / "profile_validation_summary.csv"),
-        "probability_calibration_csv": str(output_dir / "probability_calibration.csv"),
-        "portfolio_summary_csv": str(output_dir / "portfolio_validation_summary.csv"),
-    }
-    manifest_path = output_dir / "run_manifest.json"
-    write_json(
-        manifest_path,
-        {
-            "started_at_utc": started_at.isoformat(),
-            "completed_at_utc": completed_at.isoformat(),
-            "duration_seconds": (completed_at - started_at).total_seconds(),
-            "preset": getattr(args, "preset", None),
-            "preset_description": getattr(args, "preset_description", ""),
-            "preset_description_zh": getattr(args, "preset_description_zh", ""),
-            "universe": getattr(args, "universe", None),
-            "universe_file": getattr(args, "universe_file", None),
-            "historical_universe_file": getattr(args, "historical_universe_file", None),
-            "all_universes": bool(getattr(args, "all_universes", False)),
-            "period": args.period,
-            "step_days": args.step_days,
-            "min_history_days": args.min_history_days,
-            "screening_config": getattr(args, "screening_config", None),
-            "requested_tickers": tickers,
-            "download_tickers": download_tickers,
-            "benchmark_tickers": list(DEFAULT_BENCHMARK_TICKERS),
-            "price_provider": price_result.provider,
-            "price_provider_attempts": list(price_result.attempts),
-            "price_warnings": list(price_result.warnings),
-            "missing_price_tickers": list(getattr(price_result, "missing_tickers", ())),
-            "survivorship_bias_report": getattr(result, "survivorship_bias_report", {}),
-            "event_count": len(result.events),
-            "summary_rows": len(result.summary),
-            "ticker_ranking_rows": len(result.ticker_ranking),
-            "sample_sufficiency_rows": len(result.sample_sufficiency),
-            "output_dir": str(output_dir),
-            "output_files": output_files,
-        },
-    )
-    return manifest_path
-
-
-def _print_walk_forward_progress(ticker: str, status: str, index: int, total: int) -> None:
-    status_zh = {
-        "started": "开始",
-        "completed": "完成",
-        "skipped_insufficient_history": "历史数据不足，跳过",
-    }.get(status, status)
-    print(f"[{index}/{total}] {ticker}: {status} / {status_zh}", flush=True)
-
-
-def _validation_stem(tickers: list[str], universe_name: str | None) -> str:
-    if universe_name:
-        return universe_name.lower().strip().replace(" ", "_")
-    if len(tickers) <= 6:
-        return "_".join(str(ticker).upper().strip() for ticker in tickers)
-    return f"{'_'.join(str(ticker).upper().strip() for ticker in tickers[:6])}_{len(tickers)}tickers"
 
 
 def download_yfinance_command(args: argparse.Namespace) -> int:

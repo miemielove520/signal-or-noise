@@ -11,7 +11,7 @@ from stock_selector.universe import (
     load_historical_universe_membership,
     load_universe_tickers,
 )
-from validate import _validation_stem
+from stock_selector.validation_cli import _validation_stem
 
 
 class UniverseTest(unittest.TestCase):
