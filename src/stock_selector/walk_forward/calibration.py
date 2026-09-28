@@ -73,6 +73,7 @@ def calibrate_walk_forward_profiles(
     target_window: int = 20,
     min_sample_count: int = 5,
 ) -> pd.DataFrame:
+    """Per screening profile, suggest thresholds the same way as ``calibrate_walk_forward_rules``, with sample counts and a confidence level."""
     columns = [
         "screening_profile",
         "screening_profile_zh",
@@ -259,6 +260,7 @@ def render_suggested_screening_config(
     historical_threshold_recommendations: pd.DataFrame | None = None,
     min_sample_count: int = MIN_CALIBRATION_SAMPLE_COUNT,
 ) -> str:
+    """Write a TOML screening config with the suggested thresholds, applying only changes backed by at least ``min_sample_count`` samples and allowed by the benchmark policy and minimum-sample guard; skipped changes are noted."""
     suggested_thresholds = {
         profile.name: profile.thresholds for profile in screening_config.profiles
     }

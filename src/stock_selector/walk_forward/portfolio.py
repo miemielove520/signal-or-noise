@@ -21,6 +21,7 @@ def summarize_walk_forward_portfolios(
     target_window: int = 20,
     top_n: int = 5,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Replay top-``top_n`` portfolios chosen at each signal date by several rules (calibrated probability, high-probability score, strict gate, watchlist) and summarise their ``target_window``-day returns."""
     summary_columns = [
         "portfolio_name",
         "portfolio_name_zh",
@@ -267,6 +268,7 @@ def build_walk_forward_portfolio_equity(
     target_window: int = 20,
     transaction_cost: float = 0.001,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Turn the portfolio rebalances into daily equity curves, charging ``transaction_cost`` on turnover, with return, volatility, Sharpe and drawdown summaries."""
     summary_columns = [
         "portfolio_name",
         "portfolio_name_zh",
@@ -546,6 +548,7 @@ def build_walk_forward_benchmark_comparison(
     portfolio_equity_curve: pd.DataFrame,
     benchmark_tickers: tuple[str, ...] = DEFAULT_BENCHMARK_TICKERS,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Compare each portfolio's daily equity curve with every benchmark ticker (daily and total excess return, drawdowns)."""
     summary_columns = [
         "portfolio_name",
         "portfolio_name_zh",

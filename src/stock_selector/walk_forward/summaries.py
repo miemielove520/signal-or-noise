@@ -29,6 +29,7 @@ def summarize_walk_forward_events(
     events: pd.DataFrame,
     forward_windows: tuple[int, ...] = DEFAULT_FORWARD_WINDOWS,
 ) -> pd.DataFrame:
+    """Win rate and average, median and worst forward return for each validation bucket and forward window."""
     if events.empty:
         return pd.DataFrame(columns=["bucket", "sample_count"])
 
@@ -51,6 +52,7 @@ def build_ticker_validation_ranking(
     events: pd.DataFrame,
     target_window: int = 20,
 ) -> pd.DataFrame:
+    """Rank tickers by how their past signals performed over ``target_window`` days, with a per-ticker decision."""
     columns = [
         "rank",
         "ticker",
@@ -252,6 +254,7 @@ def build_sample_sufficiency_guidance(
     min_total_samples: int | None = None,
     min_ticker_samples: int = 10,
 ) -> pd.DataFrame:
+    """Check whether the run produced enough samples overall and per ticker, and suggest step, history and period settings that would."""
     columns = [
         "scope",
         "ticker",
@@ -440,6 +443,7 @@ def summarize_walk_forward_profiles(
     events: pd.DataFrame,
     forward_windows: tuple[int, ...] = DEFAULT_FORWARD_WINDOWS,
 ) -> pd.DataFrame:
+    """Sample counts and forward returns per screening profile and validation bucket."""
     columns = [
         "screening_profile",
         "screening_profile_zh",
@@ -488,6 +492,7 @@ def summarize_walk_forward_segments(
     events: pd.DataFrame,
     forward_windows: tuple[int, ...] = DEFAULT_FORWARD_WINDOWS,
 ) -> pd.DataFrame:
+    """Forward-return statistics split into segments (profile, horizon and other groupings) to show where results come from."""
     columns = [
         "validation_segment",
         "validation_segment_zh",
@@ -605,6 +610,7 @@ def summarize_market_regime_validation(
     events: pd.DataFrame,
     forward_windows: tuple[int, ...] = DEFAULT_FORWARD_WINDOWS,
 ) -> pd.DataFrame:
+    """Signal statistics grouped by the market regime on each signal date."""
     columns = [
         "validation_market_regime",
         "validation_market_regime_zh",
@@ -752,6 +758,7 @@ def build_market_regime_protection_policy(
     market_regime_summary: pd.DataFrame,
     target_window: int = 20,
 ) -> pd.DataFrame:
+    """From the regime-level results, decide for each market regime how cautious new entries should be."""
     columns = [
         "validation_market_regime",
         "validation_market_regime_zh",
@@ -949,6 +956,7 @@ def summarize_probability_calibration(
     events: pd.DataFrame,
     target_window: int = 20,
 ) -> pd.DataFrame:
+    """Bucket events by estimated win probability and compare each bucket with the realised ``target_window``-day win rate (calibration error and suggested adjustment)."""
     columns = [
         "probability_bucket",
         "probability_bucket_zh",

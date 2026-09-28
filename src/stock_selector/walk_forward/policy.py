@@ -20,6 +20,7 @@ from .config import (
 
 
 def build_benchmark_aware_policy(benchmark_summary: pd.DataFrame) -> pd.DataFrame:
+    """For each replayed portfolio, summarise excess return against the benchmarks and derive whether its rules should be tightened."""
     columns = [
         "portfolio_name",
         "portfolio_name_zh",
@@ -214,6 +215,7 @@ def build_benchmark_tightening_recommendations(
     benchmark_policy: pd.DataFrame,
     target_window: int = 20,
 ) -> pd.DataFrame:
+    """Suggest stricter thresholds per profile and rule for portfolios that lag the benchmarks."""
     columns = [
         "screening_profile",
         "screening_profile_zh",
@@ -421,6 +423,7 @@ def build_tightening_impact_validation(
     target_window: int = 20,
     active_priorities: tuple[str, ...] = ("high", "medium"),
 ) -> pd.DataFrame:
+    """Re-apply the suggested tightenings to past events and compare sample size, win rate and return before and after."""
     columns = [
         "screening_profile",
         "screening_profile_zh",
@@ -649,6 +652,7 @@ def build_threshold_sensitivity_grid(
     screening_config: ScreeningConfig,
     target_window: int = 20,
 ) -> pd.DataFrame:
+    """Re-evaluate past events under a grid of stricter thresholds per profile to show how results and sample counts change."""
     columns = [
         "screening_profile",
         "screening_profile_zh",

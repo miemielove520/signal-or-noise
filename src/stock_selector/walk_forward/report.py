@@ -41,6 +41,7 @@ def render_walk_forward_report(
     forward_windows: tuple[int, ...] = DEFAULT_FORWARD_WINDOWS,
     survivorship_bias_report: dict[str, object] | None = None,
 ) -> str:
+    """Render the walk-forward tables as the bilingual Markdown report, one section per table."""
     survivorship = survivorship_bias_report or survivorship_report_without_historical_membership()
     lines: list[str] = []
     lines.extend(

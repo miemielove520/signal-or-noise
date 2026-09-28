@@ -347,6 +347,7 @@ def _target_window(forward_windows: tuple[int, ...]) -> int:
 
 
 def build_validation_market_regime_lookup(prices: pd.DataFrame) -> dict[pd.Timestamp, dict[str, object]]:
+    """Label every trading date with a market regime from the SPY/QQQ trend, so events can be grouped by the regime they occurred in."""
     if prices.empty:
         return {}
     frame = _normalize_prices(prices)
