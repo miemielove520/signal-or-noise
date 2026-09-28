@@ -1380,3 +1380,48 @@ def make_price_frame() -> pd.DataFrame:
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FailedSignalReportingTest(unittest.TestCase):
+    def test_failing_analysis_is_recorded_not_silently_dropped(self) -> None:
+        from unittest.mock import patch
+
+        calls = {"n": 0}
+        from stock_selector.walk_forward import core
+
+        real_analyze = core.analyze_ticker
+
+        def flaky_analyze(*args, **kwargs):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise RuntimeError("boom")
+            return real_analyze(*args, **kwargs)
+
+        with tempfile.TemporaryDirectory() as directory, patch.object(core, "analyze_ticker", side_effect=flaky_analyze):
+            result = run_walk_forward_validation(
+                prices=make_price_frame(),
+                tickers=["AAA"],
+                forward_windows=(5, 20),
+                step_days=30,
+                min_history_days=120,
+                output_dir=directory,
+            )
+            written = pd.read_csv(Path(directory) / "failed_signals.csv")
+            report = (Path(directory) / "walk_forward_report.md").read_text(encoding="utf-8")
+
+        self.assertEqual(len(result.failed_signals), 1)
+        self.assertEqual(result.failed_signals.iloc[0]["ticker"], "AAA")
+        self.assertIn("RuntimeError: boom", result.failed_signals.iloc[0]["error"])
+        self.assertEqual(len(written), 1)
+        self.assertIn("Skipped Signals", report)
+
+    def test_clean_run_has_no_failed_signals_section(self) -> None:
+        result = run_walk_forward_validation(
+            prices=make_price_frame(),
+            tickers=["AAA"],
+            forward_windows=(5, 20),
+            step_days=30,
+            min_history_days=120,
+        )
+        self.assertTrue(result.failed_signals.empty)
+        self.assertNotIn("Skipped Signals", result.report)

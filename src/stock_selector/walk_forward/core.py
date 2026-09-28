@@ -40,6 +40,9 @@ from .calibration import (
     calibrate_walk_forward_rules,
     render_suggested_screening_config,
 )
+from ._common import (
+    _markdown_table,
+)
 from .config import (
     DEFAULT_FORWARD_WINDOWS,
     WalkForwardProgressCallback,
@@ -127,6 +130,8 @@ class WalkForwardResult:
     profile_blocker_dashboard: pd.DataFrame = field(default_factory=pd.DataFrame)
     profile_blocker_dashboard_report: str = ""
     survivorship_bias_report: dict[str, object] = field(default_factory=dict)
+    # Signals whose analysis raised; they are excluded from every statistic.
+    failed_signals: pd.DataFrame = field(default_factory=pd.DataFrame)
 
 
 def run_walk_forward_validation(
@@ -165,6 +170,7 @@ def run_walk_forward_validation(
         else survivorship_report_without_historical_membership()
     )
     rows: list[dict[str, object]] = []
+    failed_signals: list[dict[str, str]] = []
 
     for ticker_index, ticker in enumerate(normalized_tickers, start=1):
         _emit_walk_forward_progress(
@@ -227,7 +233,12 @@ def run_walk_forward_validation(
                 )
                 analysis["screening_profile"] = profile_name
                 analysis["screening_profile_zh"] = profile_name_zh
-            except Exception:
+            except Exception as exc:
+                failed_signals.append({
+                    "ticker": ticker,
+                    "signal_date": str(pd.Timestamp(signal_date).date()),
+                    "error": f"{type(exc).__name__}: {exc}",
+                })
                 continue
             # One event per horizon row. All horizons of a (date, ticker) share the same
             # forward returns, so pooled counts over-state independent samples by up to
@@ -367,6 +378,7 @@ def run_walk_forward_validation(
         forward_windows=forward_windows,
         survivorship_bias_report=survivorship_bias_report,
     )
+    failed_signal_frame = pd.DataFrame(failed_signals, columns=["ticker", "signal_date", "error"])
     report = (
         report.rstrip()
         + "\n\n"
@@ -382,6 +394,8 @@ def run_walk_forward_validation(
         + "\n"
         + historical_threshold_recommendations_report
     )
+    if not failed_signal_frame.empty:
+        report = report.rstrip() + "\n\n" + _render_failed_signals(failed_signal_frame)
 
     result = WalkForwardResult(
             events=events,
@@ -422,6 +436,7 @@ def run_walk_forward_validation(
             profile_blocker_dashboard=profile_blocker_dashboard,
             profile_blocker_dashboard_report=profile_blocker_dashboard_report,
             survivorship_bias_report=survivorship_bias_report,
+            failed_signals=failed_signal_frame,
         )
     if output_dir is not None:
         _write_walk_forward_outputs(
@@ -476,6 +491,7 @@ def _write_walk_forward_outputs(
     result.tightening_impact.to_csv(path / "tightening_impact_validation.csv", index=False)
     result.threshold_sensitivity.to_csv(path / "threshold_sensitivity_grid.csv", index=False)
     result.minimum_sample_guard.to_csv(path / "minimum_sample_guard.csv", index=False)
+    result.failed_signals.to_csv(path / "failed_signals.csv", index=False)
     for name, frame in result.win_rate_dashboard.items():
         frame.to_csv(path / f"win_rate_{name}.csv", index=False)
     result.profile_health_dashboard.to_csv(path / "profile_health_dashboard.csv", index=False)
@@ -596,9 +612,11 @@ def _write_walk_forward_outputs(
             "screening_thresholds": (screening_thresholds or ScreeningThresholds()).to_dict(),
             "screening_config": config.to_dict(),
             "survivorship_bias_report": result.survivorship_bias_report,
+            "failed_signal_count": int(len(result.failed_signals)),
             "output_files": {
                 "markdown_report": str(path / "walk_forward_report.md"),
                 "events_csv": str(path / "walk_forward_events.csv"),
+                "failed_signals_csv": str(path / "failed_signals.csv"),
                 "summary_csv": str(path / "walk_forward_summary.csv"),
                 "ticker_ranking_csv": str(path / "ticker_validation_ranking.csv"),
                 "sample_sufficiency_csv": str(path / "sample_sufficiency_guidance.csv"),
@@ -683,6 +701,19 @@ def _write_walk_forward_outputs(
             },
         },
     )
+
+
+def _render_failed_signals(failed: pd.DataFrame, limit: int = 20) -> str:
+    """Warn that some signals were dropped because their analysis raised."""
+    lines = [
+        "## Skipped Signals / 跳过的信号",
+        "",
+        f"{len(failed)} signal(s) raised during analysis and are excluded from every statistic above.",
+        f"{len(failed)} 个信号在分析时出错，未计入上面的任何统计。",
+        "",
+    ]
+    lines.extend(_markdown_table(failed.head(limit)))
+    return "\n".join(lines).rstrip() + "\n"
 
 
 def _emit_walk_forward_progress(
