@@ -365,37 +365,9 @@ def _entry_backtest_summary(
         "backtest_volatility_label_zh": slippage_profile["volatility_label_zh"],
         "backtest_execution_note": execution_note,
         "backtest_execution_note_zh": execution_note_zh,
-        "regime_coverage_score": regime_coverage["score"],
-        "regime_coverage_level": regime_coverage["level"],
-        "regime_coverage_level_zh": regime_coverage["level_zh"],
-        "regime_coverage_regime_count": regime_coverage["regime_count"],
-        "regime_coverage_dominant_regime": regime_coverage["dominant_regime"],
-        "regime_coverage_dominant_regime_zh": regime_coverage["dominant_regime_zh"],
-        "regime_coverage_dominant_share": regime_coverage["dominant_share"],
-        "regime_coverage_note": regime_coverage["note"],
-        "regime_coverage_note_zh": regime_coverage["note_zh"],
-        "recent_backtest_score": recent_backtest["score"],
-        "recent_backtest_level": recent_backtest["level"],
-        "recent_backtest_level_zh": recent_backtest["level_zh"],
-        "recent_backtest_trade_count": recent_backtest["recent_trade_count"],
-        "recent_backtest_win_rate": recent_backtest["recent_win_rate"],
-        "recent_backtest_average_return": recent_backtest["recent_average_return"],
-        "recent_backtest_return_delta": recent_backtest["return_delta"],
-        "recent_backtest_note": recent_backtest["note"],
-        "recent_backtest_note_zh": recent_backtest["note_zh"],
-        "backtest_decay_score": backtest_decay["score"],
-        "backtest_decay_level": backtest_decay["level"],
-        "backtest_decay_level_zh": backtest_decay["level_zh"],
-        "backtest_decay_early_trade_count": backtest_decay["early_trade_count"],
-        "backtest_decay_late_trade_count": backtest_decay["late_trade_count"],
-        "backtest_decay_early_win_rate": backtest_decay["early_win_rate"],
-        "backtest_decay_late_win_rate": backtest_decay["late_win_rate"],
-        "backtest_decay_early_average_return": backtest_decay["early_average_return"],
-        "backtest_decay_late_average_return": backtest_decay["late_average_return"],
-        "backtest_decay_win_rate_delta": backtest_decay["win_rate_delta"],
-        "backtest_decay_average_return_delta": backtest_decay["average_return_delta"],
-        "backtest_decay_note": backtest_decay["note"],
-        "backtest_decay_note_zh": backtest_decay["note_zh"],
+        **_regime_coverage_fields(regime_coverage),
+        **_recent_backtest_fields(recent_backtest),
+        **_backtest_decay_fields(backtest_decay),
         "breakout_trade_count": len(breakout_outcomes),
         "breakout_sample_quality": breakout_sample_quality,
         "breakout_sample_quality_zh": breakout_sample_quality_zh,
@@ -418,6 +390,52 @@ def _entry_backtest_summary(
         "pullback_average_return": pullback_average_return,
         "entry_backtest_note": note,
         "entry_backtest_note_zh": note_zh,
+    }
+
+def _regime_coverage_fields(regime_coverage: object) -> dict[str, object]:
+    """Row fields `regime_coverage_score` … `regime_coverage_note_zh` taken from `regime_coverage`."""
+    return {
+        "regime_coverage_score": regime_coverage["score"],
+        "regime_coverage_level": regime_coverage["level"],
+        "regime_coverage_level_zh": regime_coverage["level_zh"],
+        "regime_coverage_regime_count": regime_coverage["regime_count"],
+        "regime_coverage_dominant_regime": regime_coverage["dominant_regime"],
+        "regime_coverage_dominant_regime_zh": regime_coverage["dominant_regime_zh"],
+        "regime_coverage_dominant_share": regime_coverage["dominant_share"],
+        "regime_coverage_note": regime_coverage["note"],
+        "regime_coverage_note_zh": regime_coverage["note_zh"],
+    }
+
+def _recent_backtest_fields(recent_backtest: object) -> dict[str, object]:
+    """Row fields `recent_backtest_score` … `recent_backtest_note_zh` taken from `recent_backtest`."""
+    return {
+        "recent_backtest_score": recent_backtest["score"],
+        "recent_backtest_level": recent_backtest["level"],
+        "recent_backtest_level_zh": recent_backtest["level_zh"],
+        "recent_backtest_trade_count": recent_backtest["recent_trade_count"],
+        "recent_backtest_win_rate": recent_backtest["recent_win_rate"],
+        "recent_backtest_average_return": recent_backtest["recent_average_return"],
+        "recent_backtest_return_delta": recent_backtest["return_delta"],
+        "recent_backtest_note": recent_backtest["note"],
+        "recent_backtest_note_zh": recent_backtest["note_zh"],
+    }
+
+def _backtest_decay_fields(backtest_decay: object) -> dict[str, object]:
+    """Row fields `backtest_decay_score` … `backtest_decay_note_zh` taken from `backtest_decay`."""
+    return {
+        "backtest_decay_score": backtest_decay["score"],
+        "backtest_decay_level": backtest_decay["level"],
+        "backtest_decay_level_zh": backtest_decay["level_zh"],
+        "backtest_decay_early_trade_count": backtest_decay["early_trade_count"],
+        "backtest_decay_late_trade_count": backtest_decay["late_trade_count"],
+        "backtest_decay_early_win_rate": backtest_decay["early_win_rate"],
+        "backtest_decay_late_win_rate": backtest_decay["late_win_rate"],
+        "backtest_decay_early_average_return": backtest_decay["early_average_return"],
+        "backtest_decay_late_average_return": backtest_decay["late_average_return"],
+        "backtest_decay_win_rate_delta": backtest_decay["win_rate_delta"],
+        "backtest_decay_average_return_delta": backtest_decay["average_return_delta"],
+        "backtest_decay_note": backtest_decay["note"],
+        "backtest_decay_note_zh": backtest_decay["note_zh"],
     }
 
 

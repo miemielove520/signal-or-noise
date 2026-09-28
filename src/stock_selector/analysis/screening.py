@@ -57,194 +57,85 @@ def _high_probability_screening_for_row(
     liquidity_filter = _liquidity_filter_result(row, thresholds)
     entry_readiness = _entry_readiness_filter_result(row)
     trade_plan_quality = _trade_plan_quality_filter_result(row)
-    fail_reasons: list[str] = []
-    fail_reasons_zh: list[str] = []
-
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        float(row["data_quality_score"]) < thresholds.data_quality_min,
-        "data quality insufficient",
-        "数据质量不足",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        float(row["confidence_score"]) < thresholds.confidence_min,
-        "confidence too low",
-        "置信度不足",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        str(row["overall_risk_level"]) == "high",
-        "overall risk high",
-        "综合风险过高",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        float(row["market_score"]) < thresholds.market_score_min,
-        "market not supportive",
-        "大盘环境不够支持",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        float(row["relative_strength_score"]) < thresholds.relative_strength_min,
-        "relative strength weak",
-        "相对强弱不足",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        float(row["signal_score"]) < thresholds.signal_score_min,
-        "signal score too low",
-        "信号分数不足",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        int(trade_count) < thresholds.backtest_sample_min,
-        f"{entry_label} backtest sample too small",
-        f"{entry_label_zh}回测样本不足",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        not _is_finite(win_rate) or float(win_rate) < thresholds.backtest_win_rate_min,
-        f"{entry_label} backtest win rate too low",
-        f"{entry_label_zh}回测胜率不足",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        not _is_finite(average_return)
-        or float(average_return) <= thresholds.backtest_average_return_min,
-        f"{entry_label} backtest average return not positive",
-        f"{entry_label_zh}回测平均收益不是正数",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        _is_finite(stop_hit_rate) and float(stop_hit_rate) > thresholds.max_backtest_stop_hit_rate,
-        f"{entry_label} backtest stop-hit rate too high",
-        f"{entry_label_zh}回测止损命中率过高",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        float(row.get("backtest_trust_score", 0.0)) < thresholds.backtest_trust_score_min,
-        "backtest trust score too low",
-        "回测可信度分不足",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        float(row.get("recent_backtest_score", 0.0)) < thresholds.recent_backtest_score_min,
-        "recent backtest strength too weak",
-        "近期回测强度不足",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        float(row.get("backtest_decay_score", 0.0)) < thresholds.backtest_decay_score_min,
-        "backtest decay check failed",
-        "回测衰退检查未通过",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        not liquidity_filter["passed"],
-        str(liquidity_filter["reason"]),
-        str(liquidity_filter["reason_zh"]),
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        not entry_readiness["passed"],
-        str(entry_readiness["reason"]),
-        str(entry_readiness["reason_zh"]),
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        not trade_plan_quality["passed"],
-        str(trade_plan_quality["reason"]),
-        str(trade_plan_quality["reason_zh"]),
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        str(row["horizon"]) == "long"
-        and float(row["fundamental_score"]) < thresholds.long_fundamental_score_min,
-        "long-term fundamental score too low",
-        "长期基本面分数不足",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        str(row["horizon"]) in {"medium", "long"}
-        and float(row["sector_score"]) < thresholds.medium_long_sector_score_min,
-        "sector context weak",
-        "板块环境偏弱",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        str(row["event_risk_level"]) == "high",
-        "event risk high",
-        "事件风险过高",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        _coerce_bool(row.get("event_block_new_entries", False)),
-        "event window blocks new entries",
-        "事件窗口阻止新入场",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        str(row.get("sentiment_risk_level", "unknown")) == "high",
-        "news sentiment risk high",
-        "新闻情绪风险过高",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        _coerce_bool(row.get("sentiment_block_new_entries", False)),
-        "news sentiment blocks new entries",
-        "新闻情绪阻止新入场",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        str(row.get("analyst_risk_level", "unknown")) == "high",
-        "analyst expectation risk high",
-        "分析师预期风险过高",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        _coerce_bool(row.get("analyst_block_new_entries", False)),
-        "analyst expectations block new entries",
-        "分析师预期阻止新入场",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        str(row.get("valuation_risk_level", "unknown")) == "high",
-        "valuation risk high",
-        "估值风险过高",
-    )
-    _add_gate_failure(
-        fail_reasons,
-        fail_reasons_zh,
-        _coerce_bool(row.get("valuation_block_new_entries", False)),
-        "valuation blocks new entries",
-        "估值阻止新入场",
-    )
+    # Every strict quality gate as (failed?, reason, reason_zh); order is the report order.
+    gates = [
+        (float(row["data_quality_score"]) < thresholds.data_quality_min, "data quality insufficient", "数据质量不足"),
+        (float(row["confidence_score"]) < thresholds.confidence_min, "confidence too low", "置信度不足"),
+        (str(row["overall_risk_level"]) == "high", "overall risk high", "综合风险过高"),
+        (float(row["market_score"]) < thresholds.market_score_min, "market not supportive", "大盘环境不够支持"),
+        (
+            float(row["relative_strength_score"]) < thresholds.relative_strength_min,
+            "relative strength weak",
+            "相对强弱不足",
+        ),
+        (float(row["signal_score"]) < thresholds.signal_score_min, "signal score too low", "信号分数不足"),
+        (
+            int(trade_count) < thresholds.backtest_sample_min,
+            f"{entry_label} backtest sample too small",
+            f"{entry_label_zh}回测样本不足",
+        ),
+        (
+            not _is_finite(win_rate) or float(win_rate) < thresholds.backtest_win_rate_min,
+            f"{entry_label} backtest win rate too low",
+            f"{entry_label_zh}回测胜率不足",
+        ),
+        (
+            not _is_finite(average_return) or float(average_return) <= thresholds.backtest_average_return_min,
+            f"{entry_label} backtest average return not positive",
+            f"{entry_label_zh}回测平均收益不是正数",
+        ),
+        (
+            _is_finite(stop_hit_rate) and float(stop_hit_rate) > thresholds.max_backtest_stop_hit_rate,
+            f"{entry_label} backtest stop-hit rate too high",
+            f"{entry_label_zh}回测止损命中率过高",
+        ),
+        (
+            float(row.get("backtest_trust_score", 0.0)) < thresholds.backtest_trust_score_min,
+            "backtest trust score too low",
+            "回测可信度分不足",
+        ),
+        (
+            float(row.get("recent_backtest_score", 0.0)) < thresholds.recent_backtest_score_min,
+            "recent backtest strength too weak",
+            "近期回测强度不足",
+        ),
+        (
+            float(row.get("backtest_decay_score", 0.0)) < thresholds.backtest_decay_score_min,
+            "backtest decay check failed",
+            "回测衰退检查未通过",
+        ),
+        (not liquidity_filter["passed"], str(liquidity_filter["reason"]), str(liquidity_filter["reason_zh"])),
+        (not entry_readiness["passed"], str(entry_readiness["reason"]), str(entry_readiness["reason_zh"])),
+        (not trade_plan_quality["passed"], str(trade_plan_quality["reason"]), str(trade_plan_quality["reason_zh"])),
+        (
+            str(row["horizon"]) == "long" and float(row["fundamental_score"]) < thresholds.long_fundamental_score_min,
+            "long-term fundamental score too low",
+            "长期基本面分数不足",
+        ),
+        (
+            str(row["horizon"]) in {"medium", "long"} and float(row["sector_score"]) < thresholds.medium_long_sector_score_min,
+            "sector context weak",
+            "板块环境偏弱",
+        ),
+        (str(row["event_risk_level"]) == "high", "event risk high", "事件风险过高"),
+        (_coerce_bool(row.get("event_block_new_entries", False)), "event window blocks new entries", "事件窗口阻止新入场"),
+        (str(row.get("sentiment_risk_level", "unknown")) == "high", "news sentiment risk high", "新闻情绪风险过高"),
+        (
+            _coerce_bool(row.get("sentiment_block_new_entries", False)),
+            "news sentiment blocks new entries",
+            "新闻情绪阻止新入场",
+        ),
+        (str(row.get("analyst_risk_level", "unknown")) == "high", "analyst expectation risk high", "分析师预期风险过高"),
+        (
+            _coerce_bool(row.get("analyst_block_new_entries", False)),
+            "analyst expectations block new entries",
+            "分析师预期阻止新入场",
+        ),
+        (str(row.get("valuation_risk_level", "unknown")) == "high", "valuation risk high", "估值风险过高"),
+        (_coerce_bool(row.get("valuation_block_new_entries", False)), "valuation blocks new entries", "估值阻止新入场"),
+    ]
+    fail_reasons = [reason for failed, reason, _ in gates if failed]
+    fail_reasons_zh = [reason_zh for failed, _, reason_zh in gates if failed]
 
     score_row = row.copy()
     score_row["entry_readiness_score"] = entry_readiness["score"]
@@ -286,6 +177,35 @@ def _high_probability_screening_for_row(
         "high_probability_score": score,
         "high_probability_level": level,
         "high_probability_level_zh": level_zh,
+        **_probability_calibration_fields(probability_calibration),
+        "quality_gate_passed": bool(passed),
+        "quality_gate_fail_reasons": reason_text,
+        "quality_gate_fail_reasons_zh": reason_text_zh,
+        "screening_backtest_entry_type": entry_label,
+        "screening_backtest_trade_count": int(trade_count),
+        "screening_backtest_win_rate": float(win_rate) if _is_finite(win_rate) else np.nan,
+        "screening_backtest_stop_hit_rate": float(stop_hit_rate)
+        if _is_finite(stop_hit_rate)
+        else np.nan,
+        "screening_backtest_average_return": float(average_return)
+        if _is_finite(average_return)
+        else np.nan,
+        "sample_confidence_level": evidence["sample_confidence_level"],
+        "sample_confidence_level_zh": evidence["sample_confidence_level_zh"],
+        "evidence_strength": evidence["evidence_strength"],
+        "evidence_strength_zh": evidence["evidence_strength_zh"],
+        "evidence_note": evidence["evidence_note"],
+        "evidence_note_zh": evidence["evidence_note_zh"],
+        "liquidity_filter_passed": bool(liquidity_filter["passed"]),
+        "liquidity_filter_reason": liquidity_filter["reason"],
+        "liquidity_filter_reason_zh": liquidity_filter["reason_zh"],
+        **_entry_readiness_fields(entry_readiness),
+        **_trade_plan_quality_fields(trade_plan_quality),
+    }
+
+def _probability_calibration_fields(probability_calibration: object) -> dict[str, object]:
+    """Row fields `calibrated_win_probability` … `calibrated_probability_note_zh` taken from `probability_calibration`."""
+    return {
         "calibrated_win_probability": probability_calibration["calibrated_win_probability"],
         "calibrated_probability_level": probability_calibration[
             "calibrated_probability_level"
@@ -308,27 +228,11 @@ def _high_probability_screening_for_row(
         "calibrated_probability_note_zh": probability_calibration[
             "calibrated_probability_note_zh"
         ],
-        "quality_gate_passed": bool(passed),
-        "quality_gate_fail_reasons": reason_text,
-        "quality_gate_fail_reasons_zh": reason_text_zh,
-        "screening_backtest_entry_type": entry_label,
-        "screening_backtest_trade_count": int(trade_count),
-        "screening_backtest_win_rate": float(win_rate) if _is_finite(win_rate) else np.nan,
-        "screening_backtest_stop_hit_rate": float(stop_hit_rate)
-        if _is_finite(stop_hit_rate)
-        else np.nan,
-        "screening_backtest_average_return": float(average_return)
-        if _is_finite(average_return)
-        else np.nan,
-        "sample_confidence_level": evidence["sample_confidence_level"],
-        "sample_confidence_level_zh": evidence["sample_confidence_level_zh"],
-        "evidence_strength": evidence["evidence_strength"],
-        "evidence_strength_zh": evidence["evidence_strength_zh"],
-        "evidence_note": evidence["evidence_note"],
-        "evidence_note_zh": evidence["evidence_note_zh"],
-        "liquidity_filter_passed": bool(liquidity_filter["passed"]),
-        "liquidity_filter_reason": liquidity_filter["reason"],
-        "liquidity_filter_reason_zh": liquidity_filter["reason_zh"],
+    }
+
+def _entry_readiness_fields(entry_readiness: object) -> dict[str, object]:
+    """Row fields `entry_readiness_gate_passed` … `entry_readiness_note_zh` taken from `entry_readiness`."""
+    return {
         "entry_readiness_gate_passed": bool(entry_readiness["passed"]),
         "entry_readiness_status": entry_readiness["status"],
         "entry_readiness_status_zh": entry_readiness["status_zh"],
@@ -337,6 +241,11 @@ def _high_probability_screening_for_row(
         "entry_readiness_reason_zh": entry_readiness["reason_zh"],
         "entry_readiness_note": entry_readiness["note"],
         "entry_readiness_note_zh": entry_readiness["note_zh"],
+    }
+
+def _trade_plan_quality_fields(trade_plan_quality: object) -> dict[str, object]:
+    """Row fields `trade_plan_quality_gate_passed` … `trade_plan_quality_note_zh` taken from `trade_plan_quality`."""
+    return {
         "trade_plan_quality_gate_passed": bool(trade_plan_quality["passed"]),
         "trade_plan_quality_status": trade_plan_quality["status"],
         "trade_plan_quality_status_zh": trade_plan_quality["status_zh"],
@@ -346,18 +255,6 @@ def _high_probability_screening_for_row(
         "trade_plan_quality_note": trade_plan_quality["note"],
         "trade_plan_quality_note_zh": trade_plan_quality["note_zh"],
     }
-
-
-def _add_gate_failure(
-    fail_reasons: list[str],
-    fail_reasons_zh: list[str],
-    condition: bool,
-    reason: str,
-    reason_zh: str,
-) -> None:
-    if condition:
-        fail_reasons.append(reason)
-        fail_reasons_zh.append(reason_zh)
 
 
 def _liquidity_filter_result(
