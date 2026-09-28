@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+import tomllib
 from dataclasses import asdict, dataclass
 from pathlib import Path
-import tomllib
 
 
 @dataclass(frozen=True)
 class ScreeningThresholds:
     """Minimum scores and backtest statistics a setup must meet to pass the strict quality gate."""
+
     data_quality_min: float = 70.0
     confidence_min: float = 65.0
     market_score_min: float = 55.0
@@ -33,7 +34,7 @@ class ScreeningThresholds:
     early_watchlist_min_score: float = 45.0
 
     @classmethod
-    def from_mapping(cls, values: dict[str, object] | None) -> "ScreeningThresholds":
+    def from_mapping(cls, values: dict[str, object] | None) -> ScreeningThresholds:
         if not values:
             return cls()
         defaults = asdict(cls())
@@ -72,6 +73,7 @@ class ScreeningThresholds:
 @dataclass(frozen=True)
 class TradingRules:
     """Entry style and per-horizon stop, target and chase settings for a profile."""
+
     preferred_entry_style: str = "balanced"
     preferred_entry_style_zh: str = "均衡"
     short_atr_stop_multiple: float = 1.5
@@ -92,7 +94,7 @@ class TradingRules:
     sell_rule_zh: str = "止损、目标价或趋势跌破时退出"
 
     @classmethod
-    def from_mapping(cls, values: dict[str, object] | None) -> "TradingRules":
+    def from_mapping(cls, values: dict[str, object] | None) -> TradingRules:
         if not values:
             return cls()
         defaults = asdict(cls())
@@ -140,6 +142,7 @@ class TradingRules:
 @dataclass(frozen=True)
 class ScreeningProfile:
     """A named rule profile (for example semiconductors) with its thresholds, trading rules and the tickers, sectors or industries it applies to."""
+
     name: str
     name_zh: str
     thresholds: ScreeningThresholds
@@ -154,7 +157,7 @@ class ScreeningProfile:
         name: str,
         values: dict[str, object],
         base_thresholds: ScreeningThresholds,
-    ) -> "ScreeningProfile":
+    ) -> ScreeningProfile:
         metadata_keys = {
             "name_zh",
             "ticker_symbols",
@@ -162,12 +165,8 @@ class ScreeningProfile:
             "industry_keywords",
             "trading",
         }
-        threshold_values = {
-            key: value for key, value in values.items() if key not in metadata_keys
-        }
-        thresholds = ScreeningThresholds.from_mapping(
-            {**base_thresholds.to_dict(), **threshold_values}
-        )
+        threshold_values = {key: value for key, value in values.items() if key not in metadata_keys}
+        thresholds = ScreeningThresholds.from_mapping({**base_thresholds.to_dict(), **threshold_values})
         return cls(
             name=name,
             name_zh=str(values.get("name_zh", name)),
@@ -205,6 +204,7 @@ class ScreeningProfile:
 @dataclass(frozen=True)
 class ScreeningConfig:
     """Default thresholds plus the ordered sector profiles; ``resolve_profile`` returns the first profile that matches a ticker."""
+
     default_thresholds: ScreeningThresholds
     profiles: tuple[ScreeningProfile, ...] = ()
 
@@ -232,7 +232,7 @@ class ScreeningConfig:
     def with_profile_thresholds(
         self,
         profile_thresholds: dict[str, ScreeningThresholds],
-    ) -> "ScreeningConfig":
+    ) -> ScreeningConfig:
         profiles = tuple(
             ScreeningProfile(
                 name=profile.name,

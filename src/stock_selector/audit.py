@@ -14,6 +14,7 @@ from .data import REQUIRED_PRICE_COLUMNS
 @dataclass(frozen=True)
 class AuditIssue:
     """One data-quality problem: severity, code, message, affected row count and ticker."""
+
     severity: str
     code: str
     message: str
@@ -24,6 +25,7 @@ class AuditIssue:
 @dataclass(frozen=True)
 class AuditReport:
     """Summary counts plus the list of issues found by the price audit."""
+
     summary: dict[str, object]
     issues: list[AuditIssue]
 
@@ -167,9 +169,8 @@ def _add_price_sanity_issues(frame: pd.DataFrame, issues: list[AuditIssue]) -> N
             )
         )
 
-    ohlc_bad = (
-        (frame["high"] < frame[["open", "close", "low"]].max(axis=1))
-        | (frame["low"] > frame[["open", "close", "high"]].min(axis=1))
+    ohlc_bad = (frame["high"] < frame[["open", "close", "low"]].max(axis=1)) | (
+        frame["low"] > frame[["open", "close", "high"]].min(axis=1)
     )
     ohlc_bad_count = int(ohlc_bad.sum())
     if ohlc_bad_count:

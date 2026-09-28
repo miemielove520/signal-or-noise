@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import pandas as pd
 
-from ..screening_config import ScreeningThresholds
-from ..screening_config import TradingRules
-
+from ..screening_config import ScreeningThresholds, TradingRules
 from .horizons import (
     HORIZON_SPECS,
     _effective_horizon_spec,

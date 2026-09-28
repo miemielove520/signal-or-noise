@@ -28,21 +28,19 @@ def add_basic_factors(
         frame[f"momentum_{window}"] = grouped["adj_close"].pct_change(window)
 
     vol_window = factor_config.volatility_window
-    frame[f"volatility_{vol_window}"] = grouped["daily_return"].rolling(vol_window).std().reset_index(
-        level=0, drop=True
+    frame[f"volatility_{vol_window}"] = (
+        grouped["daily_return"].rolling(vol_window).std().reset_index(level=0, drop=True)
     )
     frame[f"low_volatility_{vol_window}"] = -frame[f"volatility_{vol_window}"]
 
     trend_window = factor_config.trend_window
-    moving_average = grouped["adj_close"].rolling(trend_window).mean().reset_index(
-        level=0, drop=True
-    )
+    moving_average = grouped["adj_close"].rolling(trend_window).mean().reset_index(level=0, drop=True)
     frame[f"trend_{trend_window}"] = frame["adj_close"] / moving_average - 1.0
 
     liquidity_window = factor_config.liquidity_window
-    frame[f"liquidity_{liquidity_window}"] = grouped["dollar_volume"].rolling(
-        liquidity_window
-    ).mean().reset_index(level=0, drop=True)
+    frame[f"liquidity_{liquidity_window}"] = (
+        grouped["dollar_volume"].rolling(liquidity_window).mean().reset_index(level=0, drop=True)
+    )
 
     money_flow_window = factor_config.money_flow_window
     high_low_range = (frame["high"] - frame["low"]).replace(0, np.nan)
@@ -50,19 +48,14 @@ def add_basic_factors(
         (frame["close"] - frame["low"]) - (frame["high"] - frame["close"])
     ) / high_low_range
     frame["money_flow_volume"] = money_flow_multiplier.fillna(0.0) * frame["volume"]
-    money_flow_volume_sum = grouped["money_flow_volume"].rolling(
-        money_flow_window
-    ).sum().reset_index(level=0, drop=True)
-    volume_sum = grouped["volume"].rolling(money_flow_window).sum().reset_index(
-        level=0, drop=True
+    money_flow_volume_sum = (
+        grouped["money_flow_volume"].rolling(money_flow_window).sum().reset_index(level=0, drop=True)
     )
-    frame[f"money_flow_{money_flow_window}"] = money_flow_volume_sum / volume_sum.replace(
-        0, np.nan
-    )
+    volume_sum = grouped["volume"].rolling(money_flow_window).sum().reset_index(level=0, drop=True)
+    frame[f"money_flow_{money_flow_window}"] = money_flow_volume_sum / volume_sum.replace(0, np.nan)
 
-    frame["passes_universe"] = (
-        (frame["history_days"] >= universe_config.min_history_days)
-        & (frame[f"liquidity_{liquidity_window}"] >= universe_config.min_avg_dollar_volume)
+    frame["passes_universe"] = (frame["history_days"] >= universe_config.min_history_days) & (
+        frame[f"liquidity_{liquidity_window}"] >= universe_config.min_avg_dollar_volume
     )
 
     if fundamentals is not None:
@@ -79,9 +72,7 @@ def add_fundamental_factors(frame: pd.DataFrame, fundamentals: pd.DataFrame) -> 
     if "fundamentals_source" not in fund.columns:
         fund["fundamentals_source"] = "yfinance_restated"
     else:
-        fund["fundamentals_source"] = (
-            fund["fundamentals_source"].fillna("").astype(str).str.strip()
-        )
+        fund["fundamentals_source"] = fund["fundamentals_source"].fillna("").astype(str).str.strip()
         fund.loc[fund["fundamentals_source"] == "", "fundamentals_source"] = "yfinance_restated"
     fund = _prefer_point_in_time_fundamentals(fund)
     flow_columns = [
@@ -94,13 +85,11 @@ def add_fundamental_factors(frame: pd.DataFrame, fundamentals: pd.DataFrame) -> 
     ]
     grouped = fund.groupby("ticker", group_keys=False)
     for column in flow_columns:
-        fund[f"{column}_ttm"] = grouped[column].rolling(4, min_periods=4).sum().reset_index(
-            level=0, drop=True
+        fund[f"{column}_ttm"] = (
+            grouped[column].rolling(4, min_periods=4).sum().reset_index(level=0, drop=True)
         )
 
-    fund["free_cash_flow_ttm"] = (
-        fund["operating_cash_flow_ttm"] - fund["capital_expenditure_ttm"]
-    )
+    fund["free_cash_flow_ttm"] = fund["operating_cash_flow_ttm"] - fund["capital_expenditure_ttm"]
     fund["revenue_growth_yoy"] = grouped["revenue_ttm"].pct_change(4)
 
     feature_columns = [
@@ -142,23 +131,15 @@ def add_fundamental_factors(frame: pd.DataFrame, fundamentals: pd.DataFrame) -> 
     enriched = pd.concat(merged_parts, ignore_index=True).sort_values(["ticker", "date"])
     enriched = enriched.reset_index(drop=True)
 
-    enriched["fundamental_age_days"] = (
-        enriched["date"] - enriched["report_date"]
-    ).dt.days
+    enriched["fundamental_age_days"] = (enriched["date"] - enriched["report_date"]).dt.days
     market_cap = enriched["adj_close"] * enriched["shares_outstanding"]
     enriched["market_cap"] = market_cap
     enriched["earnings_yield"] = safe_divide(enriched["net_income_ttm"], market_cap)
     enriched["book_to_market"] = safe_divide(enriched["book_value"], market_cap)
-    enriched["free_cash_flow_yield"] = safe_divide(
-        enriched["free_cash_flow_ttm"], market_cap
-    )
+    enriched["free_cash_flow_yield"] = safe_divide(enriched["free_cash_flow_ttm"], market_cap)
     enriched["roe"] = safe_divide(enriched["net_income_ttm"], enriched["book_value"])
-    enriched["gross_margin"] = safe_divide(
-        enriched["gross_profit_ttm"], enriched["revenue_ttm"]
-    )
-    enriched["debt_to_equity"] = safe_divide(
-        enriched["total_liabilities"], enriched["book_value"]
-    )
+    enriched["gross_margin"] = safe_divide(enriched["gross_profit_ttm"], enriched["revenue_ttm"])
+    enriched["debt_to_equity"] = safe_divide(enriched["total_liabilities"], enriched["book_value"])
     enriched["low_debt_to_equity"] = -enriched["debt_to_equity"]
     return enriched
 
@@ -168,7 +149,9 @@ def _prefer_point_in_time_fundamentals(fundamentals: pd.DataFrame) -> pd.DataFra
     frame["_source_priority"] = np.where(frame["fundamentals_source"] == "sec_pit", 0, 1)
     frame = frame.sort_values(["ticker", "period_end", "_source_priority", "report_date"])
     frame = frame.drop_duplicates(["ticker", "period_end"], keep="first")
-    return frame.drop(columns=["_source_priority"]).sort_values(["ticker", "report_date"]).reset_index(drop=True)
+    return (
+        frame.drop(columns=["_source_priority"]).sort_values(["ticker", "report_date"]).reset_index(drop=True)
+    )
 
 
 def add_macro_features(frame: pd.DataFrame, macro: pd.DataFrame) -> pd.DataFrame:

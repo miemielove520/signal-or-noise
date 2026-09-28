@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
-from pathlib import Path
 import subprocess
+from datetime import UTC, datetime
+from hashlib import sha256
+from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
@@ -14,7 +14,6 @@ import numpy as np
 import pandas as pd
 
 from .json_io import json_safe, write_json
-
 
 RUN_COLUMNS = [
     "run_id",
@@ -112,10 +111,10 @@ VALUATION_COLUMNS = [
 
 def new_audit_identity(prefix: str, now: datetime | None = None) -> tuple[str, str]:
     """A unique run id and its UTC timestamp."""
-    instant = now or datetime.now(timezone.utc)
+    instant = now or datetime.now(UTC)
     if instant.tzinfo is None:
-        instant = instant.replace(tzinfo=timezone.utc)
-    instant = instant.astimezone(timezone.utc)
+        instant = instant.replace(tzinfo=UTC)
+    instant = instant.astimezone(UTC)
     timestamp = instant.isoformat().replace("+00:00", "Z")
     run_id = f"{prefix}_{instant.strftime('%Y%m%dT%H%M%S%fZ')}_{uuid4().hex[:8]}"
     return run_id, timestamp
@@ -123,7 +122,7 @@ def new_audit_identity(prefix: str, now: datetime | None = None) -> tuple[str, s
 
 def utc_timestamp() -> str:
     """The current UTC time in ISO format."""
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def record_rebalance_success(

@@ -8,6 +8,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class ValidationPreset:
     """A named set of walk-forward settings: universe, period, step, history and output folder."""
+
     name: str
     universe: str | None
     all_universes: bool

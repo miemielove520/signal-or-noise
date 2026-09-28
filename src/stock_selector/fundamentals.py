@@ -11,6 +11,7 @@ import numpy as np
 @dataclass(frozen=True)
 class FundamentalContext:
     """Fundamental-quality score (0-100), quality label and the metrics behind it for one ticker."""
+
     ticker: str
     fundamental_score: float
     fundamental_quality: str
@@ -156,9 +157,7 @@ def build_fundamental_context(
         peg_ratio=metrics["peg_ratio"],
         debt_to_equity=metrics["debt_to_equity"],
         source=str(
-            snapshot.get("fundamental_data_source")
-            or snapshot.get("data_source")
-            or "yfinance_restated"
+            snapshot.get("fundamental_data_source") or snapshot.get("data_source") or "yfinance_restated"
         ),
         cash_flow_quality_score=(
             round(float(cash_flow_quality), 2) if cash_flow_quality is not None else None
@@ -179,9 +178,7 @@ def _unknown_context(ticker: str, warning: str) -> FundamentalContext:
         fundamental_score=50.0,
         fundamental_quality="unknown",
         fundamental_quality_zh="未知",
-        fundamental_note=(
-            "Fundamental data is unavailable or too sparse; neutral score 50 is used."
-        ),
+        fundamental_note=("Fundamental data is unavailable or too sparse; neutral score 50 is used."),
         fundamental_note_zh="基本面数据不可用或字段太少；使用中性分数50。",
         fundamental_warning=warning,
         data_coverage=0.0,
@@ -219,9 +216,7 @@ def _trend_fields(trend_context: object | None) -> dict[str, object]:
     }
 
 
-def _derive_depth_metrics(
-    snapshot: dict[str, Any], free_cash_flow: float | None
-) -> dict[str, float | None]:
+def _derive_depth_metrics(snapshot: dict[str, Any], free_cash_flow: float | None) -> dict[str, float | None]:
     gross_margin = _safe_float(snapshot.get("gross_margin"))
     operating_margin = _safe_float(snapshot.get("operating_margin"))
     revenue = _safe_float(snapshot.get("revenue"))
@@ -243,11 +238,7 @@ def _derive_depth_metrics(
         if operating_cash_flow is not None and net_income is not None and net_income > 0
         else None
     )
-    net_debt = (
-        total_debt - total_cash
-        if total_debt is not None and total_cash is not None
-        else None
-    )
+    net_debt = total_debt - total_cash if total_debt is not None and total_cash is not None else None
     net_debt_to_equity = (
         net_debt / equity if net_debt is not None and equity is not None and equity > 0 else None
     )

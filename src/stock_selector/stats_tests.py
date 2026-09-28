@@ -12,21 +12,19 @@ Conventions
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
 from scipy import stats
 
-
 # --------------------------------------------------------------------------
 # Bootstrap for time series
 # --------------------------------------------------------------------------
 
-def stationary_bootstrap_indices(
-    n: int, mean_block: float, rng: np.random.Generator
-) -> np.ndarray:
+
+def stationary_bootstrap_indices(n: int, mean_block: float, rng: np.random.Generator) -> np.ndarray:
     """One resample of ``range(n)`` using the Politis–Romano stationary bootstrap.
 
     Blocks start at random positions and have geometric length with mean
@@ -51,6 +49,7 @@ def stationary_bootstrap_indices(
 @dataclass(frozen=True)
 class BootstrapResult:
     """Point estimate, percentile confidence interval and the share of resamples at or below zero."""
+
     estimate: float
     ci_low: float
     ci_high: float
@@ -117,6 +116,7 @@ def simulate_window_returns(
 # Cross-sectional ranking skill
 # --------------------------------------------------------------------------
 
+
 def information_coefficients(
     frame: pd.DataFrame, score_col: str, return_col: str, date_col: str = "date"
 ) -> pd.Series:
@@ -125,6 +125,7 @@ def information_coefficients(
     The mean IC over dates measures whether higher scores really rank stocks
     better. Each date is one independent observation; stocks within a date are not.
     """
+
     def _ic(group: pd.DataFrame) -> float:
         g = group[[score_col, return_col]].dropna()
         if len(g) < 3 or g[score_col].nunique() < 2 or g[return_col].nunique() < 2:
@@ -137,6 +138,7 @@ def information_coefficients(
 @dataclass(frozen=True)
 class MeanTest:
     """One-sample t-test of mean = 0 together with a sign test on the count of positive values."""
+
     mean: float
     std: float
     n: int
@@ -177,9 +179,11 @@ def bonferroni_t_threshold(n_trials: int, df: int, alpha: float = 0.05) -> float
 # Probability calibration
 # --------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class BrierResult:
     """Brier score of the forecasts, of the constant base-rate forecast, and the skill score between them."""
+
     brier: float
     reference_brier: float  # always predicting the base rate
     skill_score: float  # 1 - brier / reference; < 0 = worse than the base rate
@@ -225,20 +229,23 @@ def reliability_table(
     for interval, g in frame.groupby("bin", observed=True):
         k, n = int(g["y"].sum()), len(g)
         lo, hi = wilson_interval(k, n)
-        rows.append({
-            "bin": str(interval),
-            "n": n,
-            "mean_predicted": float(g["p"].mean()),
-            "observed": k / n,
-            "ci_low": lo,
-            "ci_high": hi,
-        })
+        rows.append(
+            {
+                "bin": str(interval),
+                "n": n,
+                "mean_predicted": float(g["p"].mean()),
+                "observed": k / n,
+                "ci_low": lo,
+                "ci_high": hi,
+            }
+        )
     return pd.DataFrame(rows)
 
 
 # --------------------------------------------------------------------------
 # Sample-size hygiene
 # --------------------------------------------------------------------------
+
 
 def duplication_factor(frame: pd.DataFrame, key_cols: list[str]) -> float:
     """Rows per unique key. > 1 means observations are counted more than once."""

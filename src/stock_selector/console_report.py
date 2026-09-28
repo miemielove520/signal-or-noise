@@ -61,9 +61,7 @@ def _print_data_sources(result: RealTickerAnalysisResult) -> None:
     for symbol, provider in result.data_sources.items():
         print(f"- {symbol}: {provider}")
     warnings = [
-        f"{symbol}: {'; '.join(items)}"
-        for symbol, items in result.data_source_warnings.items()
-        if items
+        f"{symbol}: {'; '.join(items)}" for symbol, items in result.data_source_warnings.items() if items
     ]
     if warnings:
         print("Data source warnings / 数据源提示")
@@ -79,10 +77,7 @@ def _print_data_source_readiness(readiness: DataReadinessReport) -> None:
         f"{readiness.overall_status} / {readiness.overall_status_zh}, "
         f"score={readiness.overall_score:.2f}"
     )
-    print(
-        "Repair priority / 修复优先级: "
-        f"{readiness.repair_priority} / {readiness.repair_priority_zh}"
-    )
+    print(f"Repair priority / 修复优先级: {readiness.repair_priority} / {readiness.repair_priority_zh}")
     print(
         "Price validation / 价格源验证: "
         f"{readiness.source_validation.get('status', 'unknown')} / "
@@ -138,10 +133,7 @@ def _print_priority_blockers(first: pd.Series) -> None:
 def _print_horizon_alignment(first: pd.Series) -> None:
     print()
     print("Horizon alignment / 周期一致性")
-    print(
-        "Alignment / 一致性: "
-        f"{first.horizon_alignment_label} / {first.horizon_alignment_label_zh}"
-    )
+    print(f"Alignment / 一致性: {first.horizon_alignment_label} / {first.horizon_alignment_label_zh}")
     print(f"Alignment score / 一致性分数: {first.horizon_alignment_score:.2f}")
     print(
         "Horizon counts / 周期数量: "
@@ -267,8 +259,7 @@ def _print_threshold_calibration(screening_focus: pd.Series) -> None:
         f"{screening_focus.calibration_action} / {screening_focus.calibration_action_zh}"
     )
     print(
-        "Market regime / 市场状态分层: "
-        f"{screening_focus.market_regime} / {screening_focus.market_regime_zh}"
+        f"Market regime / 市场状态分层: {screening_focus.market_regime} / {screening_focus.market_regime_zh}"
     )
     print(
         "Market regime adjustment / 市场状态门槛调整: "
@@ -280,8 +271,7 @@ def _print_threshold_calibration(screening_focus: pd.Series) -> None:
     )
     print(f"Market regime note / 市场状态说明: {screening_focus.market_regime_note_zh}")
     print(
-        "Recommended signal threshold / 建议信号分门槛: "
-        f"{screening_focus.recommended_signal_threshold:.2f}"
+        f"Recommended signal threshold / 建议信号分门槛: {screening_focus.recommended_signal_threshold:.2f}"
     )
     print(
         "Recommended confidence threshold / 建议置信度门槛: "
@@ -315,8 +305,7 @@ def _print_calibrated_screening(screening_focus: pd.Series) -> None:
         f"{screening_focus.calibrated_high_probability_score:.2f}"
     )
     print(
-        "Calibrated gate result / 校准后门槛结果: "
-        f"{screening_focus.calibrated_quality_gate_fail_reasons_zh}"
+        f"Calibrated gate result / 校准后门槛结果: {screening_focus.calibrated_quality_gate_fail_reasons_zh}"
     )
 
 
@@ -358,8 +347,12 @@ def _print_calibrated_watchlist_plan(screening_focus: pd.Series) -> None:
         "Calibrated trigger price / 校准后重新检查触发价: "
         f"{screening_focus.calibrated_watchlist_trigger_price:.2f}"
     )
-    print(f"Calibrated missing items / 校准后未达标条件: {screening_focus.calibrated_watchlist_missing_items_zh}")
-    print(f"Calibrated re-check reason / 校准后重新检查原因: {screening_focus.calibrated_watchlist_recheck_reason_zh}")
+    print(
+        f"Calibrated missing items / 校准后未达标条件: {screening_focus.calibrated_watchlist_missing_items_zh}"
+    )
+    print(
+        f"Calibrated re-check reason / 校准后重新检查原因: {screening_focus.calibrated_watchlist_recheck_reason_zh}"
+    )
 
 
 def _print_watchlist_plan(screening_focus: pd.Series) -> None:
@@ -395,8 +388,12 @@ def _print_risk_breakdown(first: pd.Series) -> None:
         f"{first.relative_strength_risk_level} / {first.relative_strength_risk_level_zh}"
     )
     print(f"Sector risk / 板块风险: {first.sector_risk_level} / {first.sector_risk_level_zh}")
-    print(f"Fundamental risk / 基本面风险: {first.fundamental_risk_level} / {first.fundamental_risk_level_zh}")
-    print(f"Event risk / 事件风险: {first.event_risk_breakdown_level} / {first.event_risk_breakdown_level_zh}")
+    print(
+        f"Fundamental risk / 基本面风险: {first.fundamental_risk_level} / {first.fundamental_risk_level_zh}"
+    )
+    print(
+        f"Event risk / 事件风险: {first.event_risk_breakdown_level} / {first.event_risk_breakdown_level_zh}"
+    )
     print(
         "News sentiment risk / 新闻情绪风险: "
         f"{first.sentiment_risk_breakdown_level} / {first.sentiment_risk_breakdown_level_zh}"
@@ -405,7 +402,9 @@ def _print_risk_breakdown(first: pd.Series) -> None:
         "Analyst expectation risk / 分析师预期风险: "
         f"{first.analyst_risk_breakdown_level} / {first.analyst_risk_breakdown_level_zh}"
     )
-    print(f"Valuation risk / 估值风险: {first.valuation_risk_breakdown_level} / {first.valuation_risk_breakdown_level_zh}")
+    print(
+        f"Valuation risk / 估值风险: {first.valuation_risk_breakdown_level} / {first.valuation_risk_breakdown_level_zh}"
+    )
     print(f"Data risk / 数据风险: {first.data_risk_level} / {first.data_risk_level_zh}")
     print(f"Risk note / 风险说明: {first.risk_breakdown_note_zh}")
 
@@ -448,8 +447,7 @@ def _print_data_quality(first: pd.Series) -> None:
     )
     print(f"Sector data / 板块数据: {first.sector_data_status} / {first.sector_data_status_zh}")
     print(
-        "Fundamental data / 基本面数据: "
-        f"{first.fundamental_data_status} / {first.fundamental_data_status_zh}"
+        f"Fundamental data / 基本面数据: {first.fundamental_data_status} / {first.fundamental_data_status_zh}"
     )
     print(f"Event data / 事件数据: {first.event_data_status} / {first.event_data_status_zh}")
     print(
@@ -484,10 +482,7 @@ def _print_sector_context(first: pd.Series, result: RealTickerAnalysisResult) ->
         if not target_peer_row.empty:
             target_peer = target_peer_row.iloc[0]
             print("Peer comparison / 同业比较")
-            print(
-                f"Peer rank / 同业排名: {int(target_peer.peer_rank)} "
-                f"of {len(result.peer_comparison)}"
-            )
+            print(f"Peer rank / 同业排名: {int(target_peer.peer_rank)} of {len(result.peer_comparison)}")
             print(f"Peer score / 同业高概率分数: {target_peer.high_probability_score:.2f}")
             print(
                 "Peer screening / 同业筛选结论: "
@@ -522,10 +517,7 @@ def _print_sector_context(first: pd.Series, result: RealTickerAnalysisResult) ->
             print()
     print("Fundamental quality / 基本面质量")
     print(f"Fundamental score / 基本面分数: {first.fundamental_score:.2f}")
-    print(
-        f"Quality / 质量: {first.fundamental_quality} / "
-        f"{first.fundamental_quality_zh}"
-    )
+    print(f"Quality / 质量: {first.fundamental_quality} / {first.fundamental_quality_zh}")
     print(f"Note / 说明: {first.fundamental_note_zh}")
 
 
@@ -567,15 +559,9 @@ def _print_news_sentiment(first: pd.Series) -> None:
     print("News sentiment / 新闻情绪")
     print(f"Sentiment score / 情绪分数: {first.sentiment_score:.2f}")
     print(f"Sentiment label / 情绪标签: {first.sentiment_label} / {first.sentiment_label_zh}")
-    print(
-        "Sentiment risk / 情绪风险: "
-        f"{first.sentiment_risk_level} / {first.sentiment_risk_level_zh}"
-    )
+    print(f"Sentiment risk / 情绪风险: {first.sentiment_risk_level} / {first.sentiment_risk_level_zh}")
     print(f"Block new entries / 是否阻止新入场: {bool(first.sentiment_block_new_entries)}")
-    print(
-        "Positive news level / 利好等级: "
-        f"{first.positive_news_level} / {first.positive_news_level_zh}"
-    )
+    print(f"Positive news level / 利好等级: {first.positive_news_level} / {first.positive_news_level_zh}")
     print(f"Positive news score / 利好加分: {first.positive_news_score:.2f}")
     print(
         "Positive news drivers / 利好触发项: "
@@ -593,18 +579,19 @@ def _print_news_sentiment(first: pd.Series) -> None:
 def _print_event_risk(first: pd.Series) -> None:
     print()
     print("Event risk / 事件风险")
-    print(
-        f"Risk level / 风险等级: {first.event_risk_level} / "
-        f"{first.event_risk_level_zh}"
-    )
+    print(f"Risk level / 风险等级: {first.event_risk_level} / {first.event_risk_level_zh}")
     print(f"Event window / 事件窗口: {first.event_window} / {first.event_window_zh}")
     print(f"Block new entries / 是否阻止新入场: {bool(first.event_block_new_entries)}")
     print(f"Cooldown active / 财报后冷却是否生效: {bool(first.event_cooldown_active)}")
     print(f"Next earnings / 下一次财报: {first.next_earnings_date or 'N/A'}")
-    days_until = "N/A" if first.days_until_earnings != first.days_until_earnings else int(first.days_until_earnings)
+    days_until = (
+        "N/A" if first.days_until_earnings != first.days_until_earnings else int(first.days_until_earnings)
+    )
     print(f"Days until earnings / 距离财报天数: {days_until}")
     print(f"Last earnings / 上一次财报: {first.last_earnings_date or 'N/A'}")
-    days_since = "N/A" if first.days_since_earnings != first.days_since_earnings else int(first.days_since_earnings)
+    days_since = (
+        "N/A" if first.days_since_earnings != first.days_since_earnings else int(first.days_since_earnings)
+    )
     print(f"Days since earnings / 距离上次财报天数: {days_since}")
     print(f"Note / 说明: {first.event_risk_note_zh}")
 
@@ -642,8 +629,7 @@ def _print_entry_backtest(first: pd.Series, result: RealTickerAnalysisResult) ->
     print("Entry backtest / 买点回测")
     print("How to read / 怎么看:")
     print(
-        "execution model / 执行模型: "
-        f"{first.backtest_execution_model} / {first.backtest_execution_model_zh}"
+        f"execution model / 执行模型: {first.backtest_execution_model} / {first.backtest_execution_model_zh}"
     )
     print(f"slippage / 滑点: {_format_optional_percent(first.backtest_slippage_pct)}")
     print(
@@ -722,10 +708,7 @@ def _print_signal_summary(result: RealTickerAnalysisResult) -> None:
             f"samples={_format_optional_count(signal_review.get('review_learning_sample_count'))}, "
             f"adjustment={_format_signed_number(signal_review.get('review_learning_adjustment'))}"
         )
-        print(
-            "Review learning note / 复盘学习说明: "
-            f"{signal_review.get('review_learning_note_zh') or 'N/A'}"
-        )
+        print(f"Review learning note / 复盘学习说明: {signal_review.get('review_learning_note_zh') or 'N/A'}")
         for window in (5, 20, 60):
             print(
                 f"{window}d review / {window}日复盘: "

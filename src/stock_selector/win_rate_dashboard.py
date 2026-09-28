@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import pandas as pd
 
 from .json_io import dataframe_records
-
 
 DEFAULT_DASHBOARD_WINDOWS = (5, 20, 60)
 
@@ -221,10 +220,7 @@ def render_profile_action_recommendations(recommendations: pd.DataFrame) -> str:
     lines = [
         "# Profile Action Recommendations / 分类规则行动建议",
         "",
-        (
-            "This section translates profile health into concrete next steps for each "
-            "screening profile."
-        ),
+        ("This section translates profile health into concrete next steps for each screening profile."),
         "本区块把分类规则健康状态转成每个规则组的具体下一步。",
         "",
     ]
@@ -282,9 +278,7 @@ def build_profile_blocker_dashboard(events: pd.DataFrame, top_n: int = 5) -> pd.
                     "blocker_zh": reason_zh,
                     "occurrence_count": int(count),
                     "profile_event_count": profile_event_count,
-                    "blocker_rate": float(count / profile_event_count)
-                    if profile_event_count
-                    else np.nan,
+                    "blocker_rate": float(count / profile_event_count) if profile_event_count else np.nan,
                     "blocker_category": category,
                     "blocker_category_zh": category_zh,
                     "recommended_fix": fix,
@@ -293,9 +287,13 @@ def build_profile_blocker_dashboard(events: pd.DataFrame, top_n: int = 5) -> pd.
             )
     if not rows:
         return pd.DataFrame(columns=columns)
-    return pd.DataFrame(rows, columns=columns).sort_values(
-        ["screening_profile", "blocker_rank"],
-    ).reset_index(drop=True)
+    return (
+        pd.DataFrame(rows, columns=columns)
+        .sort_values(
+            ["screening_profile", "blocker_rank"],
+        )
+        .reset_index(drop=True)
+    )
 
 
 def render_profile_blocker_dashboard(blockers: pd.DataFrame) -> str:
@@ -303,10 +301,7 @@ def render_profile_blocker_dashboard(blockers: pd.DataFrame) -> str:
     lines = [
         "# Profile Blocker Dashboard / 分类规则卡点面板",
         "",
-        (
-            "This dashboard summarizes the most common quality-gate blockers for each "
-            "screening profile."
-        ),
+        ("This dashboard summarizes the most common quality-gate blockers for each screening profile."),
         "这个面板汇总每个分类规则最常见的质量门槛卡点。",
         "",
     ]
@@ -578,11 +573,7 @@ def _split_reasons(value: object) -> list[str]:
 
 def _is_non_blocking_reason(reason: str) -> bool:
     text = reason.lower().strip()
-    return (
-        text == ""
-        or "all strict quality gates passed" in text
-        or text in {"none", "nan"}
-    )
+    return text == "" or "all strict quality gates passed" in text or text in {"none", "nan"}
 
 
 def _blocker_fix(reason: str) -> tuple[str, str, str, str]:
@@ -886,7 +877,9 @@ def render_win_rate_dashboard(dashboard: dict[str, pd.DataFrame]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def _threshold_recommendation_rows(gate_row: object, screening_config: object | None) -> list[dict[str, object]]:
+def _threshold_recommendation_rows(
+    gate_row: object, screening_config: object | None
+) -> list[dict[str, object]]:
     action = str(getattr(gate_row, "deployment_gate_action", ""))
     if action == "allow_high_probability_filter":
         return [
@@ -937,7 +930,13 @@ def _threshold_recommendation_rows(gate_row: object, screening_config: object | 
                 ("relative_strength_min", 5.0, "up", "raise_relative_strength", "提高相对强弱门槛"),
                 ("market_score_min", 5.0, "up", "raise_market_support", "提高大盘环境门槛"),
                 ("backtest_win_rate_min", 0.02, "up", "raise_backtest_win_rate", "提高买点回测胜率要求"),
-                ("high_probability_target_score", 3.0, "up", "raise_high_probability_score", "提高高概率分数要求"),
+                (
+                    "high_probability_target_score",
+                    3.0,
+                    "up",
+                    "raise_high_probability_score",
+                    "提高高概率分数要求",
+                ),
             ],
             reason="historical win rate is below the required level",
             reason_zh="历史胜率低于要求",
@@ -948,7 +947,13 @@ def _threshold_recommendation_rows(gate_row: object, screening_config: object | 
             gate_row,
             screening_config,
             [
-                ("high_probability_target_score", 3.0, "up", "raise_high_probability_score", "提高高概率分数要求"),
+                (
+                    "high_probability_target_score",
+                    3.0,
+                    "up",
+                    "raise_high_probability_score",
+                    "提高高概率分数要求",
+                ),
                 ("backtest_win_rate_min", 0.02, "up", "raise_backtest_win_rate", "提高买点回测胜率要求"),
                 ("signal_score_min", 2.0, "up", "raise_signal_quality", "提高信号质量门槛"),
             ],
@@ -961,9 +966,21 @@ def _threshold_recommendation_rows(gate_row: object, screening_config: object | 
             gate_row,
             screening_config,
             [
-                ("max_backtest_stop_hit_rate", 0.05, "down", "lower_stop_hit_tolerance", "降低止损命中率容忍度"),
+                (
+                    "max_backtest_stop_hit_rate",
+                    0.05,
+                    "down",
+                    "lower_stop_hit_tolerance",
+                    "降低止损命中率容忍度",
+                ),
                 ("backtest_trust_score_min", 5.0, "up", "raise_backtest_trust", "提高回测可信度门槛"),
-                ("high_probability_target_score", 3.0, "up", "raise_high_probability_score", "提高高概率分数要求"),
+                (
+                    "high_probability_target_score",
+                    3.0,
+                    "up",
+                    "raise_high_probability_score",
+                    "提高高概率分数要求",
+                ),
             ],
             reason="historical worst return is too large",
             reason_zh="历史最差亏损过大",
@@ -1290,7 +1307,9 @@ def _metric_row(returns: pd.Series, window: int) -> dict[str, object]:
     negative_count = int(len(losers))
     avg_gain = float(winners.mean()) if positive_count else np.nan
     avg_loss = float(losers.mean()) if negative_count else np.nan
-    payoff_ratio = avg_gain / abs(avg_loss) if _is_finite(avg_gain) and _is_finite(avg_loss) and avg_loss < 0 else np.nan
+    payoff_ratio = (
+        avg_gain / abs(avg_loss) if _is_finite(avg_gain) and _is_finite(avg_loss) and avg_loss < 0 else np.nan
+    )
     win_rate = float(positive_count / sample_count)
     avg_return = float(returns.mean())
     sample_quality, sample_quality_zh = _sample_quality(sample_count)

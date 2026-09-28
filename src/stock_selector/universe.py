@@ -9,7 +9,6 @@ import pandas as pd
 
 from .real_data import normalize_ticker
 
-
 BUILT_IN_UNIVERSES = {
     "mega-cap-tech": [
         "AAPL",
@@ -252,6 +251,7 @@ BUILT_IN_UNIVERSES["sector-core"] = list(
 @dataclass(frozen=True)
 class HistoricalUniverseMembership:
     """Point-in-time universe records (start, end and delisting dates) used to keep only signals from dates when a ticker was actually a member."""
+
     records: pd.DataFrame
     source_path: Path | None = None
 
@@ -433,9 +433,7 @@ def survivorship_report_without_historical_membership() -> dict[str, object]:
         "warnings": [
             "No historical universe membership file was supplied; validation may have survivorship bias."
         ],
-        "warnings_zh": [
-            "没有提供历史成分股文件；验证结果可能存在幸存者偏差。"
-        ],
+        "warnings_zh": ["没有提供历史成分股文件；验证结果可能存在幸存者偏差。"],
     }
 
 

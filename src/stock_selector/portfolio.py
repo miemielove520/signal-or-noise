@@ -31,9 +31,7 @@ def build_equal_weight_portfolio(
     rebalance_dates = select_rebalance_dates(scored["date"], rebalance_frequency)
     candidates = scored[scored["date"].isin(rebalance_dates)].copy()
     candidates = candidates.dropna(subset=["score"])
-    candidates["rank"] = candidates.groupby("date")["score"].rank(
-        ascending=False, method="first"
-    )
+    candidates["rank"] = candidates.groupby("date")["score"].rank(ascending=False, method="first")
     selected = candidates[candidates["rank"] <= top_n].copy()
     if selected.empty:
         return pd.DataFrame(columns=["date", "ticker", "weight", "score", "rank"])
@@ -58,9 +56,7 @@ def build_risk_managed_portfolio(
     rebalance_dates = select_rebalance_dates(scored["date"], rebalance_frequency)
     candidates = scored[scored["date"].isin(rebalance_dates)].copy()
     candidates = candidates.dropna(subset=["score"])
-    candidates["rank"] = candidates.groupby("date")["score"].rank(
-        ascending=False, method="first"
-    )
+    candidates["rank"] = candidates.groupby("date")["score"].rank(ascending=False, method="first")
 
     returns = prices.sort_values(["ticker", "date"]).copy()
     returns["asset_return"] = returns.groupby("ticker")["adj_close"].pct_change()

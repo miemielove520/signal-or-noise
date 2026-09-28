@@ -11,6 +11,7 @@ import pandas as pd
 @dataclass(frozen=True)
 class MarketContext:
     """Market-background score (0-100) and status (supportive / neutral / weak) with the SPY, QQQ and VIX components."""
+
     market_score: float
     market_status: str
     note: str
@@ -24,6 +25,7 @@ class MarketContext:
 @dataclass(frozen=True)
 class RelativeStrengthContext:
     """A ticker's return over one lookback window compared with SPY and QQQ."""
+
     score: float
     note: str
     note_zh: str
@@ -35,6 +37,7 @@ class RelativeStrengthContext:
 @dataclass(frozen=True)
 class SectorContext:
     """The matched sector ETF's trend and the ticker's return relative to that ETF."""
+
     sector: str
     industry: str
     sector_etf: str

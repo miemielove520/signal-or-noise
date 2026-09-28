@@ -257,9 +257,7 @@ class UnpricedHoldingTests(unittest.TestCase):
                 {"ticker": "ANET", "quantity": 1.0818},  # 持仓，但今天没有报价
             ]
         )
-        targets = pd.DataFrame(
-            [{"date": pd.Timestamp("2026-07-10"), "ticker": "NEWT", "weight": 0.2}]
-        )
+        targets = pd.DataFrame([{"date": pd.Timestamp("2026-07-10"), "ticker": "NEWT", "weight": 0.2}])
         only_target_prices = pd.DataFrame(
             [{"date": pd.Timestamp("2026-07-10"), "ticker": "NEWT", "adj_close": 50.0}]
         )
@@ -345,9 +343,7 @@ class CliPriceTableTests(unittest.TestCase):
                 {"date": "2026-07-10", "ticker": "BBB", "latest_price": 20.0},
             ]
         )
-        targets = pd.DataFrame(
-            [{"date": "2026-07-10", "ticker": "BBB", "latest_price": 21.0, "weight": 0.2}]
-        )
+        targets = pd.DataFrame([{"date": "2026-07-10", "ticker": "BBB", "latest_price": 21.0, "weight": 0.2}])
 
         table = cli._load_prices(self._args(), analysis, targets, state=None)
 
@@ -393,17 +389,24 @@ class CliPriceTableTests(unittest.TestCase):
         analysis = pd.DataFrame([{"date": "2026-07-10", "ticker": "NEWT", "latest_price": 50.0}])
         state = pd.DataFrame([{"ticker": "GONE", "quantity": 3.0}])
         table = cli._load_prices(
-            self._args(), analysis, analysis.iloc[0:0], state=state,
+            self._args(),
+            analysis,
+            analysis.iloc[0:0],
+            state=state,
             fetch_close_fn=lambda ticker: None,
         )
-        self.assertNotIn("GONE", set(table["ticker"]))  # 补价失败：跳过并警告（引擎侧会亮 unpriced_positions）
+        self.assertNotIn(
+            "GONE", set(table["ticker"])
+        )  # 补价失败：跳过并警告（引擎侧会亮 unpriced_positions）
 
 
 class SpreadCostTests(unittest.TestCase):
     def test_buy_fills_above_close_by_half_spread(self) -> None:
         import pandas as pd
+
         from stock_selector.config import PaperTradingConfig
         from stock_selector.paper import _rebalance_to_targets
+
         targets = pd.DataFrame({"ticker": ["AAA"], "target_weight": [1.0]})
         prices = pd.DataFrame({"ticker": ["AAA"], "price": [100.0]})
         state = pd.DataFrame({"ticker": ["CASH"], "quantity": [1000.0]})
@@ -415,7 +418,9 @@ class SpreadCostTests(unittest.TestCase):
         self.assertAlmostEqual(row["close_price"], 100.0, places=4)
         self.assertGreater(float(row["spread_cost"]), 0.0)
         self.assertEqual(float(row["cash_before"]), 1000.0)
-        self.assertAlmostEqual(float(row["cash_after"]), float(post.loc[post["ticker"] == "CASH", "quantity"].iloc[0]))
+        self.assertAlmostEqual(
+            float(row["cash_after"]), float(post.loc[post["ticker"] == "CASH", "quantity"].iloc[0])
+        )
         self.assertAlmostEqual(
             float(row["total_transaction_cost"]),
             float(row["spread_cost"] + row["slippage_cost"] + row["commission_cost"]),

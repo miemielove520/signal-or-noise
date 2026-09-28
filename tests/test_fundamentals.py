@@ -53,7 +53,6 @@ class FundamentalContextTest(unittest.TestCase):
         self.assertLessEqual(context.fundamental_score, 35)
         self.assertEqual(context.fundamental_quality, "weak")
 
-
     def test_weak_cash_conversion_lowers_score_vs_strong(self) -> None:
         base = {
             "data_source": "test",

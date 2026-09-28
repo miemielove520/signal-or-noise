@@ -12,7 +12,6 @@ from ..analysis.screening import _entry_evidence_profile
 from ..real_data import normalize_ticker
 from ..screening_config import ScreeningConfig
 from ..universe import HistoricalUniverseMembership
-
 from ._common import (
     _clamp,
     _format_optional_date,
@@ -61,14 +60,10 @@ def _event_row(
         else np.nan,
         "calibrated_probability_level": analysis_row.calibrated_probability_level,
         "calibrated_probability_level_zh": analysis_row.calibrated_probability_level_zh,
-        "calibrated_probability_confidence": float(
-            analysis_row.calibrated_probability_confidence
-        )
+        "calibrated_probability_confidence": float(analysis_row.calibrated_probability_confidence)
         if _is_finite(analysis_row.calibrated_probability_confidence)
         else np.nan,
-        "calibrated_probability_confidence_level": (
-            analysis_row.calibrated_probability_confidence_level
-        ),
+        "calibrated_probability_confidence_level": (analysis_row.calibrated_probability_confidence_level),
         "calibrated_probability_confidence_level_zh": (
             analysis_row.calibrated_probability_confidence_level_zh
         ),
@@ -114,12 +109,8 @@ def _event_row(
         "validation_market_regime_zh": market_regime["validation_market_regime_zh"],
         "validation_spy_trend_score": market_regime["validation_spy_trend_score"],
         "validation_qqq_trend_score": market_regime["validation_qqq_trend_score"],
-        "validation_benchmark_60d_return": market_regime[
-            "validation_benchmark_60d_return"
-        ],
-        "validation_benchmark_20d_volatility": market_regime[
-            "validation_benchmark_20d_volatility"
-        ],
+        "validation_benchmark_60d_return": market_regime["validation_benchmark_60d_return"],
+        "validation_benchmark_20d_volatility": market_regime["validation_benchmark_20d_volatility"],
         "point_in_time_universe_member": membership_record is not None,
         "universe_start_date": _format_optional_date((membership_record or {}).get("start_date")),
         "universe_end_date": _format_optional_date((membership_record or {}).get("end_date")),
@@ -222,8 +213,7 @@ def _apply_pooled_entry_backtest(events: pd.DataFrame, config: ScreeningConfig) 
     }
     group_columns = ["screening_profile", "horizon", "screening_backtest_entry_type"]
     pooled_metrics = {
-        keys: _pooled_backtest_metrics(group)
-        for keys, group in result.groupby(group_columns, dropna=False)
+        keys: _pooled_backtest_metrics(group) for keys, group in result.groupby(group_columns, dropna=False)
     }
 
     for index, row in result.iterrows():
@@ -273,12 +263,20 @@ def _apply_pooled_entry_backtest(events: pd.DataFrame, config: ScreeningConfig) 
                 win_rate=float(pooled["win_rate"]),
                 average_return=float(pooled["average_return"]),
             )
-            result.at[index, "pooled_quality_gate_fail_reasons"] = "all strict quality gates passed with pooled entry backtest"
-            result.at[index, "pooled_quality_gate_fail_reasons_zh"] = "使用同类聚合买点回测后，所有严格质量门槛通过"
+            result.at[index, "pooled_quality_gate_fail_reasons"] = (
+                "all strict quality gates passed with pooled entry backtest"
+            )
+            result.at[index, "pooled_quality_gate_fail_reasons_zh"] = (
+                "使用同类聚合买点回测后，所有严格质量门槛通过"
+            )
             result.at[index, "quality_gate_passed"] = True
             result.at[index, "validation_bucket"] = "high_probability"
-            result.at[index, "quality_gate_fail_reasons"] = result.at[index, "pooled_quality_gate_fail_reasons"]
-            result.at[index, "quality_gate_fail_reasons_zh"] = result.at[index, "pooled_quality_gate_fail_reasons_zh"]
+            result.at[index, "quality_gate_fail_reasons"] = result.at[
+                index, "pooled_quality_gate_fail_reasons"
+            ]
+            result.at[index, "quality_gate_fail_reasons_zh"] = result.at[
+                index, "pooled_quality_gate_fail_reasons_zh"
+            ]
             result.at[index, "screening_backtest_trade_count"] = int(pooled["trade_count"])
             result.at[index, "screening_backtest_win_rate"] = float(pooled["win_rate"])
             result.at[index, "screening_backtest_average_return"] = float(pooled["average_return"])
@@ -360,17 +358,17 @@ def build_validation_market_regime_lookup(prices: pd.DataFrame) -> dict[pd.Times
     benchmark = benchmark.sort_values("date").drop_duplicates("date", keep="last")
     benchmark["benchmark_return"] = benchmark["adj_close"].pct_change()
     benchmark["benchmark_60d_return"] = benchmark["adj_close"].pct_change(60)
-    benchmark["benchmark_20d_volatility"] = (
-        benchmark["benchmark_return"].rolling(20).std() * np.sqrt(252)
-    )
+    benchmark["benchmark_20d_volatility"] = benchmark["benchmark_return"].rolling(20).std() * np.sqrt(252)
     benchmark["benchmark_ma_200"] = benchmark["adj_close"].rolling(200).mean()
 
     if qqq.empty:
         qqq_trend = pd.DataFrame(columns=["date", "qqq_trend_score"])
     else:
         qqq_trend = _benchmark_trend_frame(qqq, "qqq_trend_score")
-    spy_trend = _benchmark_trend_frame(spy, "spy_trend_score") if not spy.empty else pd.DataFrame(
-        columns=["date", "spy_trend_score"]
+    spy_trend = (
+        _benchmark_trend_frame(spy, "spy_trend_score")
+        if not spy.empty
+        else pd.DataFrame(columns=["date", "spy_trend_score"])
     )
     regime_frame = benchmark.merge(spy_trend, on="date", how="left").merge(
         qqq_trend,
@@ -390,15 +388,9 @@ def build_validation_market_regime_lookup(prices: pd.DataFrame) -> dict[pd.Times
         lookup[date] = {
             "validation_market_regime": regime,
             "validation_market_regime_zh": regime_zh,
-            "validation_spy_trend_score": _safe_float(
-                getattr(row, "spy_trend_score", np.nan)
-            ),
-            "validation_qqq_trend_score": _safe_float(
-                getattr(row, "qqq_trend_score", np.nan)
-            ),
-            "validation_benchmark_60d_return": _safe_float(
-                getattr(row, "benchmark_60d_return", np.nan)
-            ),
+            "validation_spy_trend_score": _safe_float(getattr(row, "spy_trend_score", np.nan)),
+            "validation_qqq_trend_score": _safe_float(getattr(row, "qqq_trend_score", np.nan)),
+            "validation_benchmark_60d_return": _safe_float(getattr(row, "benchmark_60d_return", np.nan)),
             "validation_benchmark_20d_volatility": _safe_float(
                 getattr(row, "benchmark_20d_volatility", np.nan)
             ),
@@ -473,7 +465,11 @@ def _normalize_prices(prices: pd.DataFrame) -> pd.DataFrame:
     for column in numeric_columns:
         if column in frame.columns:
             frame[column] = pd.to_numeric(frame[column], errors="coerce")
-    return frame.dropna(subset=["date", "ticker", "adj_close"]).sort_values(["ticker", "date"]).reset_index(drop=True)
+    return (
+        frame.dropna(subset=["date", "ticker", "adj_close"])
+        .sort_values(["ticker", "date"])
+        .reset_index(drop=True)
+    )
 
 
 def _validation_market_context() -> SimpleNamespace:

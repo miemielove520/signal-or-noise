@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 
 from ..screening_config import ScreeningThresholds
-
 from ._common import (
     _append_reason,
     _clamp_score,
@@ -59,10 +58,18 @@ def _high_probability_screening_for_row(
     trade_plan_quality = _trade_plan_quality_filter_result(row)
     # Every strict quality gate as (failed?, reason, reason_zh); order is the report order.
     gates = [
-        (float(row["data_quality_score"]) < thresholds.data_quality_min, "data quality insufficient", "数据质量不足"),
+        (
+            float(row["data_quality_score"]) < thresholds.data_quality_min,
+            "data quality insufficient",
+            "数据质量不足",
+        ),
         (float(row["confidence_score"]) < thresholds.confidence_min, "confidence too low", "置信度不足"),
         (str(row["overall_risk_level"]) == "high", "overall risk high", "综合风险过高"),
-        (float(row["market_score"]) < thresholds.market_score_min, "market not supportive", "大盘环境不够支持"),
+        (
+            float(row["market_score"]) < thresholds.market_score_min,
+            "market not supportive",
+            "大盘环境不够支持",
+        ),
         (
             float(row["relative_strength_score"]) < thresholds.relative_strength_min,
             "relative strength weak",
@@ -106,33 +113,55 @@ def _high_probability_screening_for_row(
         ),
         (not liquidity_filter["passed"], str(liquidity_filter["reason"]), str(liquidity_filter["reason_zh"])),
         (not entry_readiness["passed"], str(entry_readiness["reason"]), str(entry_readiness["reason_zh"])),
-        (not trade_plan_quality["passed"], str(trade_plan_quality["reason"]), str(trade_plan_quality["reason_zh"])),
         (
-            str(row["horizon"]) == "long" and float(row["fundamental_score"]) < thresholds.long_fundamental_score_min,
+            not trade_plan_quality["passed"],
+            str(trade_plan_quality["reason"]),
+            str(trade_plan_quality["reason_zh"]),
+        ),
+        (
+            str(row["horizon"]) == "long"
+            and float(row["fundamental_score"]) < thresholds.long_fundamental_score_min,
             "long-term fundamental score too low",
             "长期基本面分数不足",
         ),
         (
-            str(row["horizon"]) in {"medium", "long"} and float(row["sector_score"]) < thresholds.medium_long_sector_score_min,
+            str(row["horizon"]) in {"medium", "long"}
+            and float(row["sector_score"]) < thresholds.medium_long_sector_score_min,
             "sector context weak",
             "板块环境偏弱",
         ),
         (str(row["event_risk_level"]) == "high", "event risk high", "事件风险过高"),
-        (_coerce_bool(row.get("event_block_new_entries", False)), "event window blocks new entries", "事件窗口阻止新入场"),
-        (str(row.get("sentiment_risk_level", "unknown")) == "high", "news sentiment risk high", "新闻情绪风险过高"),
+        (
+            _coerce_bool(row.get("event_block_new_entries", False)),
+            "event window blocks new entries",
+            "事件窗口阻止新入场",
+        ),
+        (
+            str(row.get("sentiment_risk_level", "unknown")) == "high",
+            "news sentiment risk high",
+            "新闻情绪风险过高",
+        ),
         (
             _coerce_bool(row.get("sentiment_block_new_entries", False)),
             "news sentiment blocks new entries",
             "新闻情绪阻止新入场",
         ),
-        (str(row.get("analyst_risk_level", "unknown")) == "high", "analyst expectation risk high", "分析师预期风险过高"),
+        (
+            str(row.get("analyst_risk_level", "unknown")) == "high",
+            "analyst expectation risk high",
+            "分析师预期风险过高",
+        ),
         (
             _coerce_bool(row.get("analyst_block_new_entries", False)),
             "analyst expectations block new entries",
             "分析师预期阻止新入场",
         ),
         (str(row.get("valuation_risk_level", "unknown")) == "high", "valuation risk high", "估值风险过高"),
-        (_coerce_bool(row.get("valuation_block_new_entries", False)), "valuation blocks new entries", "估值阻止新入场"),
+        (
+            _coerce_bool(row.get("valuation_block_new_entries", False)),
+            "valuation blocks new entries",
+            "估值阻止新入场",
+        ),
     ]
     fail_reasons = [reason for failed, reason, _ in gates if failed]
     fail_reasons_zh = [reason_zh for failed, _, reason_zh in gates if failed]
@@ -184,12 +213,8 @@ def _high_probability_screening_for_row(
         "screening_backtest_entry_type": entry_label,
         "screening_backtest_trade_count": int(trade_count),
         "screening_backtest_win_rate": float(win_rate) if _is_finite(win_rate) else np.nan,
-        "screening_backtest_stop_hit_rate": float(stop_hit_rate)
-        if _is_finite(stop_hit_rate)
-        else np.nan,
-        "screening_backtest_average_return": float(average_return)
-        if _is_finite(average_return)
-        else np.nan,
+        "screening_backtest_stop_hit_rate": float(stop_hit_rate) if _is_finite(stop_hit_rate) else np.nan,
+        "screening_backtest_average_return": float(average_return) if _is_finite(average_return) else np.nan,
         "sample_confidence_level": evidence["sample_confidence_level"],
         "sample_confidence_level_zh": evidence["sample_confidence_level_zh"],
         "evidence_strength": evidence["evidence_strength"],
@@ -203,32 +228,24 @@ def _high_probability_screening_for_row(
         **_trade_plan_quality_fields(trade_plan_quality),
     }
 
+
 def _probability_calibration_fields(probability_calibration: object) -> dict[str, object]:
     """Row fields `calibrated_win_probability` … `calibrated_probability_note_zh` taken from `probability_calibration`."""
     return {
         "calibrated_win_probability": probability_calibration["calibrated_win_probability"],
-        "calibrated_probability_level": probability_calibration[
-            "calibrated_probability_level"
-        ],
-        "calibrated_probability_level_zh": probability_calibration[
-            "calibrated_probability_level_zh"
-        ],
-        "calibrated_probability_confidence": probability_calibration[
-            "calibrated_probability_confidence"
-        ],
+        "calibrated_probability_level": probability_calibration["calibrated_probability_level"],
+        "calibrated_probability_level_zh": probability_calibration["calibrated_probability_level_zh"],
+        "calibrated_probability_confidence": probability_calibration["calibrated_probability_confidence"],
         "calibrated_probability_confidence_level": probability_calibration[
             "calibrated_probability_confidence_level"
         ],
         "calibrated_probability_confidence_level_zh": probability_calibration[
             "calibrated_probability_confidence_level_zh"
         ],
-        "calibrated_probability_note": probability_calibration[
-            "calibrated_probability_note"
-        ],
-        "calibrated_probability_note_zh": probability_calibration[
-            "calibrated_probability_note_zh"
-        ],
+        "calibrated_probability_note": probability_calibration["calibrated_probability_note"],
+        "calibrated_probability_note_zh": probability_calibration["calibrated_probability_note_zh"],
     }
+
 
 def _entry_readiness_fields(entry_readiness: object) -> dict[str, object]:
     """Row fields `entry_readiness_gate_passed` … `entry_readiness_note_zh` taken from `entry_readiness`."""
@@ -242,6 +259,7 @@ def _entry_readiness_fields(entry_readiness: object) -> dict[str, object]:
         "entry_readiness_note": entry_readiness["note"],
         "entry_readiness_note_zh": entry_readiness["note_zh"],
     }
+
 
 def _trade_plan_quality_fields(trade_plan_quality: object) -> dict[str, object]:
     """Row fields `trade_plan_quality_gate_passed` … `trade_plan_quality_note_zh` taken from `trade_plan_quality`."""
@@ -272,23 +290,15 @@ def _liquidity_filter_result(
         reasons.append("average dollar volume unavailable")
         reasons_zh.append("平均成交额不可用")
     elif avg_dollar_volume < thresholds.min_backtest_avg_dollar_volume:
-        reasons.append(
-            f"average dollar volume below ${thresholds.min_backtest_avg_dollar_volume:,.0f}"
-        )
-        reasons_zh.append(
-            f"平均成交额低于${thresholds.min_backtest_avg_dollar_volume:,.0f}"
-        )
+        reasons.append(f"average dollar volume below ${thresholds.min_backtest_avg_dollar_volume:,.0f}")
+        reasons_zh.append(f"平均成交额低于${thresholds.min_backtest_avg_dollar_volume:,.0f}")
 
     if not _is_finite(slippage_pct):
         reasons.append("dynamic slippage unavailable")
         reasons_zh.append("动态滑点不可用")
     elif slippage_pct > thresholds.max_backtest_slippage_pct:
-        reasons.append(
-            f"dynamic slippage above {thresholds.max_backtest_slippage_pct:.2%}"
-        )
-        reasons_zh.append(
-            f"动态滑点高于{thresholds.max_backtest_slippage_pct:.2%}"
-        )
+        reasons.append(f"dynamic slippage above {thresholds.max_backtest_slippage_pct:.2%}")
+        reasons_zh.append(f"动态滑点高于{thresholds.max_backtest_slippage_pct:.2%}")
 
     if liquidity_label in {"very_low_liquidity", "unknown_liquidity"}:
         reasons.append(f"liquidity label is {liquidity_label}")
@@ -468,10 +478,7 @@ def _trade_plan_quality_filter_result(row: pd.Series) -> dict[str, object]:
                 f"Stop distance is {stop_distance_pct:.2%}, above the "
                 f"{horizon} limit of {max_stop_distance:.2%}."
             ),
-            note_zh=(
-                f"止损距离为{stop_distance_pct:.2%}，高于{horizon}"
-                f"周期限制{max_stop_distance:.2%}。"
-            ),
+            note_zh=(f"止损距离为{stop_distance_pct:.2%}，高于{horizon}周期限制{max_stop_distance:.2%}。"),
         )
 
     reward_score = min(max((risk_reward - 1.5) / 2.0, 0.0), 1.0) * 45.0
@@ -743,7 +750,9 @@ def _select_probability_calibration_row(
         action = str(record.get("formula_action", "none"))
         action_zh = str(record.get("formula_action_zh", "无"))
         source = f"walk_forward_probability_bucket:{record.get('probability_bucket')}"
-        source_zh = f"滚动验证概率分组：{record.get('probability_bucket_zh', record.get('probability_bucket'))}"
+        source_zh = (
+            f"滚动验证概率分组：{record.get('probability_bucket_zh', record.get('probability_bucket'))}"
+        )
         return {
             "adjustment": min(max(adjustment, -0.10), 0.10),
             "sample_count": sample_count,
@@ -823,15 +832,9 @@ def _calibrated_win_probability_profile(
     market_adjustment = (market_score - 55.0) / 100.0 * 0.03
     relative_adjustment = (relative_strength_score - 50.0) / 100.0 * 0.03
     return_adjustment = (
-        min(max(float(average_return), -0.05), 0.10) * 0.75
-        if _is_finite(average_return)
-        else 0.0
+        min(max(float(average_return), -0.05), 0.10) * 0.75 if _is_finite(average_return) else 0.0
     )
-    stop_penalty = (
-        max(0.0, float(stop_hit_rate) - 0.45) * 0.45
-        if _is_finite(stop_hit_rate)
-        else 0.0
-    )
+    stop_penalty = max(0.0, float(stop_hit_rate) - 0.45) * 0.45 if _is_finite(stop_hit_rate) else 0.0
 
     probability = (
         observed_win_rate * evidence_weight
@@ -1193,16 +1196,10 @@ def _calibration_result(
         "market_regime": regime_adjustment["market_regime"],
         "market_regime_zh": regime_adjustment["market_regime_zh"],
         "market_regime_signal_delta": round(float(regime_adjustment["signal_delta"]), 2),
-        "market_regime_confidence_delta": round(
-            float(regime_adjustment["confidence_delta"]), 2
-        ),
+        "market_regime_confidence_delta": round(float(regime_adjustment["confidence_delta"]), 2),
         "market_regime_sample_delta": int(regime_adjustment["sample_delta"]),
-        "market_regime_win_rate_delta": round(
-            float(regime_adjustment["win_rate_delta"]), 4
-        ),
-        "market_regime_average_return_delta": round(
-            float(regime_adjustment["average_return_delta"]), 4
-        ),
+        "market_regime_win_rate_delta": round(float(regime_adjustment["win_rate_delta"]), 4),
+        "market_regime_average_return_delta": round(float(regime_adjustment["average_return_delta"]), 4),
         "market_regime_note": regime_adjustment["note"],
         "market_regime_note_zh": regime_adjustment["note_zh"],
         "calibration_sample_count": int(trade_count),
@@ -1227,10 +1224,7 @@ def _add_calibrated_screening(
     base_thresholds: ScreeningThresholds | None = None,
 ) -> pd.DataFrame:
     base_thresholds = base_thresholds or ScreeningThresholds()
-    rows = [
-        _calibrated_screening_for_row(row, base_thresholds)
-        for _, row in analysis.iterrows()
-    ]
+    rows = [_calibrated_screening_for_row(row, base_thresholds) for _, row in analysis.iterrows()]
     result = analysis.copy()
     for key in rows[0]:
         result[key] = [row[key] for row in rows]
@@ -1244,15 +1238,9 @@ def _calibrated_screening_for_row(
     calibrated_thresholds = _thresholds_from_calibration(row, base_thresholds)
     calibrated = _high_probability_screening_for_row(row, calibrated_thresholds)
     passed = bool(calibrated["quality_gate_passed"])
-    action = (
-        "calibrated_high_probability_candidate"
-        if passed
-        else "not_calibrated_high_probability_now"
-    )
+    action = "calibrated_high_probability_candidate" if passed else "not_calibrated_high_probability_now"
     action_zh = "校准后高概率候选" if passed else "校准后当前不是高概率机会"
-    note = (
-        "The calibrated gate re-runs the high-probability filter using recommended thresholds from the calibration layer."
-    )
+    note = "The calibrated gate re-runs the high-probability filter using recommended thresholds from the calibration layer."
     note_zh = "校准后筛选会使用阈值校准层给出的建议门槛，重新运行高概率过滤。"
     return {
         "calibrated_screening_action": action,
@@ -1266,9 +1254,7 @@ def _calibrated_screening_for_row(
         "calibrated_screening_backtest_entry_type": calibrated["screening_backtest_entry_type"],
         "calibrated_screening_backtest_trade_count": calibrated["screening_backtest_trade_count"],
         "calibrated_screening_backtest_win_rate": calibrated["screening_backtest_win_rate"],
-        "calibrated_screening_backtest_average_return": calibrated[
-            "screening_backtest_average_return"
-        ],
+        "calibrated_screening_backtest_average_return": calibrated["screening_backtest_average_return"],
         "calibrated_screening_note": note,
         "calibrated_screening_note_zh": note_zh,
     }
@@ -1296,34 +1282,32 @@ def _add_signal_review_feedback(
 
     for column in ["high_probability_score", "calibrated_high_probability_score"]:
         result[column] = pd.to_numeric(result[column], errors="coerce").apply(
-            lambda value: round(_clamp_score(float(value) + adjustment), 2)
-            if _is_finite(float(value))
-            else value
+            lambda value: (
+                round(_clamp_score(float(value) + adjustment), 2) if _is_finite(float(value)) else value
+            )
         )
     probability_adjustment = adjustment / 100.0 * 0.10
     result["calibrated_win_probability"] = pd.to_numeric(
         result["calibrated_win_probability"],
         errors="coerce",
     ).apply(
-        lambda value: round(float(min(max(value + probability_adjustment, 0.05), 0.90)), 6)
-        if _is_finite(float(value))
-        else value
+        lambda value: (
+            round(float(min(max(value + probability_adjustment, 0.05), 0.90)), 6)
+            if _is_finite(float(value))
+            else value
+        )
     )
     result["high_probability_level"] = [
-        _high_probability_level(float(value))[0]
-        for value in result["high_probability_score"]
+        _high_probability_level(float(value))[0] for value in result["high_probability_score"]
     ]
     result["high_probability_level_zh"] = [
-        _high_probability_level(float(value))[1]
-        for value in result["high_probability_score"]
+        _high_probability_level(float(value))[1] for value in result["high_probability_score"]
     ]
     result["calibrated_high_probability_level"] = [
-        _high_probability_level(float(value))[0]
-        for value in result["calibrated_high_probability_score"]
+        _high_probability_level(float(value))[0] for value in result["calibrated_high_probability_score"]
     ]
     result["calibrated_high_probability_level_zh"] = [
-        _high_probability_level(float(value))[1]
-        for value in result["calibrated_high_probability_score"]
+        _high_probability_level(float(value))[1] for value in result["calibrated_high_probability_score"]
     ]
 
     if str(feedback["level"]) in {"weak", "poor"} and int(feedback["sample_count"]) >= 5:
@@ -1332,9 +1316,9 @@ def _add_signal_review_feedback(
         result["calibrated_quality_gate_passed"] = False
         result["calibrated_screening_action"] = "not_calibrated_high_probability_now"
         result["calibrated_screening_action_zh"] = "校准后当前不是高概率机会"
-        result["calibrated_quality_gate_fail_reasons"] = result[
-            "calibrated_quality_gate_fail_reasons"
-        ].apply(lambda value: _append_reason(value, fail_reason))
+        result["calibrated_quality_gate_fail_reasons"] = result["calibrated_quality_gate_fail_reasons"].apply(
+            lambda value: _append_reason(value, fail_reason)
+        )
         result["calibrated_quality_gate_fail_reasons_zh"] = result[
             "calibrated_quality_gate_fail_reasons_zh"
         ].apply(lambda value: _append_reason(value, fail_reason_zh, delimiter="；"))
@@ -1399,9 +1383,7 @@ def _thresholds_from_calibration(
             "confidence_min": float(row["recommended_confidence_threshold"]),
             "backtest_sample_min": int(row["recommended_backtest_sample_min"]),
             "backtest_win_rate_min": float(row["recommended_backtest_win_rate_min"]),
-            "backtest_average_return_min": float(
-                row["recommended_backtest_average_return_min"]
-            ),
+            "backtest_average_return_min": float(row["recommended_backtest_average_return_min"]),
         }
     )
 
@@ -1411,10 +1393,7 @@ def _add_calibrated_watchlist_plan(
     base_thresholds: ScreeningThresholds | None = None,
 ) -> pd.DataFrame:
     base_thresholds = base_thresholds or ScreeningThresholds()
-    rows = [
-        _calibrated_watchlist_plan_for_row(row, base_thresholds)
-        for _, row in analysis.iterrows()
-    ]
+    rows = [_calibrated_watchlist_plan_for_row(row, base_thresholds) for _, row in analysis.iterrows()]
     result = analysis.copy()
     for key in rows[0]:
         result[key] = [row[key] for row in rows]
@@ -1561,14 +1540,12 @@ def _watchlist_checks(
             f"买点回测胜率至少{thresholds.backtest_win_rate_min:.0%}",
         ),
         (
-            _is_finite(average_return)
-            and average_return > thresholds.backtest_average_return_min,
+            _is_finite(average_return) and average_return > thresholds.backtest_average_return_min,
             f"entry backtest average return > {thresholds.backtest_average_return_min:.0%}",
             f"买点回测平均收益高于{thresholds.backtest_average_return_min:.0%}",
         ),
         (
-            not _is_finite(stop_hit_rate)
-            or stop_hit_rate <= thresholds.max_backtest_stop_hit_rate,
+            not _is_finite(stop_hit_rate) or stop_hit_rate <= thresholds.max_backtest_stop_hit_rate,
             f"entry backtest stop-hit rate <= {thresholds.max_backtest_stop_hit_rate:.0%}",
             f"买点回测止损命中率不高于{thresholds.max_backtest_stop_hit_rate:.0%}",
         ),

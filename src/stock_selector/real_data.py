@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta, timezone
 import json
-from pathlib import Path
 import sys
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -23,7 +23,6 @@ from .data_sources import (
 )
 from .events import EventRiskContext, fetch_yfinance_event_risk
 from .fundamentals import FundamentalContext, build_fundamental_context
-from .position import build_position_context
 from .json_io import dataframe_records, write_json
 from .market import (
     SectorContext,
@@ -37,14 +36,15 @@ from .peer import (
     choose_peer_tickers,
     render_peer_comparison_report,
 )
+from .position import build_position_context
 from .screening_config import (
     ScreeningConfig,
     ScreeningProfile,
     ScreeningThresholds,
     default_screening_config,
 )
-from .sentiment import SentimentContext, build_sentiment_context
 from .sec_data import SecFundamentalSnapshot, fetch_sec_fundamental_snapshot
+from .sentiment import SentimentContext, build_sentiment_context
 from .signal_review import (
     build_signal_review_feedback_context,
     render_signal_review_section,
@@ -53,7 +53,6 @@ from .signal_review import (
 )
 from .snapshot import fetch_yfinance_snapshot
 from .valuation import ValuationContext, build_valuation_context
-
 
 TICKER_ALIASES = {
     "APPL": "AAPL",
@@ -95,6 +94,7 @@ SNAPSHOT_CACHE_MAX_AGE_DAYS = 14
 @dataclass(frozen=True)
 class RealTickerAnalysisResult:
     """Everything produced by one ``run_real_ticker_analysis`` call: the data used, the per-horizon analysis and where the outputs were written."""
+
     ticker: str
     requested_period: str
     effective_period: str
@@ -147,9 +147,7 @@ def _build_fundamental_trend_context(
     try:
         from .fundamental_trends import fetch_fundamental_trend_context
 
-        return fetch_fundamental_trend_context(
-            ticker, data_root=str(data_root), as_of_date=as_of_date
-        )
+        return fetch_fundamental_trend_context(ticker, data_root=str(data_root), as_of_date=as_of_date)
     except Exception as exc:
         # 降级但别静默：基本面趋势缺席会拉低打分深度，日志里要能看出来。
         print(f"- {ticker}: fundamental trend context unavailable ({exc})", file=sys.stderr)
@@ -209,10 +207,7 @@ def run_real_ticker_analysis(
     relative_strength_contexts = build_relative_strength_contexts(
         target_prices=prices,
         benchmark_prices=benchmark_prices,
-        horizon_windows={
-            name: spec.momentum_window
-            for name, spec in HORIZON_SPECS.items()
-        },
+        horizon_windows={name: spec.momentum_window for name, spec in HORIZON_SPECS.items()},
     )
     scored = build_single_ticker_scored_frame(prices)
     event_risk = fetch_yfinance_event_risk(
@@ -234,32 +229,22 @@ def run_real_ticker_analysis(
         ticker=ticker,
         snapshot=snapshot,
     )
-    snapshot, financial_repair_actions, financial_repair_actions_zh = (
-        _repair_snapshot_financial_fields(
-            ticker=ticker,
-            snapshot=snapshot,
-            allow_fetch=include_snapshot,
-        )
+    snapshot, financial_repair_actions, financial_repair_actions_zh = _repair_snapshot_financial_fields(
+        ticker=ticker,
+        snapshot=snapshot,
+        allow_fetch=include_snapshot,
     )
-    snapshot, sec_repair_actions, sec_repair_actions_zh, sec_snapshot = (
-        _repair_snapshot_from_sec(
-            ticker=ticker,
-            snapshot=snapshot,
-            data_root=Path(data_root),
-            allow_fetch=include_snapshot,
-        )
+    snapshot, sec_repair_actions, sec_repair_actions_zh, sec_snapshot = _repair_snapshot_from_sec(
+        ticker=ticker,
+        snapshot=snapshot,
+        data_root=Path(data_root),
+        allow_fetch=include_snapshot,
     )
     data_repair_actions = (
-        cache_repair_actions
-        + data_repair_actions
-        + financial_repair_actions
-        + sec_repair_actions
+        cache_repair_actions + data_repair_actions + financial_repair_actions + sec_repair_actions
     )
     data_repair_actions_zh = (
-        cache_repair_actions_zh
-        + data_repair_actions_zh
-        + financial_repair_actions_zh
-        + sec_repair_actions_zh
+        cache_repair_actions_zh + data_repair_actions_zh + financial_repair_actions_zh + sec_repair_actions_zh
     )
     if include_snapshot:
         _save_snapshot_cache(ticker=ticker, snapshot=snapshot, data_root=Path(data_root))
@@ -320,9 +305,7 @@ def run_real_ticker_analysis(
             "analyst": analyst,
         },
     )
-    probability_calibration_context = _load_probability_calibration_context(
-        probability_calibration_path
-    )
+    probability_calibration_context = _load_probability_calibration_context(probability_calibration_path)
     signal_review_feedback_context = build_signal_review_feedback_context(
         ticker=ticker,
         review_root=Path(output_root).parent / "signal_review",
@@ -750,10 +733,7 @@ def _snapshot_cache_path(data_root: Path, ticker: str) -> Path:
 
 
 def _snapshot_cache_is_stale(payload: dict[str, object]) -> bool:
-    timestamp = (
-        payload.get("snapshot_cache_saved_at_utc")
-        or payload.get("fetched_at_utc")
-    )
+    timestamp = payload.get("snapshot_cache_saved_at_utc") or payload.get("fetched_at_utc")
     if not isinstance(timestamp, str) or not timestamp.strip():
         return True
     try:
@@ -761,8 +741,8 @@ def _snapshot_cache_is_stale(payload: dict[str, object]) -> bool:
     except ValueError:
         return True
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    age = datetime.now(timezone.utc) - parsed.astimezone(timezone.utc)
+        parsed = parsed.replace(tzinfo=UTC)
+    age = datetime.now(UTC) - parsed.astimezone(UTC)
     return age > timedelta(days=SNAPSHOT_CACHE_MAX_AGE_DAYS)
 
 
@@ -1190,9 +1170,7 @@ def _apply_data_readiness_to_analysis(
     result["data_readiness_repair_priority_zh"] = data_readiness.repair_priority_zh
     result["data_readiness_primary_blockers"] = blockers
     result["data_readiness_primary_blockers_zh"] = blockers_zh
-    result["data_source_validation_status"] = str(
-        data_readiness.source_validation.get("status", "unknown")
-    )
+    result["data_source_validation_status"] = str(data_readiness.source_validation.get("status", "unknown"))
     result["data_source_validation_status_zh"] = str(
         data_readiness.source_validation.get("status_zh", "未知")
     )
@@ -1350,9 +1328,7 @@ def _build_analysis_result_payload(
         "market_regime_confidence_delta": float(focus["market_regime_confidence_delta"]),
         "market_regime_sample_delta": int(focus["market_regime_sample_delta"]),
         "market_regime_win_rate_delta": float(focus["market_regime_win_rate_delta"]),
-        "market_regime_average_return_delta": float(
-            focus["market_regime_average_return_delta"]
-        ),
+        "market_regime_average_return_delta": float(focus["market_regime_average_return_delta"]),
         "entry_readiness_gate_passed": bool(focus["entry_readiness_gate_passed"]),
         "entry_readiness_status": focus["entry_readiness_status"],
         "entry_readiness_status_zh": focus["entry_readiness_status_zh"],
@@ -1382,68 +1358,40 @@ def _build_analysis_result_payload(
         "trading_rule_target_r_multiple": float(focus["trading_rule_target_r_multiple"]),
         "trading_rule_max_chase_pct": float(focus["trading_rule_max_chase_pct"]),
         "trading_rule_time_stop_days": int(focus["trading_rule_time_stop_days"]),
-        "trading_rule_trailing_stop_trigger_r": float(
-            focus["trading_rule_trailing_stop_trigger_r"]
-        ),
-        "trading_rule_trailing_stop_lock_r": float(
-            focus["trading_rule_trailing_stop_lock_r"]
-        ),
+        "trading_rule_trailing_stop_trigger_r": float(focus["trading_rule_trailing_stop_trigger_r"]),
+        "trading_rule_trailing_stop_lock_r": float(focus["trading_rule_trailing_stop_lock_r"]),
         "trading_rule_sell_rule": focus["trading_rule_sell_rule"],
         "trading_rule_sell_rule_zh": focus["trading_rule_sell_rule_zh"],
         "quality_gate_passed": bool(focus["quality_gate_passed"]),
         "high_probability_score": float(focus["high_probability_score"]),
         "calibrated_win_probability": float(focus["calibrated_win_probability"]),
-        "calibrated_win_probability_raw": float(
-            focus["calibrated_win_probability_raw"]
-        ),
-        "probability_calibration_adjustment": float(
-            focus["probability_calibration_adjustment"]
-        ),
+        "calibrated_win_probability_raw": float(focus["calibrated_win_probability_raw"]),
+        "probability_calibration_adjustment": float(focus["probability_calibration_adjustment"]),
         "probability_calibration_source": focus["probability_calibration_source"],
         "probability_calibration_source_zh": focus["probability_calibration_source_zh"],
-        "probability_calibration_sample_count": int(
-            focus["probability_calibration_sample_count"]
-        ),
+        "probability_calibration_sample_count": int(focus["probability_calibration_sample_count"]),
         "probability_calibration_action": focus["probability_calibration_action"],
-        "probability_calibration_action_zh": focus[
-            "probability_calibration_action_zh"
-        ],
+        "probability_calibration_action_zh": focus["probability_calibration_action_zh"],
         "probability_calibration_note": focus["probability_calibration_note"],
         "probability_calibration_note_zh": focus["probability_calibration_note_zh"],
         "calibrated_probability_level": focus["calibrated_probability_level"],
         "calibrated_probability_level_zh": focus["calibrated_probability_level_zh"],
-        "calibrated_probability_confidence": float(
-            focus["calibrated_probability_confidence"]
-        ),
-        "calibrated_probability_confidence_level": focus[
-            "calibrated_probability_confidence_level"
-        ],
-        "calibrated_probability_confidence_level_zh": focus[
-            "calibrated_probability_confidence_level_zh"
-        ],
+        "calibrated_probability_confidence": float(focus["calibrated_probability_confidence"]),
+        "calibrated_probability_confidence_level": focus["calibrated_probability_confidence_level"],
+        "calibrated_probability_confidence_level_zh": focus["calibrated_probability_confidence_level_zh"],
         "calibrated_probability_note": focus["calibrated_probability_note"],
         "calibrated_probability_note_zh": focus["calibrated_probability_note_zh"],
         "screening_backtest_entry_type": focus["screening_backtest_entry_type"],
         "screening_backtest_trade_count": int(focus["screening_backtest_trade_count"]),
         "screening_backtest_win_rate": float(focus["screening_backtest_win_rate"]),
-        "screening_backtest_stop_hit_rate": float(
-            focus["screening_backtest_stop_hit_rate"]
-        ),
-        "screening_backtest_average_return": float(
-            focus["screening_backtest_average_return"]
-        ),
+        "screening_backtest_stop_hit_rate": float(focus["screening_backtest_stop_hit_rate"]),
+        "screening_backtest_average_return": float(focus["screening_backtest_average_return"]),
         "calibrated_screening_action": focus["calibrated_screening_action"],
         "calibrated_screening_action_zh": focus["calibrated_screening_action_zh"],
         "calibrated_quality_gate_passed": bool(focus["calibrated_quality_gate_passed"]),
-        "calibrated_high_probability_score": float(
-            focus["calibrated_high_probability_score"]
-        ),
-        "calibrated_quality_gate_fail_reasons": focus[
-            "calibrated_quality_gate_fail_reasons"
-        ],
-        "calibrated_quality_gate_fail_reasons_zh": focus[
-            "calibrated_quality_gate_fail_reasons_zh"
-        ],
+        "calibrated_high_probability_score": float(focus["calibrated_high_probability_score"]),
+        "calibrated_quality_gate_fail_reasons": focus["calibrated_quality_gate_fail_reasons"],
+        "calibrated_quality_gate_fail_reasons_zh": focus["calibrated_quality_gate_fail_reasons_zh"],
         "watchlist_status": focus["watchlist_status"],
         "watchlist_status_zh": focus["watchlist_status_zh"],
         "quality_gate_fail_reasons": focus["quality_gate_fail_reasons"],
@@ -1474,9 +1422,7 @@ def _build_analysis_result_payload(
         "price_health_note_zh": focus["price_health_note_zh"],
         "backtest_trust_score": float(focus["backtest_trust_score"]),
         "backtest_time_stop_days": int(focus["backtest_time_stop_days"]),
-        "backtest_trailing_stop_trigger_r": float(
-            focus["backtest_trailing_stop_trigger_r"]
-        ),
+        "backtest_trailing_stop_trigger_r": float(focus["backtest_trailing_stop_trigger_r"]),
         "backtest_trailing_stop_lock_r": float(focus["backtest_trailing_stop_lock_r"]),
         "backtest_trust_level": focus["backtest_trust_level"],
         "backtest_trust_level_zh": focus["backtest_trust_level_zh"],
@@ -1489,9 +1435,7 @@ def _build_analysis_result_payload(
         "regime_coverage_level_zh": focus["regime_coverage_level_zh"],
         "regime_coverage_regime_count": int(focus["regime_coverage_regime_count"]),
         "regime_coverage_dominant_regime": focus["regime_coverage_dominant_regime"],
-        "regime_coverage_dominant_regime_zh": focus[
-            "regime_coverage_dominant_regime_zh"
-        ],
+        "regime_coverage_dominant_regime_zh": focus["regime_coverage_dominant_regime_zh"],
         "regime_coverage_dominant_share": float(focus["regime_coverage_dominant_share"]),
         "regime_coverage_note": focus["regime_coverage_note"],
         "regime_coverage_note_zh": focus["regime_coverage_note_zh"],
@@ -1511,16 +1455,10 @@ def _build_analysis_result_payload(
         "backtest_decay_late_trade_count": int(focus["backtest_decay_late_trade_count"]),
         "backtest_decay_early_win_rate": float(focus["backtest_decay_early_win_rate"]),
         "backtest_decay_late_win_rate": float(focus["backtest_decay_late_win_rate"]),
-        "backtest_decay_early_average_return": float(
-            focus["backtest_decay_early_average_return"]
-        ),
-        "backtest_decay_late_average_return": float(
-            focus["backtest_decay_late_average_return"]
-        ),
+        "backtest_decay_early_average_return": float(focus["backtest_decay_early_average_return"]),
+        "backtest_decay_late_average_return": float(focus["backtest_decay_late_average_return"]),
         "backtest_decay_win_rate_delta": float(focus["backtest_decay_win_rate_delta"]),
-        "backtest_decay_average_return_delta": float(
-            focus["backtest_decay_average_return_delta"]
-        ),
+        "backtest_decay_average_return_delta": float(focus["backtest_decay_average_return_delta"]),
         "backtest_decay_note": focus["backtest_decay_note"],
         "backtest_decay_note_zh": focus["backtest_decay_note_zh"],
         "backtest_trust_note": focus["backtest_trust_note"],
@@ -1529,9 +1467,7 @@ def _build_analysis_result_payload(
         "peer_comparison": dataframe_records(peer_comparison),
         "snapshot": snapshot or {},
         "data_sources": data_sources,
-        "data_source_warnings": {
-            key: list(value) for key, value in data_source_warnings.items()
-        },
+        "data_source_warnings": {key: list(value) for key, value in data_source_warnings.items()},
         "data_readiness": data_readiness.to_dict(),
         "event_risk": event_risk.to_dict(),
         "fundamental_quality": fundamentals.to_dict(),
@@ -1661,11 +1597,11 @@ def _latest_date(frame: pd.DataFrame, column: str) -> str | None:
 def _file_modified_utc(path: Path) -> str | None:
     if not path.exists():
         return None
-    return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).isoformat()
+    return datetime.fromtimestamp(path.stat().st_mtime, tz=UTC).isoformat()
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def build_single_ticker_scored_frame(
@@ -1683,13 +1619,17 @@ def build_single_ticker_scored_frame(
 
     frame["dollar_volume"] = frame["adj_close"].astype(float) * frame["volume"].astype(float)
     frame["history_days"] = grouped.cumcount() + 1
-    frame["liquidity"] = grouped["dollar_volume"].rolling(liquidity_window).mean().reset_index(
-        level=0,
-        drop=True,
+    frame["liquidity"] = (
+        grouped["dollar_volume"]
+        .rolling(liquidity_window)
+        .mean()
+        .reset_index(
+            level=0,
+            drop=True,
+        )
     )
-    frame["passes_universe"] = (
-        (frame["history_days"] >= min_history_days)
-        & (frame["liquidity"] >= min_avg_dollar_volume)
+    frame["passes_universe"] = (frame["history_days"] >= min_history_days) & (
+        frame["liquidity"] >= min_avg_dollar_volume
     )
     frame["score"] = np.nan
     return frame[

@@ -169,8 +169,7 @@ def _blocker_resolution_progress_for_row(
     blockers: list[dict[str, object]],
 ) -> dict[str, object]:
     progress_items = [
-        _blocker_progress_item(row, str(blocker["code"]), str(blocker["code_zh"]))
-        for blocker in blockers
+        _blocker_progress_item(row, str(blocker["code"]), str(blocker["code_zh"])) for blocker in blockers
     ]
     if not progress_items:
         score = 100.0
@@ -392,9 +391,7 @@ def _blocker_resolution_step(row: pd.Series, blocker_code: str) -> dict[str, str
                 f"Wait until relative_strength_score reaches 45.0 versus SPY/QQQ. "
                 f"Current score={relative_strength_score:.1f}."
             ),
-            "step_zh": (
-                f"等待相对SPY/QQQ的相对强弱分数达到45.0。当前分数={relative_strength_score:.1f}。"
-            ),
+            "step_zh": (f"等待相对SPY/QQQ的相对强弱分数达到45.0。当前分数={relative_strength_score:.1f}。"),
             "trigger": "Re-check when relative_strength_score >= 45.0.",
             "trigger_zh": "相对强弱分数达到45.0以上后重新检查。",
         },
@@ -403,16 +400,13 @@ def _blocker_resolution_step(row: pd.Series, blocker_code: str) -> dict[str, str
                 f"Wait until confidence_score reaches {confidence_threshold:.1f}. "
                 f"Current score={confidence_score:.1f}."
             ),
-            "step_zh": (
-                f"等待置信度分数达到{confidence_threshold:.1f}。当前分数={confidence_score:.1f}。"
-            ),
+            "step_zh": (f"等待置信度分数达到{confidence_threshold:.1f}。当前分数={confidence_score:.1f}。"),
             "trigger": f"Re-check when confidence_score >= {confidence_threshold:.1f}.",
             "trigger_zh": f"置信度分数达到{confidence_threshold:.1f}以上后重新检查。",
         },
         "signal_score_too_low": {
             "step": (
-                f"Wait until signal_score reaches {signal_threshold:.1f}. "
-                f"Current score={signal_score:.1f}."
+                f"Wait until signal_score reaches {signal_threshold:.1f}. Current score={signal_score:.1f}."
             ),
             "step_zh": f"等待信号分数达到{signal_threshold:.1f}。当前分数={signal_score:.1f}。",
             "trigger": f"Re-check when signal_score >= {signal_threshold:.1f}.",
@@ -1341,7 +1335,7 @@ def _build_data_quality_summary(analysis: pd.DataFrame) -> dict[str, object]:
 
 
 def _data_quality_repair_summary(
-    layers: list[tuple[str, str, tuple[str, str, float, int, str, str]]]
+    layers: list[tuple[str, str, tuple[str, str, float, int, str, str]]],
 ) -> dict[str, object]:
     weak_layers = [
         {
@@ -1391,17 +1385,13 @@ def _data_quality_repair_summary(
         "data_quality_weakest_layer": str(weakest["name"]),
         "data_quality_weakest_layer_zh": str(weakest["name_zh"]),
         "data_quality_weak_layers": "; ".join(
-            f"{item['name']}({item['status']}, -{item['penalty']:.0f})"
-            for item in top_layers
+            f"{item['name']}({item['status']}, -{item['penalty']:.0f})" for item in top_layers
         ),
         "data_quality_weak_layers_zh": "；".join(
-            f"{item['name_zh']}（{item['status_zh']}，扣{item['penalty']:.0f}分）"
-            for item in top_layers
+            f"{item['name_zh']}（{item['status_zh']}，扣{item['penalty']:.0f}分）" for item in top_layers
         ),
         "data_quality_repair_actions": "; ".join(str(item["repair"]) for item in top_layers),
-        "data_quality_repair_actions_zh": "；".join(
-            str(item["repair_zh"]) for item in top_layers
-        ),
+        "data_quality_repair_actions_zh": "；".join(str(item["repair_zh"]) for item in top_layers),
         "data_quality_repair_priority": priority,
         "data_quality_repair_priority_zh": priority_zh,
     }

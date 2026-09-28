@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import numpy as np
@@ -27,9 +27,7 @@ def fetch_yfinance_snapshot(ticker: str) -> dict[str, Any]:
     news_titles = extract_news_titles(news_items)
 
     current_price = _safe_float(
-        info.get("currentPrice")
-        or info.get("regularMarketPrice")
-        or info.get("previousClose")
+        info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose")
     )
     target_mean = _first_float(
         info,
@@ -44,7 +42,7 @@ def fetch_yfinance_snapshot(ticker: str) -> dict[str, Any]:
 
     snapshot = {
         "ticker": ticker,
-        "fetched_at_utc": datetime.now(timezone.utc).isoformat(),
+        "fetched_at_utc": datetime.now(UTC).isoformat(),
         "data_source": "yfinance_current_snapshot",
         "historical_backtest_safe": False,
         "usage_note": (

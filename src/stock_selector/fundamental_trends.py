@@ -15,7 +15,6 @@ from dataclasses import asdict, dataclass
 import numpy as np
 import pandas as pd
 
-
 FUNDAMENTAL_TREND_MIN_PERIODS = 3
 # A margin slope (decimal margin points per period) beyond this is a real move.
 _MARGIN_SLOPE_THRESHOLD = 0.005
@@ -26,6 +25,7 @@ _GROWTH_SLOPE_THRESHOLD = 0.01
 @dataclass(frozen=True)
 class FundamentalTrendContext:
     """Direction of revenue growth and margins over recent fiscal periods, with the periods used."""
+
     ticker: str
     status: str
     periods_used: int

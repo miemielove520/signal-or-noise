@@ -12,6 +12,7 @@ import pandas as pd
 @dataclass(frozen=True)
 class AnalystContext:
     """Analyst-expectation score (0-100), risk level and entry-block flag for one ticker."""
+
     ticker: str
     analyst_score: float
     analyst_label: str

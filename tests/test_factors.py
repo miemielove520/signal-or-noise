@@ -98,9 +98,7 @@ class MoneyFlowFactorTest(unittest.TestCase):
         self.assertLessEqual(abs(last["money_flow_2"]), 1.0)
 
 
-def _ohlc_row(
-    date: str, high: float, low: float, close: float, volume: int
-) -> dict[str, object]:
+def _ohlc_row(date: str, high: float, low: float, close: float, volume: int) -> dict[str, object]:
     return {
         "date": pd.Timestamp(date),
         "ticker": "AAA",

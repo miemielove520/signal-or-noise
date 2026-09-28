@@ -50,9 +50,7 @@ class FundamentalTrendTests(unittest.TestCase):
 
     def test_decelerating_revenue_growth(self) -> None:
         # Revenue grows but by a shrinking amount each year -> decelerating.
-        ctx = build_fundamental_trend_context(
-            _history([0.15] * 4, revenues=[1_000, 1_400, 1_650, 1_780])
-        )
+        ctx = build_fundamental_trend_context(_history([0.15] * 4, revenues=[1_000, 1_400, 1_650, 1_780]))
         self.assertEqual(ctx.revenue_growth_trend, "decelerating")
 
     def test_insufficient_history(self) -> None:

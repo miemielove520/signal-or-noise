@@ -3,21 +3,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
 
+from .data_sources import scan_data_readiness_summary
 from .journal import JournalResult, write_daily_journal
 from .json_io import dataframe_records, write_json
 from .real_data import RealTickerAnalysisResult, normalize_ticker, run_real_ticker_analysis
 from .screening_config import ScreeningConfig, ScreeningThresholds, default_screening_config
-from .data_sources import scan_data_readiness_summary
 
 
 @dataclass(frozen=True)
 class ScanResult:
     """Output of ``run_high_probability_scan``: the per-ticker scan table, ranked candidates and any tickers that failed."""
+
     tickers: tuple[str, ...]
     summary: pd.DataFrame
     top_candidates: pd.DataFrame
@@ -140,10 +141,7 @@ def run_high_probability_scan(
             "tickers_analyzed": [result.ticker for result in results],
             "requested_period": period,
             "period": period,
-            "effective_periods": {
-                result.ticker: result.effective_period
-                for result in results
-            },
+            "effective_periods": {result.ticker: result.effective_period for result in results},
             "output_dir": str(output_path),
             "summary": dataframe_records(summary),
             "top_candidates": dataframe_records(top_candidates),
@@ -196,10 +194,7 @@ def _build_scan_cache_metadata(
         "success_count": len(results),
         "failure_count": len(failures),
         "failures": failures,
-        "ticker_cache": {
-            result.ticker: getattr(result, "cache_metadata", {})
-            for result in results
-        },
+        "ticker_cache": {result.ticker: getattr(result, "cache_metadata", {}) for result in results},
     }
 
 
@@ -215,10 +210,12 @@ def _journal_payload(journal: JournalResult | None) -> dict[str, object] | None:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
-def render_scan_report(summary: pd.DataFrame, failures: list[dict[str, str]] | tuple[dict[str, str], ...]) -> str:
+def render_scan_report(
+    summary: pd.DataFrame, failures: list[dict[str, str]] | tuple[dict[str, str], ...]
+) -> str:
     """Render the scan table and failures as Markdown."""
     if not summary.empty and "recheck_priority_score" not in summary.columns:
         summary = _add_recheck_queue_columns(summary)
@@ -243,11 +240,7 @@ def render_scan_report(summary: pd.DataFrame, failures: list[dict[str, str]] | t
         ]
         filtered = summary[
             (summary["calibrated_quality_gate_passed"] == False)  # noqa: E712
-            & (
-                ~summary["calibrated_watchlist_status"].isin(
-                    ["close_but_not_ready", "early_watch"]
-                )
-            )
+            & (~summary["calibrated_watchlist_status"].isin(["close_but_not_ready", "early_watch"]))
         ]
         lines.extend(_scan_section("## Calibrated High Probability Candidates / 校准后高概率候选", passed))
         lines.extend(_scan_section("## Near Watchlist / 接近机会", near))
@@ -352,16 +345,13 @@ def _top_candidate_snapshot(summary: pd.DataFrame) -> list[str]:
             f"- Tickers analyzed / 完成分析数: `{len(summary)}`",
             (
                 "- Calibrated high-probability passed / 校准后高概率通过: "
-                f"`{int((summary['calibrated_quality_gate_passed'] == True).sum())}`"
+                f"`{int(summary['calibrated_quality_gate_passed'].eq(True).sum())}`"
             ),
             (
                 "- Near watchlist / 接近机会: "
                 f"`{int((summary['calibrated_watchlist_status'] == 'close_but_not_ready').sum())}`"
             ),
-            (
-                "- Re-check queue / 重新检查队列: "
-                f"`{int((_recheck_queue(summary)).shape[0])}`"
-            ),
+            (f"- Re-check queue / 重新检查队列: `{int((_recheck_queue(summary)).shape[0])}`"),
             "",
             "Category counts / 分类数量:",
             "",
@@ -541,7 +531,9 @@ def _add_recheck_queue_columns(summary: pd.DataFrame) -> pd.DataFrame:
         analysis_periods.append(getattr(row, "analysis_period", "unknown"))
         auto_period_upgraded_values.append(bool(getattr(row, "auto_period_upgraded", False)))
         auto_period_upgrade_reasons.append(
-            getattr(row, "auto_period_upgrade_reason", "Requested period was used without automatic extension.")
+            getattr(
+                row, "auto_period_upgrade_reason", "Requested period was used without automatic extension."
+            )
         )
         auto_period_upgrade_reasons_zh.append(
             getattr(row, "auto_period_upgrade_reason_zh", "系统使用了你请求的数据周期，没有自动延长。")
@@ -715,7 +707,9 @@ def _recheck_action_profile(row: object, trigger_profile: dict[str, object]) -> 
     elif any(blocker in evidence_blockers for blocker in blockers):
         action_type = "improve_signal_evidence"
         action_type_zh = "等待信号证据改善"
-        action_note = "The price condition may be close, but signal or evidence quality is still insufficient."
+        action_note = (
+            "The price condition may be close, but signal or evidence quality is still insufficient."
+        )
         action_note_zh = "价格条件可能接近，但信号或证据质量仍不足。"
     else:
         action_type = "monitor"
@@ -952,14 +946,10 @@ def _scan_row(result: RealTickerAnalysisResult, period: str) -> dict[str, object
         "market_regime_note": focus["market_regime_note"],
         "market_regime_note_zh": focus["market_regime_note_zh"],
         "market_regime_signal_delta": float(focus["market_regime_signal_delta"]),
-        "market_regime_confidence_delta": float(
-            focus["market_regime_confidence_delta"]
-        ),
+        "market_regime_confidence_delta": float(focus["market_regime_confidence_delta"]),
         "market_regime_sample_delta": int(focus["market_regime_sample_delta"]),
         "market_regime_win_rate_delta": float(focus["market_regime_win_rate_delta"]),
-        "market_regime_average_return_delta": float(
-            focus["market_regime_average_return_delta"]
-        ),
+        "market_regime_average_return_delta": float(focus["market_regime_average_return_delta"]),
         "focus_horizon": focus["horizon"],
         "screening_action": focus["screening_action"],
         "screening_action_zh": focus["screening_action_zh"],
@@ -970,29 +960,17 @@ def _scan_row(result: RealTickerAnalysisResult, period: str) -> dict[str, object
         "high_probability_level": focus["high_probability_level"],
         "calibrated_win_probability": float(focus["calibrated_win_probability"]),
         "calibrated_win_probability_raw": float(focus["calibrated_win_probability_raw"]),
-        "probability_calibration_adjustment": float(
-            focus["probability_calibration_adjustment"]
-        ),
+        "probability_calibration_adjustment": float(focus["probability_calibration_adjustment"]),
         "probability_calibration_source": focus["probability_calibration_source"],
         "probability_calibration_source_zh": focus["probability_calibration_source_zh"],
-        "probability_calibration_sample_count": int(
-            focus["probability_calibration_sample_count"]
-        ),
+        "probability_calibration_sample_count": int(focus["probability_calibration_sample_count"]),
         "probability_calibration_action": focus["probability_calibration_action"],
-        "probability_calibration_action_zh": focus[
-            "probability_calibration_action_zh"
-        ],
+        "probability_calibration_action_zh": focus["probability_calibration_action_zh"],
         "calibrated_probability_level": focus["calibrated_probability_level"],
         "calibrated_probability_level_zh": focus["calibrated_probability_level_zh"],
-        "calibrated_probability_confidence": float(
-            focus["calibrated_probability_confidence"]
-        ),
-        "calibrated_probability_confidence_level": focus[
-            "calibrated_probability_confidence_level"
-        ],
-        "calibrated_probability_confidence_level_zh": focus[
-            "calibrated_probability_confidence_level_zh"
-        ],
+        "calibrated_probability_confidence": float(focus["calibrated_probability_confidence"]),
+        "calibrated_probability_confidence_level": focus["calibrated_probability_confidence_level"],
+        "calibrated_probability_confidence_level_zh": focus["calibrated_probability_confidence_level_zh"],
         "calibrated_probability_note": focus["calibrated_probability_note"],
         "calibrated_probability_note_zh": focus["calibrated_probability_note_zh"],
         "watchlist_status": focus["watchlist_status"],
@@ -1045,9 +1023,7 @@ def _scan_row(result: RealTickerAnalysisResult, period: str) -> dict[str, object
         "screening_backtest_entry_type": focus["screening_backtest_entry_type"],
         "screening_backtest_trade_count": int(focus["screening_backtest_trade_count"]),
         "screening_backtest_win_rate": float(focus["screening_backtest_win_rate"]),
-        "screening_backtest_stop_hit_rate": float(
-            focus["screening_backtest_stop_hit_rate"]
-        ),
+        "screening_backtest_stop_hit_rate": float(focus["screening_backtest_stop_hit_rate"]),
         "screening_backtest_average_return": float(focus["screening_backtest_average_return"]),
         "backtest_trust_score": float(focus["backtest_trust_score"]),
         "backtest_trust_level": focus["backtest_trust_level"],
@@ -1081,16 +1057,10 @@ def _scan_row(result: RealTickerAnalysisResult, period: str) -> dict[str, object
         "backtest_decay_late_trade_count": int(focus["backtest_decay_late_trade_count"]),
         "backtest_decay_early_win_rate": float(focus["backtest_decay_early_win_rate"]),
         "backtest_decay_late_win_rate": float(focus["backtest_decay_late_win_rate"]),
-        "backtest_decay_early_average_return": float(
-            focus["backtest_decay_early_average_return"]
-        ),
-        "backtest_decay_late_average_return": float(
-            focus["backtest_decay_late_average_return"]
-        ),
+        "backtest_decay_early_average_return": float(focus["backtest_decay_early_average_return"]),
+        "backtest_decay_late_average_return": float(focus["backtest_decay_late_average_return"]),
         "backtest_decay_win_rate_delta": float(focus["backtest_decay_win_rate_delta"]),
-        "backtest_decay_average_return_delta": float(
-            focus["backtest_decay_average_return_delta"]
-        ),
+        "backtest_decay_average_return_delta": float(focus["backtest_decay_average_return_delta"]),
         "backtest_decay_note": focus["backtest_decay_note"],
         "backtest_decay_note_zh": focus["backtest_decay_note_zh"],
         "backtest_trust_note": focus["backtest_trust_note"],
@@ -1119,9 +1089,7 @@ def _scan_row(result: RealTickerAnalysisResult, period: str) -> dict[str, object
         "recommended_confidence_threshold": float(focus["recommended_confidence_threshold"]),
         "recommended_backtest_sample_min": int(focus["recommended_backtest_sample_min"]),
         "recommended_backtest_win_rate_min": float(focus["recommended_backtest_win_rate_min"]),
-        "recommended_backtest_average_return_min": float(
-            focus["recommended_backtest_average_return_min"]
-        ),
+        "recommended_backtest_average_return_min": float(focus["recommended_backtest_average_return_min"]),
         "calibration_note": focus["calibration_note"],
         "calibration_note_zh": focus["calibration_note_zh"],
         "calibrated_screening_action": focus["calibrated_screening_action"],
@@ -1129,31 +1097,17 @@ def _scan_row(result: RealTickerAnalysisResult, period: str) -> dict[str, object
         "calibrated_quality_gate_passed": bool(focus["calibrated_quality_gate_passed"]),
         "calibrated_high_probability_score": float(focus["calibrated_high_probability_score"]),
         "calibrated_high_probability_level": focus["calibrated_high_probability_level"],
-        "calibrated_quality_gate_fail_reasons": focus[
-            "calibrated_quality_gate_fail_reasons"
-        ],
-        "calibrated_quality_gate_fail_reasons_zh": focus[
-            "calibrated_quality_gate_fail_reasons_zh"
-        ],
+        "calibrated_quality_gate_fail_reasons": focus["calibrated_quality_gate_fail_reasons"],
+        "calibrated_quality_gate_fail_reasons_zh": focus["calibrated_quality_gate_fail_reasons_zh"],
         "calibrated_watchlist_status": focus["calibrated_watchlist_status"],
         "calibrated_watchlist_status_zh": focus["calibrated_watchlist_status_zh"],
         "calibrated_watchlist_gap_score": float(focus["calibrated_watchlist_gap_score"]),
         "calibrated_watchlist_missing_items": focus["calibrated_watchlist_missing_items"],
-        "calibrated_watchlist_missing_items_zh": focus[
-            "calibrated_watchlist_missing_items_zh"
-        ],
-        "calibrated_watchlist_missing_count": int(
-            focus["calibrated_watchlist_missing_count"]
-        ),
-        "calibrated_watchlist_trigger_price": float(
-            focus["calibrated_watchlist_trigger_price"]
-        ),
-        "calibrated_watchlist_recheck_reason": focus[
-            "calibrated_watchlist_recheck_reason"
-        ],
-        "calibrated_watchlist_recheck_reason_zh": focus[
-            "calibrated_watchlist_recheck_reason_zh"
-        ],
+        "calibrated_watchlist_missing_items_zh": focus["calibrated_watchlist_missing_items_zh"],
+        "calibrated_watchlist_missing_count": int(focus["calibrated_watchlist_missing_count"]),
+        "calibrated_watchlist_trigger_price": float(focus["calibrated_watchlist_trigger_price"]),
+        "calibrated_watchlist_recheck_reason": focus["calibrated_watchlist_recheck_reason"],
+        "calibrated_watchlist_recheck_reason_zh": focus["calibrated_watchlist_recheck_reason_zh"],
         "quality_gate_fail_reasons": focus["quality_gate_fail_reasons"],
         "quality_gate_fail_reasons_zh": focus["quality_gate_fail_reasons_zh"],
         "report_path": str(result.output_dir / "ticker_analysis.md"),

@@ -18,7 +18,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 MEMBERSHIP_COLUMNS = ("ticker", "start_date", "end_date")
 DEFAULT_MEMBERSHIP_PATH = "data/historical_universe.csv"
 

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime
 import json
-from pathlib import Path
 import sys
+from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
-
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 SRC_DIR = PROJECT_ROOT / "src"
@@ -239,8 +238,10 @@ def _print(perf, equity: float) -> None:
     print(f"Paper equity / 模拟盘净值: ${equity:,.2f}")
     print(f"Days tracked / 已追踪天数: {perf.days_tracked}")
     if perf.total_return is not None:
-        print(f"Return / 收益: {perf.total_return:+.2%} | benchmark / 基准: {_pct(perf.benchmark_return)} "
-              f"| excess / 超额: {_pct(perf.excess_return)} | maxDD / 最大回撤: {_pct(perf.max_drawdown)}")
+        print(
+            f"Return / 收益: {perf.total_return:+.2%} | benchmark / 基准: {_pct(perf.benchmark_return)} "
+            f"| excess / 超额: {_pct(perf.excess_return)} | maxDD / 最大回撤: {_pct(perf.max_drawdown)}"
+        )
     print(f"Readiness / 是否可进下一步: {perf.readiness} / {perf.readiness_zh}")
     print(f"  {perf.note_zh}")
 

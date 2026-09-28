@@ -50,7 +50,7 @@ class BootstrapTests(unittest.TestCase):
 
     def test_simulated_windows_match_constant_return(self):
         out = simulate_window_returns(np.full(30, 0.01), 10, np.random.default_rng(0), n_resamples=50)
-        self.assertTrue(np.allclose(out, 1.01 ** 10 - 1))
+        self.assertTrue(np.allclose(out, 1.01**10 - 1))
 
     def test_compounded_return(self):
         self.assertAlmostEqual(compounded_return([0.1, -0.1]), -0.01)
@@ -58,11 +58,13 @@ class BootstrapTests(unittest.TestCase):
 
 class RankingTests(unittest.TestCase):
     def test_perfect_ranking_gives_ic_one(self):
-        frame = pd.DataFrame({
-            "date": ["d1"] * 5 + ["d2"] * 5,
-            "score": list(range(5)) * 2,
-            "ret": [0.01 * i for i in range(5)] * 2,
-        })
+        frame = pd.DataFrame(
+            {
+                "date": ["d1"] * 5 + ["d2"] * 5,
+                "score": list(range(5)) * 2,
+                "ret": [0.01 * i for i in range(5)] * 2,
+            }
+        )
         ic = information_coefficients(frame, "score", "ret")
         self.assertTrue(np.allclose(ic.values, 1.0))
 

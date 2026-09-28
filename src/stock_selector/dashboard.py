@@ -15,7 +15,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 PRICES_DIR = "data/real_prices"
 
 
@@ -134,9 +133,18 @@ def recent_returns(ticker: str, prices_dir: str | Path = PRICES_DIR) -> dict | N
 
 
 SECTOR_NAMES = {
-    "XLK": "科技", "XLF": "金融", "XLE": "能源", "XLV": "医疗", "XLY": "可选消费",
-    "XLP": "必需消费", "XLI": "工业", "XLU": "公用事业", "XLB": "原材料",
-    "XLRE": "房地产", "XLC": "通讯", "SMH": "半导体",
+    "XLK": "科技",
+    "XLF": "金融",
+    "XLE": "能源",
+    "XLV": "医疗",
+    "XLY": "可选消费",
+    "XLP": "必需消费",
+    "XLI": "工业",
+    "XLU": "公用事业",
+    "XLB": "原材料",
+    "XLRE": "房地产",
+    "XLC": "通讯",
+    "SMH": "半导体",
 }
 
 
@@ -193,7 +201,7 @@ def collect_sector_returns(sectors: list[str], prices_dir: str | Path = PRICES_D
                 "mfi": money_flow_index(t, prices_dir),
             }
         )
-    rows.sort(key=lambda x: (x["r5"] if x["r5"] is not None else -9), reverse=True)
+    rows.sort(key=lambda x: x["r5"] if x["r5"] is not None else -9, reverse=True)
     return rows
 
 
@@ -210,7 +218,7 @@ def _render_sectors(sectors: list[dict]) -> str:
             flow = "流入" if mfi >= 60 else ("流出" if mfi <= 40 else "中性")
             mfi_txt = f"{mfi:.0f} {flow}"
         rows.append(
-            f'<tr><td><b>{html.escape(str(s.get("name") or ""))}</b> '
+            f"<tr><td><b>{html.escape(str(s.get('name') or ''))}</b> "
             f'<span class="dim">{html.escape(str(s.get("ticker") or ""))}</span></td>'
             f"<td>{_pctx(s.get('r1'))}</td>"
             f'<td class="{cls}">{_pctx(s.get("r5"))}</td>'
@@ -321,7 +329,10 @@ def _render_market(market: list[dict], prices_dir: str | Path, today: date | Non
                 tone=tone,
                 ticker=_fmt(ticker),
                 company=_fmt(m.get("company_name")),
-                price=_fmt(m.get("current_price") if m.get("current_price") is not None else m.get("latest_price"), "price"),
+                price=_fmt(
+                    m.get("current_price") if m.get("current_price") is not None else m.get("latest_price"),
+                    "price",
+                ),
                 r1=_pct(r1),
                 r5=_pct(r5),
                 r20=_pct(r20),
@@ -409,21 +420,52 @@ def _render_card(summary: dict, today: date | None = None) -> str:
 # English and cannot be auto-translated offline, so the news read is presented as a
 # Chinese interpretation of the graded catalysts/risks instead.
 _KEYWORD_ZH = {
-    "chip deal": "大额芯片订单", "billion deal": "大额交易", "deal worth": "大额交易",
-    "supply deal": "供货订单", "supply agreement": "供货协议", "wins order": "获得订单",
-    "secures order": "获得订单", "record order": "创纪录订单", "order worth": "大额订单",
-    "major order": "大额订单", "large order": "大额订单", "wins contract": "获得合同",
-    "major contract": "大额合同", "large contract": "大额合同", "record backlog": "创纪录订单积压",
-    "data center backlog": "数据中心订单积压", "beats estimates": "财报超预期",
-    "beat estimates": "财报超预期", "earnings beat": "财报超预期", "revenue beat": "营收超预期",
-    "upgrade": "分析师上调", "upgraded": "分析师上调", "price target raised": "上调目标价",
-    "raises price target": "上调目标价", "outperform": "跑赢评级", "guidance raised": "上调指引",
-    "raises guidance": "上调指引", "record revenue": "创纪录营收", "record profit": "创纪录利润",
-    "strong demand": "需求强劲", "regulatory approval": "监管批准", "fda approval": "FDA批准",
-    "buyout": "收购", "acquisition offer": "收购要约", "strategic partnership": "战略合作",
-    "expands partnership": "扩大合作", "growth": "增长", "momentum": "势头强",
-    "offering": "增发稀释", "dilution": "股本稀释", "shelf": "储架增发", "short seller": "做空报告",
-    "reverse split": "反向拆股", "pump": "炒作", "meme": "题材炒作", "going concern": "持续经营风险",
+    "chip deal": "大额芯片订单",
+    "billion deal": "大额交易",
+    "deal worth": "大额交易",
+    "supply deal": "供货订单",
+    "supply agreement": "供货协议",
+    "wins order": "获得订单",
+    "secures order": "获得订单",
+    "record order": "创纪录订单",
+    "order worth": "大额订单",
+    "major order": "大额订单",
+    "large order": "大额订单",
+    "wins contract": "获得合同",
+    "major contract": "大额合同",
+    "large contract": "大额合同",
+    "record backlog": "创纪录订单积压",
+    "data center backlog": "数据中心订单积压",
+    "beats estimates": "财报超预期",
+    "beat estimates": "财报超预期",
+    "earnings beat": "财报超预期",
+    "revenue beat": "营收超预期",
+    "upgrade": "分析师上调",
+    "upgraded": "分析师上调",
+    "price target raised": "上调目标价",
+    "raises price target": "上调目标价",
+    "outperform": "跑赢评级",
+    "guidance raised": "上调指引",
+    "raises guidance": "上调指引",
+    "record revenue": "创纪录营收",
+    "record profit": "创纪录利润",
+    "strong demand": "需求强劲",
+    "regulatory approval": "监管批准",
+    "fda approval": "FDA批准",
+    "buyout": "收购",
+    "acquisition offer": "收购要约",
+    "strategic partnership": "战略合作",
+    "expands partnership": "扩大合作",
+    "growth": "增长",
+    "momentum": "势头强",
+    "offering": "增发稀释",
+    "dilution": "股本稀释",
+    "shelf": "储架增发",
+    "short seller": "做空报告",
+    "reverse split": "反向拆股",
+    "pump": "炒作",
+    "meme": "题材炒作",
+    "going concern": "持续经营风险",
 }
 
 
@@ -491,7 +533,7 @@ def _render_candidates(candidates: list[dict]) -> str:
     if not candidates:
         return (
             '<p class="empty">今晚自动扫描后这里会出现模型筛选的潜力股。'
-            '手动跑：<code>python3 scan.py --universe growth-core</code></p>'
+            "手动跑：<code>python3 scan.py --universe growth-core</code></p>"
         )
     rows = ["<tr><th>代码</th><th>公司</th><th>高概率分</th><th>档位</th><th>状态</th></tr>"]
     for c in candidates:
@@ -566,7 +608,7 @@ def _position_line(summary: dict) -> str:
     wtxt = f"{float(weight):.1f}%" if weight is not None else "—"
     return (
         f'<div class="position">持仓 · 浮盈 <span class="{cls}">{float(pl):+.2%}</span>'
-        f' · 仓位 {wtxt} · 集中度 {html.escape(conc_zh)}{warn}</div>'
+        f" · 仓位 {wtxt} · 集中度 {html.escape(conc_zh)}{warn}</div>"
     )
 
 
@@ -666,10 +708,10 @@ def _render_paper(paper: dict | None) -> str:
         '<div class="mtile">'
         f'<div class="mhead">模拟盘净值 <span class="mprice">{eq_txt}</span></div>'
         f'<div class="mrets"><span>已追踪 {days} 天</span>'
-        f'<span>收益 {_pctx(paper.get("total_return"))}</span>'
-        f'<span>基准 {_pctx(paper.get("benchmark_return"))}</span>'
-        f'<span>超额 {_pctx(paper.get("excess_return"))}</span>'
-        f'<span>最大回撤 {_pctx(paper.get("max_drawdown"))}</span></div>'
+        f"<span>收益 {_pctx(paper.get('total_return'))}</span>"
+        f"<span>基准 {_pctx(paper.get('benchmark_return'))}</span>"
+        f"<span>超额 {_pctx(paper.get('excess_return'))}</span>"
+        f"<span>最大回撤 {_pctx(paper.get('max_drawdown'))}</span></div>"
         f'<div class="market-read">是否可进下一步：<b>{readiness}</b> — {note}</div>'
         f"{_render_backtest_gate(paper.get('backtest_gate'))}"
         f"{decisions}"
@@ -728,16 +770,23 @@ def _render_paper_logic() -> str:
     """Static explainer: the buy/sell rules the paper engine follows, step by step."""
     steps = [
         ("1. 选池", "从每日高概率扫描 <code>high_probability_scan.csv</code>（~86 只成长股）里逐只过滤。"),
-        ("2. 过关门槛", "必须<b>通过质量闸门</b>，或（本次开了 <code>--allow-near-watchlist</code>）状态为「接近但未达标」；且 风险≠高、数据质量≥70、置信度≥65；再受市场状态保护规则约束。"),
-        ("3. 打分", "综合分 = 胜率 35% + 高概率分 25% + 回测可信度 15% + 信号分 10% + 置信度 10% + 数据质量 5%。"),
+        (
+            "2. 过关门槛",
+            "必须<b>通过质量闸门</b>，或（本次开了 <code>--allow-near-watchlist</code>）状态为「接近但未达标」；且 风险≠高、数据质量≥70、置信度≥65；再受市场状态保护规则约束。",
+        ),
+        (
+            "3. 打分",
+            "综合分 = 胜率 35% + 高概率分 25% + 回测可信度 15% + 信号分 10% + 置信度 10% + 数据质量 5%。",
+        ),
         ("4. 定标的", "按 (是否过闸门, 综合分) 排序，最多取 <b>5 只</b>。"),
         ("5. 定仓位", "留 <b>10% 现金</b>，其余 90% 按分数分配，单只≤<b>20%</b>；低于 2% 的目标丢弃。"),
-        ("6. 生成买卖", "对比目标市值与当前持仓：差额&lt;$100 或&lt;0.1% 不动；买单成交价含半个买卖价差（买贵卖便宜），扣 5bps 滑点；现金不够则按比例缩小买单。"),
+        (
+            "6. 生成买卖",
+            "对比目标市值与当前持仓：差额&lt;$100 或&lt;0.1% 不动；买单成交价含半个买卖价差（买贵卖便宜），扣 5bps 滑点；现金不够则按比例缩小买单。",
+        ),
         ("7. 盯市", "用当日收盘价重估净值，与基准（QQQ）比，满 20 个交易日才与回测年化对比。"),
     ]
-    items = "".join(
-        f'<tr><td><b>{html.escape(t)}</b></td><td>{body}</td></tr>' for t, body in steps
-    )
+    items = "".join(f"<tr><td><b>{html.escape(t)}</b></td><td>{body}</td></tr>" for t, body in steps)
     return (
         '<div class="news-label">买卖逻辑 / How it decides（固定规则，每天照此执行）</div>'
         f'<table class="board paper-logic">{items}</table>'
@@ -749,16 +798,20 @@ def _render_backtest_gate(gate: dict | None) -> str:
     if not gate:
         return ""
     verdict = str(gate.get("gate") or "")
-    cls = "pl-down" if verdict in {"divergent", "below_expectation"} else (
-        "pl-up" if verdict == "consistent" else ""
+    cls = (
+        "pl-down"
+        if verdict in {"divergent", "below_expectation"}
+        else ("pl-up" if verdict == "consistent" else "")
     )
     exp = _pctx(gate.get("backtest_expected_annual"))
     paper_annual = _pctx(gate.get("paper_annual"))
-    compare = f"（回测预期年化 {exp} vs 模拟盘年化 {paper_annual}）" if gate.get("paper_annual") is not None else ""
+    compare = (
+        f"（回测预期年化 {exp} vs 模拟盘年化 {paper_annual}）" if gate.get("paper_annual") is not None else ""
+    )
     return (
         f'<div class="paper-read">回测对比闸门：'
         f'<span class="{cls}">{html.escape(str(gate.get("gate_zh") or ""))}</span> '
-        f'{compare} — {html.escape(str(gate.get("note_zh") or ""))}</div>'
+        f"{compare} — {html.escape(str(gate.get('note_zh') or ''))}</div>"
     )
 
 
@@ -947,9 +1000,7 @@ def _enrich_with_positions(summaries: list[dict], portfolio_path: str | Path) ->
             summary["pos_next_step_zh"] = pos.next_step_zh
 
 
-def _fresh_portfolio_weights(
-    portfolio_path: str | Path, fresh_price: dict[str, float]
-) -> dict[str, float]:
+def _fresh_portfolio_weights(portfolio_path: str | Path, fresh_price: dict[str, float]) -> dict[str, float]:
     """按最新价重算各持仓权重。没有新价的行（含 CASH）退回 csv 的 market_value。"""
     path = Path(portfolio_path)
     if not path.exists():
@@ -1007,7 +1058,7 @@ def _build_page_banner(
             finished = html.escape(str(status.get("finished_at") or ""))
             parts.append(
                 f'<div class="banner banner-bad">🔴 最近一次自动更新有失败步骤：{fails}'
-                f'（{finished}）。页面可能缺数据，详见 outputs/daily_update.log</div>'
+                f"（{finished}）。页面可能缺数据，详见 outputs/daily_update.log</div>"
             )
     scan_result_path = outputs_dir / "scans" / "latest" / "scan_result.json"
     if scan_result_path.exists():
@@ -1022,20 +1073,16 @@ def _build_page_banner(
             )
             parts.append(
                 '<div class="banner banner-bad">🔴 本次候选扫描有股票缺失数据：'
-                f'{html.escape(failed_tickers)}。这些股票没有进入排序，请检查扫描报告。</div>'
+                f"{html.escape(failed_tickers)}。这些股票没有进入排序，请检查扫描报告。</div>"
             )
-    dates = sorted(
-        str(s.get("date"))
-        for s in list(summaries) + list(market)
-        if s.get("date")
-    )
+    dates = sorted(str(s.get("date")) for s in list(summaries) + list(market) if s.get("date"))
     newest = dates[-1] if dates else None
     behind = _business_days_behind(newest, today)
     if behind is not None and behind >= 2:
         parts.append(
             f'<div class="banner banner-warn">⚠️ 全页数据已滞后 {behind} 个交易日'
-            f'（最新分析基准 {html.escape(str(newest))}）。每日任务可能没在跑，'
-            f'检查：launchctl print gui/$(id -u)/com.stockselector.daily</div>'
+            f"（最新分析基准 {html.escape(str(newest))}）。每日任务可能没在跑，"
+            f"检查：launchctl print gui/$(id -u)/com.stockselector.daily</div>"
         )
     return "".join(parts)
 
@@ -1069,7 +1116,9 @@ def build_dashboard(
     _enrich_with_positions(summaries, portfolio_path)
     market_tickers = _read_watchlist(market_path) if market_path else []
     market = collect_ticker_summaries(outputs / "real_ticker", tickers=market_tickers or None)
-    sector_tickers = _read_watchlist("universes/sectors.txt") if Path("universes/sectors.txt").exists() else []
+    sector_tickers = (
+        _read_watchlist("universes/sectors.txt") if Path("universes/sectors.txt").exists() else []
+    )
     sectors = collect_sector_returns(sector_tickers, prices_dir) if sector_tickers else []
     candidates = collect_candidates(
         outputs / "scans" / "latest" / "high_probability_scan.csv",

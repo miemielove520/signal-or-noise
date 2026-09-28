@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import patch
 import json
 import tempfile
 import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import pandas as pd
 
@@ -26,7 +26,10 @@ class ValidateManifestTest(unittest.TestCase):
             )
 
         with tempfile.TemporaryDirectory() as directory:
-            with patch("stock_selector.validation_cli.download_prices_for_period_multi_source", side_effect=fake_download):
+            with patch(
+                "stock_selector.validation_cli.download_prices_for_period_multi_source",
+                side_effect=fake_download,
+            ):
                 exit_code = validate.main(
                     [
                         "AAPL",

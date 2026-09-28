@@ -5,11 +5,12 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from ..screening_config import ScreeningConfig
-from ..screening_config import ScreeningThresholds
-from ..screening_config import default_screening_config
-from ..screening_config import render_screening_config_toml
-
+from ..screening_config import (
+    ScreeningConfig,
+    ScreeningThresholds,
+    default_screening_config,
+    render_screening_config_toml,
+)
 from ._common import (
     _coerce_bool,
     _first_text,
@@ -145,9 +146,7 @@ def calibrate_walk_forward_profiles(
         for column, threshold_attr, candidates, direction in specs:
             if column not in group.columns:
                 continue
-            current_threshold = (
-                0.58 if threshold_attr is None else float(getattr(thresholds, threshold_attr))
-            )
+            current_threshold = 0.58 if threshold_attr is None else float(getattr(thresholds, threshold_attr))
             best = _best_threshold(
                 events=group,
                 column=column,
@@ -261,9 +260,7 @@ def render_suggested_screening_config(
     min_sample_count: int = MIN_CALIBRATION_SAMPLE_COUNT,
 ) -> str:
     """Write a TOML screening config with the suggested thresholds, applying only changes backed by at least ``min_sample_count`` samples and allowed by the benchmark policy and minimum-sample guard; skipped changes are noted."""
-    suggested_thresholds = {
-        profile.name: profile.thresholds for profile in screening_config.profiles
-    }
+    suggested_thresholds = {profile.name: profile.thresholds for profile in screening_config.profiles}
     suggested_thresholds["default"] = screening_config.default_thresholds
     applied_notes: list[str] = []
     skipped_notes: list[str] = []
@@ -473,14 +470,22 @@ def _minimum_sample_guard_allows(
 
 
 def _minimum_sample_guard_summary(minimum_sample_guard: pd.DataFrame | None) -> str:
-    if minimum_sample_guard is None or minimum_sample_guard.empty or "guard_action" not in minimum_sample_guard.columns:
+    if (
+        minimum_sample_guard is None
+        or minimum_sample_guard.empty
+        or "guard_action" not in minimum_sample_guard.columns
+    ):
         return "not_available"
     counts = minimum_sample_guard["guard_action"].astype(str).value_counts().to_dict()
     return ", ".join(f"{key}={value}" for key, value in sorted(counts.items()))
 
 
 def _benchmark_relaxation_guard(benchmark_policy: pd.DataFrame | None) -> dict[str, object]:
-    if benchmark_policy is None or benchmark_policy.empty or "allow_relaxation" not in benchmark_policy.columns:
+    if (
+        benchmark_policy is None
+        or benchmark_policy.empty
+        or "allow_relaxation" not in benchmark_policy.columns
+    ):
         return {
             "block_relaxation": False,
             "policy": "no_benchmark_policy",

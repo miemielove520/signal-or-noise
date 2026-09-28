@@ -2,46 +2,40 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from dataclasses import field
+from collections.abc import Iterable
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable
 
 import pandas as pd
 
-from ..analysis import analyze_ticker
-from ..analysis import normalize_horizons
-from ..json_io import dataframe_records
-from ..json_io import write_json
-from ..real_data import build_single_ticker_scored_frame
-from ..real_data import normalize_ticker
-from ..screening_config import ScreeningConfig
-from ..screening_config import ScreeningThresholds
-from ..screening_config import default_screening_config
-from ..universe import HistoricalUniverseMembership
-from ..universe import survivorship_report_without_historical_membership
-from ..win_rate_dashboard import build_historical_threshold_recommendations
-from ..win_rate_dashboard import build_historical_win_rate_gate
-from ..win_rate_dashboard import build_profile_action_recommendations
-from ..win_rate_dashboard import build_profile_blocker_dashboard
-from ..win_rate_dashboard import build_profile_health_dashboard
-from ..win_rate_dashboard import build_win_rate_dashboard
-from ..win_rate_dashboard import render_historical_threshold_recommendations
-from ..win_rate_dashboard import render_historical_win_rate_gate
-from ..win_rate_dashboard import render_profile_action_recommendations
-from ..win_rate_dashboard import render_profile_blocker_dashboard
-from ..win_rate_dashboard import render_profile_health_dashboard
-from ..win_rate_dashboard import render_win_rate_dashboard
-from ..win_rate_dashboard import win_rate_dashboard_payload
-
+from ..analysis import analyze_ticker, normalize_horizons
+from ..json_io import dataframe_records, write_json
+from ..real_data import build_single_ticker_scored_frame, normalize_ticker
+from ..screening_config import ScreeningConfig, ScreeningThresholds, default_screening_config
+from ..universe import HistoricalUniverseMembership, survivorship_report_without_historical_membership
+from ..win_rate_dashboard import (
+    build_historical_threshold_recommendations,
+    build_historical_win_rate_gate,
+    build_profile_action_recommendations,
+    build_profile_blocker_dashboard,
+    build_profile_health_dashboard,
+    build_win_rate_dashboard,
+    render_historical_threshold_recommendations,
+    render_historical_win_rate_gate,
+    render_profile_action_recommendations,
+    render_profile_blocker_dashboard,
+    render_profile_health_dashboard,
+    render_win_rate_dashboard,
+    win_rate_dashboard_payload,
+)
+from ._common import (
+    _markdown_table,
+)
 from .calibration import (
     build_overfitting_risk_report,
     calibrate_walk_forward_profiles,
     calibrate_walk_forward_rules,
     render_suggested_screening_config,
-)
-from ._common import (
-    _markdown_table,
 )
 from .config import (
     DEFAULT_FORWARD_WINDOWS,
@@ -95,6 +89,7 @@ from .summaries import (
 @dataclass(frozen=True)
 class WalkForwardResult:
     """Every table produced by ``run_walk_forward_validation``, plus the rendered Markdown report."""
+
     events: pd.DataFrame
     summary: pd.DataFrame
     profile_summary: pd.DataFrame
@@ -168,7 +163,9 @@ def run_walk_forward_validation(
     if not forward_windows:
         raise ValueError("At least one forward window is required.")
 
-    normalized_tickers = tuple(dict.fromkeys(normalize_ticker(ticker) for ticker in tickers if ticker.strip()))
+    normalized_tickers = tuple(
+        dict.fromkeys(normalize_ticker(ticker) for ticker in tickers if ticker.strip())
+    )
     if not normalized_tickers:
         raise ValueError("At least one ticker is required.")
 
@@ -217,7 +214,9 @@ def run_walk_forward_validation(
                 len(normalized_tickers),
             )
             continue
-        signal_stop = len(ticker_prices) if allow_truncated_forward else len(ticker_prices) - max_forward_window
+        signal_stop = (
+            len(ticker_prices) if allow_truncated_forward else len(ticker_prices) - max_forward_window
+        )
         signal_indices = range(min_history_days, signal_stop, step_days)
         for signal_index in signal_indices:
             signal_date = ticker_prices.loc[signal_index, "date"]
@@ -249,11 +248,13 @@ def run_walk_forward_validation(
                 analysis["screening_profile"] = profile_name
                 analysis["screening_profile_zh"] = profile_name_zh
             except Exception as exc:
-                failed_signals.append({
-                    "ticker": ticker,
-                    "signal_date": str(pd.Timestamp(signal_date).date()),
-                    "error": f"{type(exc).__name__}: {exc}",
-                })
+                failed_signals.append(
+                    {
+                        "ticker": ticker,
+                        "signal_date": str(pd.Timestamp(signal_date).date()),
+                        "error": f"{type(exc).__name__}: {exc}",
+                    }
+                )
                 continue
             # One event per horizon row. All horizons of a (date, ticker) share the same
             # forward returns, so pooled counts over-state independent samples by up to
@@ -345,16 +346,12 @@ def run_walk_forward_validation(
         target_window=_target_window(forward_windows),
     )
     profile_health_dashboard_report = render_profile_health_dashboard(profile_health_dashboard)
-    profile_action_recommendations = build_profile_action_recommendations(
-        profile_health_dashboard
-    )
+    profile_action_recommendations = build_profile_action_recommendations(profile_health_dashboard)
     profile_action_recommendations_report = render_profile_action_recommendations(
         profile_action_recommendations
     )
     profile_blocker_dashboard = build_profile_blocker_dashboard(events)
-    profile_blocker_dashboard_report = render_profile_blocker_dashboard(
-        profile_blocker_dashboard
-    )
+    profile_blocker_dashboard_report = render_profile_blocker_dashboard(profile_blocker_dashboard)
     historical_win_rate_gate = build_historical_win_rate_gate(
         events,
         target_window=_target_window(forward_windows),
@@ -364,8 +361,8 @@ def run_walk_forward_validation(
         historical_win_rate_gate,
         screening_config=config,
     )
-    historical_threshold_recommendations_report = (
-        render_historical_threshold_recommendations(historical_threshold_recommendations)
+    historical_threshold_recommendations_report = render_historical_threshold_recommendations(
+        historical_threshold_recommendations
     )
     report = render_walk_forward_report(
         events=events,
@@ -413,46 +410,44 @@ def run_walk_forward_validation(
         report = report.rstrip() + "\n\n" + _render_failed_signals(failed_signal_frame)
 
     result = WalkForwardResult(
-            events=events,
-            summary=summary,
-            ticker_ranking=ticker_ranking,
-            sample_sufficiency=sample_sufficiency,
-            profile_summary=profile_summary,
-            segment_summary=segment_summary,
-            market_regime_summary=market_regime_summary,
-            market_regime_policy=market_regime_policy,
-            profile_calibration=profile_calibration,
-            calibration=calibration,
-            report=report,
-            probability_calibration=probability_calibration,
-            portfolio_summary=portfolio_summary,
-            portfolio_rebalances=portfolio_rebalances,
-            portfolio_equity_summary=portfolio_equity_summary,
-            portfolio_equity_curve=portfolio_equity_curve,
-            benchmark_summary=benchmark_summary,
-            benchmark_curve=benchmark_curve,
-            benchmark_policy=benchmark_policy,
-            benchmark_tightening=benchmark_tightening,
-            tightening_impact=tightening_impact,
-            threshold_sensitivity=threshold_sensitivity,
-            minimum_sample_guard=minimum_sample_guard,
-            win_rate_dashboard=win_rate_dashboard,
-            win_rate_dashboard_report=win_rate_dashboard_report,
-            historical_win_rate_gate=historical_win_rate_gate,
-            historical_win_rate_gate_report=historical_win_rate_gate_report,
-            historical_threshold_recommendations=historical_threshold_recommendations,
-            historical_threshold_recommendations_report=(
-                historical_threshold_recommendations_report
-            ),
-            profile_health_dashboard=profile_health_dashboard,
-            profile_health_dashboard_report=profile_health_dashboard_report,
-            profile_action_recommendations=profile_action_recommendations,
-            profile_action_recommendations_report=profile_action_recommendations_report,
-            profile_blocker_dashboard=profile_blocker_dashboard,
-            profile_blocker_dashboard_report=profile_blocker_dashboard_report,
-            survivorship_bias_report=survivorship_bias_report,
-            failed_signals=failed_signal_frame,
-        )
+        events=events,
+        summary=summary,
+        ticker_ranking=ticker_ranking,
+        sample_sufficiency=sample_sufficiency,
+        profile_summary=profile_summary,
+        segment_summary=segment_summary,
+        market_regime_summary=market_regime_summary,
+        market_regime_policy=market_regime_policy,
+        profile_calibration=profile_calibration,
+        calibration=calibration,
+        report=report,
+        probability_calibration=probability_calibration,
+        portfolio_summary=portfolio_summary,
+        portfolio_rebalances=portfolio_rebalances,
+        portfolio_equity_summary=portfolio_equity_summary,
+        portfolio_equity_curve=portfolio_equity_curve,
+        benchmark_summary=benchmark_summary,
+        benchmark_curve=benchmark_curve,
+        benchmark_policy=benchmark_policy,
+        benchmark_tightening=benchmark_tightening,
+        tightening_impact=tightening_impact,
+        threshold_sensitivity=threshold_sensitivity,
+        minimum_sample_guard=minimum_sample_guard,
+        win_rate_dashboard=win_rate_dashboard,
+        win_rate_dashboard_report=win_rate_dashboard_report,
+        historical_win_rate_gate=historical_win_rate_gate,
+        historical_win_rate_gate_report=historical_win_rate_gate_report,
+        historical_threshold_recommendations=historical_threshold_recommendations,
+        historical_threshold_recommendations_report=(historical_threshold_recommendations_report),
+        profile_health_dashboard=profile_health_dashboard,
+        profile_health_dashboard_report=profile_health_dashboard_report,
+        profile_action_recommendations=profile_action_recommendations,
+        profile_action_recommendations_report=profile_action_recommendations_report,
+        profile_blocker_dashboard=profile_blocker_dashboard,
+        profile_blocker_dashboard_report=profile_blocker_dashboard_report,
+        survivorship_bias_report=survivorship_bias_report,
+        failed_signals=failed_signal_frame,
+    )
     if output_dir is not None:
         _write_walk_forward_outputs(
             result,
@@ -614,9 +609,7 @@ def _write_walk_forward_outputs(
             "minimum_sample_guard": dataframe_records(result.minimum_sample_guard),
             "win_rate_dashboard": win_rate_dashboard_payload(result.win_rate_dashboard),
             "profile_health_dashboard": dataframe_records(result.profile_health_dashboard),
-            "profile_action_recommendations": dataframe_records(
-                result.profile_action_recommendations
-            ),
+            "profile_action_recommendations": dataframe_records(result.profile_action_recommendations),
             "profile_blocker_dashboard": dataframe_records(result.profile_blocker_dashboard),
             "historical_win_rate_gate": dataframe_records(result.historical_win_rate_gate),
             "historical_threshold_recommendations": dataframe_records(
@@ -637,9 +630,7 @@ def _write_walk_forward_outputs(
                 "sample_sufficiency_csv": str(path / "sample_sufficiency_guidance.csv"),
                 "profile_summary_csv": str(path / "profile_validation_summary.csv"),
                 "segment_summary_csv": str(path / "segment_validation_summary.csv"),
-                "market_regime_summary_csv": str(
-                    path / "market_regime_validation_summary.csv"
-                ),
+                "market_regime_summary_csv": str(path / "market_regime_validation_summary.csv"),
                 "market_regime_policy_csv": str(path / "market_regime_policy.csv"),
                 "probability_calibration_csv": str(path / "probability_calibration.csv"),
                 "portfolio_summary_csv": str(path / "portfolio_validation_summary.csv"),
@@ -649,9 +640,7 @@ def _write_walk_forward_outputs(
                 "benchmark_summary_csv": str(path / "benchmark_comparison_summary.csv"),
                 "benchmark_curve_csv": str(path / "benchmark_comparison_curve.csv"),
                 "benchmark_policy_csv": str(path / "benchmark_policy.csv"),
-                "benchmark_tightening_csv": str(
-                    path / "benchmark_tightening_recommendations.csv"
-                ),
+                "benchmark_tightening_csv": str(path / "benchmark_tightening_recommendations.csv"),
                 "tightening_impact_csv": str(path / "tightening_impact_validation.csv"),
                 "threshold_sensitivity_csv": str(path / "threshold_sensitivity_grid.csv"),
                 "minimum_sample_guard_csv": str(path / "minimum_sample_guard.csv"),
@@ -661,45 +650,19 @@ def _write_walk_forward_outputs(
                 "win_rate_by_horizon_csv": str(path / "win_rate_by_horizon.csv"),
                 "win_rate_by_entry_type_csv": str(path / "win_rate_by_entry_type.csv"),
                 "win_rate_by_profile_csv": str(path / "win_rate_by_profile.csv"),
-                "win_rate_by_quality_gate_csv": str(
-                    path / "win_rate_by_quality_gate.csv"
-                ),
-                "profile_health_dashboard_md": str(
-                    path / "profile_health_dashboard.md"
-                ),
-                "profile_health_dashboard_json": str(
-                    path / "profile_health_dashboard.json"
-                ),
-                "profile_health_dashboard_csv": str(
-                    path / "profile_health_dashboard.csv"
-                ),
-                "profile_action_recommendations_md": str(
-                    path / "profile_action_recommendations.md"
-                ),
-                "profile_action_recommendations_json": str(
-                    path / "profile_action_recommendations.json"
-                ),
-                "profile_action_recommendations_csv": str(
-                    path / "profile_action_recommendations.csv"
-                ),
-                "profile_blocker_dashboard_md": str(
-                    path / "profile_blocker_dashboard.md"
-                ),
-                "profile_blocker_dashboard_json": str(
-                    path / "profile_blocker_dashboard.json"
-                ),
-                "profile_blocker_dashboard_csv": str(
-                    path / "profile_blocker_dashboard.csv"
-                ),
-                "historical_win_rate_gate_md": str(
-                    path / "historical_win_rate_gate.md"
-                ),
-                "historical_win_rate_gate_json": str(
-                    path / "historical_win_rate_gate.json"
-                ),
-                "historical_win_rate_gate_csv": str(
-                    path / "historical_win_rate_gate.csv"
-                ),
+                "win_rate_by_quality_gate_csv": str(path / "win_rate_by_quality_gate.csv"),
+                "profile_health_dashboard_md": str(path / "profile_health_dashboard.md"),
+                "profile_health_dashboard_json": str(path / "profile_health_dashboard.json"),
+                "profile_health_dashboard_csv": str(path / "profile_health_dashboard.csv"),
+                "profile_action_recommendations_md": str(path / "profile_action_recommendations.md"),
+                "profile_action_recommendations_json": str(path / "profile_action_recommendations.json"),
+                "profile_action_recommendations_csv": str(path / "profile_action_recommendations.csv"),
+                "profile_blocker_dashboard_md": str(path / "profile_blocker_dashboard.md"),
+                "profile_blocker_dashboard_json": str(path / "profile_blocker_dashboard.json"),
+                "profile_blocker_dashboard_csv": str(path / "profile_blocker_dashboard.csv"),
+                "historical_win_rate_gate_md": str(path / "historical_win_rate_gate.md"),
+                "historical_win_rate_gate_json": str(path / "historical_win_rate_gate.json"),
+                "historical_win_rate_gate_csv": str(path / "historical_win_rate_gate.csv"),
                 "historical_threshold_recommendations_md": str(
                     path / "historical_threshold_recommendations.md"
                 ),

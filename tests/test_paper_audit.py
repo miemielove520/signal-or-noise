@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
-from pathlib import Path
 import tempfile
 import unittest
+from datetime import UTC, datetime
+from pathlib import Path
 
 import pandas as pd
 
@@ -22,7 +22,7 @@ class PaperAuditTest(unittest.TestCase):
             root = Path(tmpdir)
             run_id, started_at = new_audit_identity(
                 "rebalance",
-                datetime(2026, 7, 13, 22, 0, tzinfo=timezone.utc),
+                datetime(2026, 7, 13, 22, 0, tzinfo=UTC),
             )
             analysis = pd.DataFrame([{"date": "2026-07-13", "ticker": "AAA", "score": 80}])
             prices = pd.DataFrame(

@@ -2,19 +2,18 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from dataclasses import replace
-from typing import Iterable
+from collections.abc import Iterable
+from dataclasses import dataclass, replace
 
 import pandas as pd
 
 from ..screening_config import TradingRules
 
 
-
 @dataclass(frozen=True)
 class HorizonSpec:
     """Parameters of one holding horizon: lookback and indicator windows, stop/target multiples, chase limit and time stop."""
+
     name: str
     label: str
     zh_label: str

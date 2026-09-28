@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -14,6 +14,7 @@ from .config import MLConfig
 @dataclass(frozen=True)
 class RollingMLResult:
     """Dataset, out-of-sample predictions, evaluation metrics and feature importance of a rolling ML run."""
+
     dataset: pd.DataFrame
     predictions: pd.DataFrame
     metrics: dict[str, float]
@@ -206,12 +207,8 @@ def evaluate_predictions(
         "directional_accuracy": directional_accuracy,
         "directional_baseline_accuracy": directional_baseline,
         "directional_accuracy_advantage": directional_accuracy - directional_baseline,
-        "top_bucket_mean_return": float(np.mean(top_returns_array))
-        if len(top_returns_array)
-        else 0.0,
-        "top_bucket_win_rate": float(np.mean(top_returns_array > 0))
-        if len(top_returns_array)
-        else 0.0,
+        "top_bucket_mean_return": float(np.mean(top_returns_array)) if len(top_returns_array) else 0.0,
+        "top_bucket_win_rate": float(np.mean(top_returns_array > 0)) if len(top_returns_array) else 0.0,
         "top_bucket_sharpe": _sharpe_from_period_returns(top_returns_array, periods_per_year),
         "top_bucket_annualized_return": _annualized_return_from_period_returns(
             top_returns_array,

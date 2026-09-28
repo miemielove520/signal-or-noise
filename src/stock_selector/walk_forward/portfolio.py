@@ -188,14 +188,10 @@ def _portfolio_rebalance_rows(
                 "selected_tickers": ", ".join(selected["ticker"].astype(str).to_list()),
                 f"portfolio_forward_return_{target_window}d": float(selected[return_column].mean()),
                 "portfolio_max_drawdown_after_signal": drawdown,
-                "avg_selected_probability": float(
-                    selected["calibrated_win_probability"].mean()
-                )
+                "avg_selected_probability": float(selected["calibrated_win_probability"].mean())
                 if "calibrated_win_probability" in selected.columns
                 else np.nan,
-                "avg_selected_high_probability_score": float(
-                    selected["high_probability_score"].mean()
-                ),
+                "avg_selected_high_probability_score": float(selected["high_probability_score"].mean()),
             }
         )
     return rows
@@ -245,9 +241,7 @@ def _portfolio_summary_row(
         "win_rate": float((returns > 0).mean()) if len(returns) else np.nan,
         "best_forward_return": float(returns.max()) if len(returns) else np.nan,
         "worst_forward_return": float(returns.min()) if len(returns) else np.nan,
-        "compounded_forward_return": float((1.0 + returns).prod() - 1.0)
-        if len(returns)
-        else np.nan,
+        "compounded_forward_return": float((1.0 + returns).prod() - 1.0) if len(returns) else np.nan,
         "avg_selected_probability": float(
             pd.to_numeric(frame["avg_selected_probability"], errors="coerce").mean()
         ),
@@ -417,9 +411,7 @@ def _portfolio_equity_rows(
                 continue
             selected_returns = daily_returns.loc[date, selected_tickers].dropna()
             daily_return_before_cost = (
-                float(selected_returns.mean())
-                if len(selected_returns) and date_offset > 0
-                else 0.0
+                float(selected_returns.mean()) if len(selected_returns) and date_offset > 0 else 0.0
             )
             cost_impact = turnover * transaction_cost if date_offset == 0 else 0.0
             daily_return = daily_return_before_cost - cost_impact
@@ -515,19 +507,12 @@ def _portfolio_equity_summary_row(
             "Daily curve holds each equal-weight basket until the next rebalance "
             "or the target validation window, including transaction-cost drag."
         ),
-        "equity_note_zh": (
-            "逐日曲线按等权组合持有到下一次调仓或目标验证窗口，"
-            "并计入交易成本拖累。"
-        ),
+        "equity_note_zh": ("逐日曲线按等权组合持有到下一次调仓或目标验证窗口，并计入交易成本拖累。"),
     }
 
 
 def _parse_selected_tickers(value: object) -> list[str]:
-    return [
-        str(item).strip().upper()
-        for item in str(value).split(",")
-        if str(item).strip()
-    ]
+    return [str(item).strip().upper() for item in str(value).split(",") if str(item).strip()]
 
 
 def _portfolio_turnover(
@@ -596,7 +581,9 @@ def build_walk_forward_benchmark_comparison(
         return pd.DataFrame(columns=summary_columns), pd.DataFrame(columns=curve_columns)
 
     price_frame = _normalize_prices(prices)
-    benchmark_tickers = tuple(dict.fromkeys(str(ticker).upper().strip() for ticker in benchmark_tickers if str(ticker).strip()))
+    benchmark_tickers = tuple(
+        dict.fromkeys(str(ticker).upper().strip() for ticker in benchmark_tickers if str(ticker).strip())
+    )
     price_frame = price_frame[price_frame["ticker"].isin(benchmark_tickers)].copy()
     if price_frame.empty:
         return pd.DataFrame(columns=summary_columns), pd.DataFrame(columns=curve_columns)
@@ -697,9 +684,7 @@ def _benchmark_comparison_rows(
                 "relative_equity": float(row.equity / benchmark_equity - 1.0)
                 if benchmark_equity > 0
                 else np.nan,
-                "portfolio_drawdown": float(row.drawdown)
-                if _is_finite(row.drawdown)
-                else np.nan,
+                "portfolio_drawdown": float(row.drawdown) if _is_finite(row.drawdown) else np.nan,
                 "benchmark_drawdown": benchmark_drawdown,
             }
         )
@@ -759,9 +744,7 @@ def _benchmark_summary_row(
         "benchmark_note": (
             f"Compared daily portfolio equity against {benchmark_ticker} over matching dates."
         ),
-        "benchmark_note_zh": (
-            f"在相同日期上，将组合逐日净值与{benchmark_ticker}进行对比。"
-        ),
+        "benchmark_note_zh": (f"在相同日期上，将组合逐日净值与{benchmark_ticker}进行对比。"),
     }
 
 

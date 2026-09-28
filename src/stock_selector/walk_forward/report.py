@@ -5,7 +5,6 @@ from __future__ import annotations
 import pandas as pd
 
 from ..universe import survivorship_report_without_historical_membership
-
 from ._common import (
     _format_metric_frame,
     _markdown_table,
@@ -172,9 +171,7 @@ def _sample_sufficiency_guidance_section(sample_sufficiency: pd.DataFrame | None
             "",
         ]
     )
-    sample_sufficiency_frame = (
-        sample_sufficiency if sample_sufficiency is not None else pd.DataFrame()
-    )
+    sample_sufficiency_frame = sample_sufficiency if sample_sufficiency is not None else pd.DataFrame()
     if not sample_sufficiency_frame.empty:
         lines.extend(_markdown_table(_format_metric_frame(sample_sufficiency_frame.head(30))))
     else:
@@ -294,9 +291,7 @@ def _probability_calibration_section(probability_calibration: pd.DataFrame | Non
             "",
         ]
     )
-    probability_frame = (
-        probability_calibration if probability_calibration is not None else pd.DataFrame()
-    )
+    probability_frame = probability_calibration if probability_calibration is not None else pd.DataFrame()
     lines.extend(_markdown_table(_format_metric_frame(probability_frame)))
     lines.extend(
         [
@@ -383,10 +378,7 @@ def _benchmark_comparison_section(benchmark_summary: pd.DataFrame | None) -> lis
         [
             "## Benchmark Comparison / 基准对比",
             "",
-            (
-                "This section compares portfolio equity against SPY and QQQ "
-                "on the same daily dates."
-            ),
+            ("This section compares portfolio equity against SPY and QQQ on the same daily dates."),
             "本区块在相同每日日期上，把组合净值与SPY和QQQ进行对比。",
             "",
         ]
@@ -487,7 +479,9 @@ def _threshold_sensitivity_grid_section(threshold_sensitivity: pd.DataFrame | No
             "",
         ]
     )
-    threshold_sensitivity_frame = threshold_sensitivity if threshold_sensitivity is not None else pd.DataFrame()
+    threshold_sensitivity_frame = (
+        threshold_sensitivity if threshold_sensitivity is not None else pd.DataFrame()
+    )
     if not threshold_sensitivity_frame.empty:
         lines.extend(_markdown_table(_format_metric_frame(threshold_sensitivity_frame.head(30))))
     else:
@@ -577,9 +571,7 @@ def _profile_rule_calibration_section(profile_calibration: pd.DataFrame | None) 
             "",
         ]
     )
-    profile_calibration_frame = (
-        profile_calibration if profile_calibration is not None else pd.DataFrame()
-    )
+    profile_calibration_frame = profile_calibration if profile_calibration is not None else pd.DataFrame()
     lines.extend(_markdown_table(_format_metric_frame(profile_calibration_frame)))
     lines.extend(
         [

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
 import json
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
@@ -119,7 +119,9 @@ class ScannerTest(unittest.TestCase):
             self.assertIn("calibrated_win_probability", result.summary.columns)
             self.assertIn("calibrated_probability_confidence", result.summary.columns)
             self.assertGreater(
-                float(result.summary.loc[result.summary["ticker"] == "LOW", "recheck_priority_score"].iloc[0]),
+                float(
+                    result.summary.loc[result.summary["ticker"] == "LOW", "recheck_priority_score"].iloc[0]
+                ),
                 0.0,
             )
             self.assertEqual(
@@ -204,19 +206,13 @@ def make_scan_row(ticker: str, passed: bool, score: float) -> dict[str, object]:
         "primary_blocker_resolution": "No blocker resolution is needed."
         if passed
         else "Wait until price closes above the trigger.",
-        "primary_blocker_resolution_zh": "当前不需要解除主要卡点。"
-        if passed
-        else "等待价格收在触发价上方。",
-        "blocker_resolution_steps": "none"
-        if passed
-        else "Wait until price closes above the trigger.",
+        "primary_blocker_resolution_zh": "当前不需要解除主要卡点。" if passed else "等待价格收在触发价上方。",
+        "blocker_resolution_steps": "none" if passed else "Wait until price closes above the trigger.",
         "blocker_resolution_steps_zh": "无" if passed else "等待价格收在触发价上方。",
         "blocker_recheck_trigger": "Continue tracking the plan."
         if passed
         else "Re-check after price trigger.",
-        "blocker_recheck_trigger_zh": "继续跟踪计划。"
-        if passed
-        else "价格触发后重新检查。",
+        "blocker_recheck_trigger_zh": "继续跟踪计划。" if passed else "价格触发后重新检查。",
         "primary_blocker_progress": 100.0 if passed else 25.0,
         "blocker_resolution_score": 100.0 if passed else 25.0,
         "blocker_resolution_level": "ready" if passed else "far",
@@ -401,18 +397,14 @@ def make_scan_row(ticker: str, passed: bool, score: float) -> dict[str, object]:
         "calibrated_screening_action": "calibrated_high_probability_candidate"
         if passed
         else "not_calibrated_high_probability_now",
-        "calibrated_screening_action_zh": "校准后高概率候选"
-        if passed
-        else "校准后当前不是高概率机会",
+        "calibrated_screening_action_zh": "校准后高概率候选" if passed else "校准后当前不是高概率机会",
         "calibrated_quality_gate_passed": passed,
         "calibrated_high_probability_score": score,
         "calibrated_high_probability_level": "high" if passed else "low",
         "calibrated_quality_gate_fail_reasons": "all strict quality gates passed"
         if passed
         else "signal score too low",
-        "calibrated_quality_gate_fail_reasons_zh": "所有严格质量门槛通过"
-        if passed
-        else "信号分数不足",
+        "calibrated_quality_gate_fail_reasons_zh": "所有严格质量门槛通过" if passed else "信号分数不足",
         "calibrated_watchlist_status": "ready_high_probability"
         if passed
         else ("close_but_not_ready" if score >= 60 else "not_ready"),
@@ -420,19 +412,13 @@ def make_scan_row(ticker: str, passed: bool, score: float) -> dict[str, object]:
         if passed
         else ("接近但还没准备好" if score >= 60 else "暂不值得重点观察"),
         "calibrated_watchlist_gap_score": max(0.0, 65.0 - score),
-        "calibrated_watchlist_missing_items": "signal score >= 65"
-        if not passed
-        else "none",
-        "calibrated_watchlist_missing_items_zh": "信号分数达到65分"
-        if not passed
-        else "无",
+        "calibrated_watchlist_missing_items": "signal score >= 65" if not passed else "none",
+        "calibrated_watchlist_missing_items_zh": "信号分数达到65分" if not passed else "无",
         "calibrated_watchlist_missing_count": 0 if passed else 1,
         "calibrated_watchlist_trigger_price": 100.0,
         "calibrated_watchlist_recheck_reason": "Re-check if calibrated signal improves.",
         "calibrated_watchlist_recheck_reason_zh": "如果校准后信号改善，可以重新检查。",
-        "quality_gate_fail_reasons": "all strict quality gates passed"
-        if passed
-        else "signal score too low",
+        "quality_gate_fail_reasons": "all strict quality gates passed" if passed else "signal score too low",
         "quality_gate_fail_reasons_zh": "所有严格质量门槛通过" if passed else "信号分数不足",
     }
 

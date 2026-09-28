@@ -22,18 +22,38 @@ DATA = ROOT / "results" / "data"
 
 WALK_FORWARD_RUN = "outputs/walk_forward/v2_baseline_2026-07-10"
 SIGNAL_COLUMNS = [
-    "date", "ticker", "horizon", "screening_profile", "validation_bucket",
-    "high_probability_score", "calibrated_win_probability", "signal_score",
-    "forward_return_5d", "forward_return_20d", "forward_return_60d",
+    "date",
+    "ticker",
+    "horizon",
+    "screening_profile",
+    "validation_bucket",
+    "high_probability_score",
+    "calibrated_win_probability",
+    "signal_score",
+    "forward_return_5d",
+    "forward_return_20d",
+    "forward_return_60d",
     "point_in_time_universe_member",
 ]
 ORDER_COLUMNS = [
-    "as_of_date", "order_sequence", "ticker", "action", "quantity", "close_price",
-    "fill_price", "notional", "total_transaction_cost", "position_quantity_after",
+    "as_of_date",
+    "order_sequence",
+    "ticker",
+    "action",
+    "quantity",
+    "close_price",
+    "fill_price",
+    "notional",
+    "total_transaction_cost",
+    "position_quantity_after",
 ]
 BACKTEST_CURVE_COLUMNS = [
-    "date", "portfolio_name", "benchmark_ticker", "portfolio_daily_return",
-    "benchmark_daily_return", "excess_daily_return",
+    "date",
+    "portfolio_name",
+    "benchmark_ticker",
+    "portfolio_daily_return",
+    "benchmark_daily_return",
+    "excess_daily_return",
 ]
 
 
@@ -45,16 +65,25 @@ def _write(frame: pd.DataFrame, name: str) -> None:
 
 def export_local(pipeline: Path) -> None:
     wf = pipeline / WALK_FORWARD_RUN
-    _write(pd.read_csv(wf / "walk_forward_events.csv", usecols=SIGNAL_COLUMNS, low_memory=False),
-           "walk_forward_signals.csv")
-    _write(pd.read_csv(wf / "benchmark_comparison_curve.csv", usecols=BACKTEST_CURVE_COLUMNS),
-           "backtest_portfolio_vs_benchmark.csv")
+    _write(
+        pd.read_csv(wf / "walk_forward_events.csv", usecols=SIGNAL_COLUMNS, low_memory=False),
+        "walk_forward_signals.csv",
+    )
+    _write(
+        pd.read_csv(wf / "benchmark_comparison_curve.csv", usecols=BACKTEST_CURVE_COLUMNS),
+        "backtest_portfolio_vs_benchmark.csv",
+    )
     _write(pd.read_csv(wf / "probability_calibration.csv"), "backtest_probability_calibration.csv")
-    _write(pd.read_csv(pipeline / "outputs/paper_latest/paper_equity_history.csv"), "paper_equity_history.csv")
-    _write(pd.read_csv(pipeline / "outputs/paper_history/paper_orders.csv", usecols=ORDER_COLUMNS),
-           "paper_orders.csv")
+    _write(
+        pd.read_csv(pipeline / "outputs/paper_latest/paper_equity_history.csv"), "paper_equity_history.csv"
+    )
+    _write(
+        pd.read_csv(pipeline / "outputs/paper_history/paper_orders.csv", usecols=ORDER_COLUMNS),
+        "paper_orders.csv",
+    )
     universe = [
-        line.strip() for line in (pipeline / "candidates_universe.txt").read_text().splitlines()
+        line.strip()
+        for line in (pipeline / "candidates_universe.txt").read_text().splitlines()
         if line.strip() and not line.startswith("#")
     ]
     _write(pd.DataFrame({"ticker": universe}), "universe.csv")
@@ -64,8 +93,9 @@ def download_prices(start: str, end: str) -> None:
     import yfinance as yf
 
     universe = pd.read_csv(DATA / "universe.csv")["ticker"].tolist()
-    closes = yf.download(universe + ["QQQ", "SPY"], start=start, end=end,
-                         auto_adjust=True, progress=False)["Close"]
+    closes = yf.download(universe + ["QQQ", "SPY"], start=start, end=end, auto_adjust=True, progress=False)[
+        "Close"
+    ]
     closes.index.name = "date"
     _write(closes.reset_index(), "forward_window_prices.csv")
     qqq = yf.download(["QQQ"], start="2025-01-01", end=end, auto_adjust=True, progress=False)["Close"]
@@ -75,8 +105,12 @@ def download_prices(start: str, end: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--pipeline-dir", type=Path, required=True,
-                        help="Checkout whose outputs/ holds the running experiment.")
+    parser.add_argument(
+        "--pipeline-dir",
+        type=Path,
+        required=True,
+        help="Checkout whose outputs/ holds the running experiment.",
+    )
     parser.add_argument("--start", default="2026-07-01")
     parser.add_argument("--end", default=pd.Timestamp.today().strftime("%Y-%m-%d"))
     parser.add_argument("--skip-download", action="store_true")

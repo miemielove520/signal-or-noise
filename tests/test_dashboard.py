@@ -105,8 +105,14 @@ class DashboardTests(unittest.TestCase):
 
     def test_position_line_on_holding_card(self) -> None:
         summaries = [
-            {"ticker": "AVGO", "final_decision": "hold", "pos_pl_pct": 0.0109,
-             "pos_weight": 37.95, "pos_conc": "extreme", "pos_conc_zh": "极高"}
+            {
+                "ticker": "AVGO",
+                "final_decision": "hold",
+                "pos_pl_pct": 0.0109,
+                "pos_weight": 37.95,
+                "pos_conc": "extreme",
+                "pos_conc_zh": "极高",
+            }
         ]
         html = render_dashboard_html(summaries)
         self.assertIn("持仓", html)
@@ -140,9 +146,16 @@ class DashboardTests(unittest.TestCase):
         self.assertNotIn('<div class="newsblock">', html)  # CSS defines .newsblock; no card uses it
 
     def test_paper_section_renders(self) -> None:
-        paper = {"days_tracked": 25, "latest_equity": 105000.0, "total_return": 0.05,
-                 "benchmark_return": 0.02, "excess_return": 0.03, "max_drawdown": -0.06,
-                 "readiness_zh": "达标", "note_zh": "站得住"}
+        paper = {
+            "days_tracked": 25,
+            "latest_equity": 105000.0,
+            "total_return": 0.05,
+            "benchmark_return": 0.02,
+            "excess_return": 0.03,
+            "max_drawdown": -0.06,
+            "readiness_zh": "达标",
+            "note_zh": "站得住",
+        }
         html = render_dashboard_html([], paper=paper)
         self.assertIn("模拟盘", html)
         self.assertIn("$105,000.00", html)
@@ -168,9 +181,7 @@ class MarketAndFreshnessTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             closes = [100.0 + i for i in range(25)]  # steadily rising
-            pd.DataFrame({"date": range(25), "adj_close": closes}).to_csv(
-                root / "VOO_5y.csv", index=False
-            )
+            pd.DataFrame({"date": range(25), "adj_close": closes}).to_csv(root / "VOO_5y.csv", index=False)
             r = recent_returns("VOO", prices_dir=root)
             self.assertIsNotNone(r)
             self.assertAlmostEqual(r["r1"], 124 / 123 - 1, places=6)
@@ -245,35 +256,54 @@ if __name__ == "__main__":
 class HolderNextStepTests(unittest.TestCase):
     def test_negatives_plus_concentration_leans_trim(self) -> None:
         from stock_selector.dashboard import _holder_next_step
-        s = {"pos_pl_pct": -0.13, "pos_conc": "high", "pos_weight": 30.0,
-             "fundamental_trend_direction_zh": "恶化中", "risk_news_level_zh": "增发稀释"}
+
+        s = {
+            "pos_pl_pct": -0.13,
+            "pos_conc": "high",
+            "pos_weight": 30.0,
+            "fundamental_trend_direction_zh": "恶化中",
+            "risk_news_level_zh": "增发稀释",
+        }
         txt = _holder_next_step(s)
         self.assertIn("优先考虑减仓", txt)
         self.assertIn("基本面恶化", txt)
 
     def test_positive_but_concentrated_leans_lock_and_trim(self) -> None:
         from stock_selector.dashboard import _holder_next_step
-        s = {"pos_pl_pct": 0.01, "pos_conc": "extreme", "pos_weight": 38.0,
-             "fundamental_trend_direction_zh": "改善中", "positive_news_level_zh": "重大利好"}
+
+        s = {
+            "pos_pl_pct": 0.01,
+            "pos_conc": "extreme",
+            "pos_weight": 38.0,
+            "fundamental_trend_direction_zh": "改善中",
+            "positive_news_level_zh": "重大利好",
+        }
         txt = _holder_next_step(s)
         self.assertIn("锁部分利润", txt)
         self.assertIn("集中度", txt)
 
     def test_not_a_holding_returns_none(self) -> None:
         from stock_selector.dashboard import _holder_next_step
+
         self.assertIsNone(_holder_next_step({"ticker": "XYZ"}))
 
 
 class SectorAndFlowTests(unittest.TestCase):
     def _ohlcv(self, root, ticker, closes, vols):
-        pd.DataFrame({
-            "date": range(len(closes)),
-            "high": [c + 1 for c in closes], "low": [c - 1 for c in closes],
-            "close": closes, "adj_close": closes, "volume": vols,
-        }).to_csv(Path(root) / f"{ticker}_5y.csv", index=False)
+        pd.DataFrame(
+            {
+                "date": range(len(closes)),
+                "high": [c + 1 for c in closes],
+                "low": [c - 1 for c in closes],
+                "close": closes,
+                "adj_close": closes,
+                "volume": vols,
+            }
+        ).to_csv(Path(root) / f"{ticker}_5y.csv", index=False)
 
     def test_money_flow_index_range(self) -> None:
         from stock_selector.dashboard import money_flow_index
+
         with tempfile.TemporaryDirectory() as tmp:
             # steadily rising price -> high MFI (inflow)
             self._ohlcv(tmp, "XLK", [100 + i for i in range(30)], [1_000_000] * 30)
@@ -283,6 +313,7 @@ class SectorAndFlowTests(unittest.TestCase):
 
     def test_collect_sector_returns_sorted(self) -> None:
         from stock_selector.dashboard import collect_sector_returns
+
         with tempfile.TemporaryDirectory() as tmp:
             self._ohlcv(tmp, "XLE", [100 + 2 * i for i in range(25)], [1e6] * 25)  # strong
             self._ohlcv(tmp, "XLU", [100 - i * 0.2 for i in range(25)], [1e6] * 25)  # weak

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import unittest
 from pathlib import Path
 from types import SimpleNamespace
-import unittest
 from unittest.mock import patch
 
 import pandas as pd
@@ -21,9 +21,11 @@ class ScanCliTests(unittest.TestCase):
             failures=({"ticker": "MISSING", "error": "no price data"},),
             journal=None,
         )
-        with patch("scan.load_universe_tickers", return_value=["AAA", "MISSING"]), patch(
-            "scan.load_screening_config", return_value=object()
-        ), patch("scan.run_high_probability_scan", return_value=result):
+        with (
+            patch("scan.load_universe_tickers", return_value=["AAA", "MISSING"]),
+            patch("scan.load_screening_config", return_value=object()),
+            patch("scan.run_high_probability_scan", return_value=result),
+        ):
             exit_code = scan_cli.main(["AAA", "MISSING"])
 
         self.assertEqual(exit_code, 1)
@@ -38,9 +40,11 @@ class ScanCliTests(unittest.TestCase):
             failures=(),
             journal=None,
         )
-        with patch("scan.load_universe_tickers", return_value=["AAA"]), patch(
-            "scan.load_screening_config", return_value=object()
-        ), patch("scan.run_high_probability_scan", return_value=result):
+        with (
+            patch("scan.load_universe_tickers", return_value=["AAA"]),
+            patch("scan.load_screening_config", return_value=object()),
+            patch("scan.run_high_probability_scan", return_value=result),
+        ):
             exit_code = scan_cli.main(["AAA"])
 
         self.assertEqual(exit_code, 0)

@@ -5,8 +5,8 @@ import unittest
 import pandas as pd
 
 from stock_selector.win_rate_dashboard import (
-    build_historical_win_rate_gate,
     build_historical_threshold_recommendations,
+    build_historical_win_rate_gate,
     build_profile_action_recommendations,
     build_profile_blocker_dashboard,
     build_profile_health_dashboard,
@@ -63,9 +63,7 @@ class WinRateDashboardTest(unittest.TestCase):
 
         dashboard = build_win_rate_dashboard(events, forward_windows=(5, 20))
 
-        overall_20d = dashboard["overall"][
-            dashboard["overall"]["forward_window_days"] == 20
-        ].iloc[0]
+        overall_20d = dashboard["overall"][dashboard["overall"]["forward_window_days"] == 20].iloc[0]
         self.assertEqual(overall_20d["sample_count"], 3)
         self.assertAlmostEqual(float(overall_20d["win_rate"]), 2 / 3)
         self.assertAlmostEqual(float(overall_20d["avg_return"]), (0.08 - 0.04 + 0.06) / 3)
@@ -140,12 +138,8 @@ class WinRateDashboardTest(unittest.TestCase):
         recommendations = build_profile_action_recommendations(profile_health)
         markdown = render_profile_action_recommendations(recommendations)
 
-        weak = recommendations[
-            recommendations["screening_profile"] == "weak_profile"
-        ].iloc[0]
-        thin = recommendations[
-            recommendations["screening_profile"] == "thin_profile"
-        ].iloc[0]
+        weak = recommendations[recommendations["screening_profile"] == "weak_profile"].iloc[0]
+        thin = recommendations[recommendations["screening_profile"] == "thin_profile"].iloc[0]
         self.assertEqual(weak["recommendation_action"], "tighten_signal_quality")
         self.assertIn("signal_score_min", weak["threshold_attrs"])
         self.assertEqual(thin["recommendation_action"], "expand_validation_sample")
@@ -157,12 +151,8 @@ class WinRateDashboardTest(unittest.TestCase):
                 {
                     "screening_profile": "saas_software",
                     "screening_profile_zh": "SaaS软件规则",
-                    "quality_gate_fail_reasons": (
-                        "signal score too low; breakout backtest sample too small"
-                    ),
-                    "quality_gate_fail_reasons_zh": (
-                        "信号分数不足；突破买点回测样本不足"
-                    ),
+                    "quality_gate_fail_reasons": ("signal score too low; breakout backtest sample too small"),
+                    "quality_gate_fail_reasons_zh": ("信号分数不足；突破买点回测样本不足"),
                 },
                 {
                     "screening_profile": "saas_software",
@@ -183,8 +173,7 @@ class WinRateDashboardTest(unittest.TestCase):
         markdown = render_profile_blocker_dashboard(blockers)
 
         saas_top = blockers[
-            (blockers["screening_profile"] == "saas_software")
-            & (blockers["blocker_rank"] == 1)
+            (blockers["screening_profile"] == "saas_software") & (blockers["blocker_rank"] == 1)
         ].iloc[0]
         self.assertEqual(saas_top["blocker"], "signal score too low")
         self.assertEqual(saas_top["occurrence_count"], 2)
@@ -254,12 +243,9 @@ class WinRateDashboardTest(unittest.TestCase):
         )
         markdown = render_historical_win_rate_gate(gate)
 
-        quality_row = gate[
-            (gate["scope"] == "quality_gate") & (gate["group_value"] == "passed")
-        ].iloc[0]
+        quality_row = gate[(gate["scope"] == "quality_gate") & (gate["group_value"] == "passed")].iloc[0]
         weak_profile = gate[
-            (gate["scope"] == "screening_profile")
-            & (gate["group_value"] == "weak_profile")
+            (gate["scope"] == "screening_profile") & (gate["group_value"] == "weak_profile")
         ].iloc[0]
         self.assertEqual(
             quality_row["deployment_gate_action"],
@@ -300,9 +286,7 @@ class WinRateDashboardTest(unittest.TestCase):
         self.assertIn("signal_score_min", attrs)
         self.assertIn("relative_strength_min", attrs)
         self.assertIn("backtest_win_rate_min", attrs)
-        signal_row = recommendations[
-            recommendations["threshold_attr"] == "signal_score_min"
-        ].iloc[0]
+        signal_row = recommendations[recommendations["threshold_attr"] == "signal_score_min"].iloc[0]
         self.assertGreater(
             float(signal_row["suggested_threshold"]),
             float(signal_row["current_threshold"]),

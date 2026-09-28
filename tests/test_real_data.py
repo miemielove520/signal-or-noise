@@ -1,26 +1,26 @@
 from __future__ import annotations
 
-import unittest
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
 import tempfile
+import unittest
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
 
+from stock_selector.data_sources import DataLayerReadiness, DataReadinessReport
 from stock_selector.real_data import (
+    SNAPSHOT_CACHE_MAX_AGE_DAYS,
     _apply_data_readiness_to_analysis,
     _auto_period_upgrade_decision,
     _period_is_shorter_than_5y,
-    _repair_snapshot_from_cache,
-    _repair_snapshot_financial_fields,
     _repair_snapshot_classification,
+    _repair_snapshot_financial_fields,
+    _repair_snapshot_from_cache,
     _save_snapshot_cache,
-    SNAPSHOT_CACHE_MAX_AGE_DAYS,
     build_single_ticker_scored_frame,
     normalize_ticker,
 )
-from stock_selector.data_sources import DataLayerReadiness, DataReadinessReport
 
 
 class RealDataTest(unittest.TestCase):
@@ -274,10 +274,7 @@ class RealDataTest(unittest.TestCase):
         self.assertEqual(actions, ())
 
     def test_snapshot_cache_ignores_stale_snapshot(self) -> None:
-        stale_time = (
-            datetime.now(timezone.utc)
-            - timedelta(days=SNAPSHOT_CACHE_MAX_AGE_DAYS + 1)
-        ).isoformat()
+        stale_time = (datetime.now(UTC) - timedelta(days=SNAPSHOT_CACHE_MAX_AGE_DAYS + 1)).isoformat()
 
         with tempfile.TemporaryDirectory() as directory:
             data_root = Path(directory)

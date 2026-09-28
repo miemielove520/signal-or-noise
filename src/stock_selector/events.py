@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from datetime import date
-from typing import Any, Iterable
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -13,6 +14,7 @@ import pandas as pd
 @dataclass(frozen=True)
 class EventRiskContext:
     """Earnings-event risk for one ticker: nearest dates, days until/since, risk level and entry-block and cooldown flags."""
+
     ticker: str
     as_of_date: str
     next_earnings_date: str | None
@@ -73,9 +75,7 @@ def build_event_risk_context(
             event_risk_note=(
                 f"Earnings were {days_since} calendar days ago; wait for post-earnings price discovery."
             ),
-            event_risk_note_zh=(
-                f"距离上一次财报只有{days_since}个自然日；等待财报后价格消化。"
-            ),
+            event_risk_note_zh=(f"距离上一次财报只有{days_since}个自然日；等待财报后价格消化。"),
             event_risk_warning=warning,
             source=source,
         )
@@ -95,9 +95,7 @@ def build_event_risk_context(
             event_window_zh="未知",
             event_block_new_entries=False,
             event_cooldown_active=False,
-            event_risk_note=(
-                "Upcoming earnings date is unavailable; no event-risk downgrade is applied."
-            ),
+            event_risk_note=("Upcoming earnings date is unavailable; no event-risk downgrade is applied."),
             event_risk_note_zh="暂时无法取得下一次财报日期；不进行事件风险降级。",
             event_risk_warning=warning or "earnings date unavailable",
             source=source,
@@ -108,19 +106,13 @@ def build_event_risk_context(
     level, level_zh, score, window, window_zh, block_new_entries = _classify_event_risk(days_until)
     cooldown_active = False
     if level == "high":
-        note = (
-            f"Upcoming earnings are in {days_until} calendar days; new entries are downgraded."
-        )
+        note = f"Upcoming earnings are in {days_until} calendar days; new entries are downgraded."
         note_zh = f"距离下一次财报还有{days_until}个自然日；新的入场信号会被降级等待。"
     elif level == "medium":
-        note = (
-            f"Upcoming earnings are in {days_until} calendar days; position timing needs caution."
-        )
+        note = f"Upcoming earnings are in {days_until} calendar days; position timing needs caution."
         note_zh = f"距离下一次财报还有{days_until}个自然日；入场时机需要更谨慎。"
     else:
-        note = (
-            f"Next known earnings date is {days_until} calendar days away; event risk is low."
-        )
+        note = f"Next known earnings date is {days_until} calendar days away; event risk is low."
         note_zh = f"已知下一次财报距离现在{days_until}个自然日；事件风险较低。"
 
     return EventRiskContext(

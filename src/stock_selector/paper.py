@@ -10,13 +10,13 @@ import pandas as pd
 
 from .config import PaperTradingConfig
 
-
 CASH_TICKER = "CASH"
 
 
 @dataclass(frozen=True)
 class PaperTradeResult:
     """Orders, pre- and post-trade state, summary and report of one paper rebalance."""
+
     as_of_date: pd.Timestamp
     orders: pd.DataFrame
     pre_trade_state: pd.DataFrame
@@ -28,6 +28,7 @@ class PaperTradeResult:
 @dataclass(frozen=True)
 class PaperTargetConfig:
     """Limits for turning scan rows into paper targets: position count and size, cash reserve and score floors."""
+
     max_positions: int = 5
     max_position_weight: float = 0.20
     min_target_weight: float = 0.02
@@ -267,17 +268,14 @@ def _rebalance_to_targets(
     orders = pd.DataFrame(order_rows)
     if orders.empty:
         post_state = _positions_to_state(positions, cash)
-        summary = _paper_summary(
-            portfolio_value, portfolio_value, cash, 0.0, 0, unpriced_positions
-        )
+        summary = _paper_summary(portfolio_value, portfolio_value, cash, 0.0, 0, unpriced_positions)
         return orders, post_state, summary
 
     orders = _apply_cash_constraint(orders, cash)
     orders = _add_order_balance_audit(orders, positions, cash)
     post_positions, post_cash = _apply_orders(positions, cash, orders)
     post_value = post_cash + sum(
-        quantity * float(price_map.get(ticker, 0.0))
-        for ticker, quantity in post_positions.items()
+        quantity * float(price_map.get(ticker, 0.0)) for ticker, quantity in post_positions.items()
     )
     post_state = _positions_to_state(post_positions, post_cash)
     summary = _paper_summary(
@@ -338,11 +336,7 @@ def _add_order_balance_audit(
         signed_quantity = float(order.signed_quantity)
         position_before = float(running_positions.get(ticker, 0.0))
         next_position = position_before + signed_quantity
-        next_cash = (
-            running_cash
-            - signed_quantity * float(order.price)
-            - float(order.estimated_cost)
-        )
+        next_cash = running_cash - signed_quantity * float(order.price) - float(order.estimated_cost)
         before_quantities.append(position_before)
         after_quantities.append(next_position)
         cash_before.append(running_cash)
@@ -478,12 +472,8 @@ def _analysis_row_to_paper_candidate(
     if not ticker:
         return None
 
-    gate_passed = _safe_bool(
-        _first_existing(row, ["calibrated_quality_gate_passed", "quality_gate_passed"])
-    )
-    watchlist_status = _safe_str(
-        _first_existing(row, ["calibrated_watchlist_status", "watchlist_status"])
-    )
+    gate_passed = _safe_bool(_first_existing(row, ["calibrated_quality_gate_passed", "quality_gate_passed"]))
+    watchlist_status = _safe_str(_first_existing(row, ["calibrated_watchlist_status", "watchlist_status"]))
     overall_risk_level = _safe_str(row.get("overall_risk_level")).lower()
     data_quality_score = _safe_float(row.get("data_quality_score"), default=100.0)
     confidence_score = _safe_float(row.get("confidence_score"), default=100.0)
@@ -706,7 +696,9 @@ def _paper_score(row: dict[str, object]) -> float:
 
     probability_component = win_probability if np.isfinite(win_probability) else np.nan
     if not np.isfinite(probability_component):
-        probability_component = high_probability_score / 100.0 if np.isfinite(high_probability_score) else 0.50
+        probability_component = (
+            high_probability_score / 100.0 if np.isfinite(high_probability_score) else 0.50
+        )
 
     quality_component = _bounded_fraction(high_probability_score, default=60.0)
     trust_component = _bounded_fraction(backtest_trust_score, default=70.0)

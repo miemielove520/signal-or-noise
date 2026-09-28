@@ -54,9 +54,7 @@ class MLTest(unittest.TestCase):
         )
 
         self.assertFalse(result.predictions.empty)
-        self.assertTrue(
-            (result.predictions["latest_train_label_date"] < result.predictions["date"]).all()
-        )
+        self.assertTrue((result.predictions["latest_train_label_date"] < result.predictions["date"]).all())
         self.assertIn("rank_ic_mean", result.metrics)
         self.assertIn("top_bucket_mean_return", result.metrics)
         self.assertIn("directional_accuracy_advantage", result.metrics)

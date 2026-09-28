@@ -431,9 +431,7 @@ def ml_run_command(args: argparse.Namespace) -> int:
 
     if not result.ml.feature_importance.empty:
         top_features = result.ml.feature_importance.head(5)
-        rendered = ", ".join(
-            f"{row.feature}={row.importance:.3f}" for row in top_features.itertuples()
-        )
+        rendered = ", ".join(f"{row.feature}={row.importance:.3f}" for row in top_features.itertuples())
         print(f"Top features: {rendered}")
 
     latest_date = result.selections["date"].max() if not result.selections.empty else None
@@ -536,9 +534,7 @@ def daily_report_command(args: argparse.Namespace) -> int:
     monitor.candidates.to_csv(output_dir / "daily_candidates.csv", index=False)
     monitor.checks.to_csv(output_dir / "monitor_checks.csv", index=False)
     feature_columns = (
-        config.ml.feature_columns
-        if args.mode == "ml"
-        else tuple(config.scoring.factor_weights.keys())
+        config.ml.feature_columns if args.mode == "ml" else tuple(config.scoring.factor_weights.keys())
     )
     feature_missing_report(result.scored, feature_columns).to_csv(
         output_dir / "feature_missing_report.csv",
@@ -745,9 +741,7 @@ def compare_runs_command(args: argparse.Namespace) -> int:
     print(f"Output folder / 输出文件夹: {result.output_dir}")
     print()
     if not result.adoption_decision.empty:
-        final = result.adoption_decision[
-            result.adoption_decision["check_name"] == "final_decision"
-        ]
+        final = result.adoption_decision[result.adoption_decision["check_name"] == "final_decision"]
         if not final.empty:
             row = final.iloc[0]
             print("Config adoption decision / 配置采用结论")

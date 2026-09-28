@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 
 from ..screening_config import TradingRules
-
 from ._common import (
     _context_bool,
     _context_float,
@@ -98,12 +97,7 @@ def _price_data_health_profile(frame: pd.DataFrame) -> dict[str, object]:
     volume = pd.to_numeric(frame.get("volume"), errors="coerce")
     close = pd.to_numeric(frame.get("close"), errors="coerce") if "close" in frame else pd.Series(dtype=float)
 
-    missing_ohlcv_rows = int(
-        pd.concat([high, low, adj_close, volume], axis=1)
-        .isna()
-        .any(axis=1)
-        .sum()
-    )
+    missing_ohlcv_rows = int(pd.concat([high, low, adj_close, volume], axis=1).isna().any(axis=1).sum())
     zero_volume_days = int((volume.fillna(0.0) <= 0).sum())
     high_low_inversion_count = int(((high < low) & high.notna() & low.notna()).sum())
 
@@ -601,6 +595,7 @@ def _analyze_horizon(
         "plain_summary_zh": plain_summary_zh,
     }
 
+
 def _sentiment_fields(sentiment_context: object) -> dict[str, object]:
     """Row fields `positive_news_level` … `sentiment_warning` taken from `sentiment_context`."""
     return {
@@ -611,9 +606,7 @@ def _sentiment_fields(sentiment_context: object) -> dict[str, object]:
             "未知",
         ),
         "positive_news_score": _context_float(sentiment_context, "positive_news_score", 0.0),
-        "positive_news_major_count": int(
-            _context_float(sentiment_context, "positive_news_major_count", 0.0)
-        ),
+        "positive_news_major_count": int(_context_float(sentiment_context, "positive_news_major_count", 0.0)),
         "positive_news_strong_count": int(
             _context_float(sentiment_context, "positive_news_strong_count", 0.0)
         ),
@@ -637,18 +630,10 @@ def _sentiment_fields(sentiment_context: object) -> dict[str, object]:
         "dilution_count": int(_context_float(sentiment_context, "dilution_count", 0.0)),
         "risk_news_drivers": _context_text(sentiment_context, "risk_news_drivers", "none"),
         "risk_news_drivers_zh": _context_text(sentiment_context, "risk_news_drivers_zh", "无"),
-        "sentiment_positive_count": int(
-            _context_float(sentiment_context, "sentiment_positive_count", 0.0)
-        ),
-        "sentiment_negative_count": int(
-            _context_float(sentiment_context, "sentiment_negative_count", 0.0)
-        ),
-        "sentiment_high_risk_count": int(
-            _context_float(sentiment_context, "sentiment_high_risk_count", 0.0)
-        ),
-        "sentiment_titles_used": int(
-            _context_float(sentiment_context, "sentiment_titles_used", 0.0)
-        ),
+        "sentiment_positive_count": int(_context_float(sentiment_context, "sentiment_positive_count", 0.0)),
+        "sentiment_negative_count": int(_context_float(sentiment_context, "sentiment_negative_count", 0.0)),
+        "sentiment_high_risk_count": int(_context_float(sentiment_context, "sentiment_high_risk_count", 0.0)),
+        "sentiment_titles_used": int(_context_float(sentiment_context, "sentiment_titles_used", 0.0)),
         "sentiment_note": _context_text(
             sentiment_context,
             "sentiment_note",
@@ -661,6 +646,7 @@ def _sentiment_fields(sentiment_context: object) -> dict[str, object]:
         ),
         "sentiment_warning": _context_text(sentiment_context, "sentiment_warning", ""),
     }
+
 
 def _analyst_fields(analyst_context: object) -> dict[str, object]:
     """Row fields `analyst_upside` … `analyst_data_coverage` taken from `analyst_context`."""
@@ -683,6 +669,7 @@ def _analyst_fields(analyst_context: object) -> dict[str, object]:
         "analyst_warning": _context_text(analyst_context, "analyst_warning", ""),
         "analyst_data_coverage": _context_float(analyst_context, "data_coverage", 0.0),
     }
+
 
 def _valuation_fields(valuation_context: object) -> dict[str, object]:
     """Row fields `valuation_forward_pe` … `valuation_data_coverage` taken from `valuation_context`."""
@@ -724,6 +711,7 @@ def _valuation_fields(valuation_context: object) -> dict[str, object]:
         "valuation_data_coverage": _context_float(valuation_context, "data_coverage", 0.0),
     }
 
+
 def _sector_fields(sector_context: object) -> dict[str, object]:
     """Row fields `sector_status` … `sector_relative_strength` taken from `sector_context`."""
     return {
@@ -749,6 +737,7 @@ def _sector_fields(sector_context: object) -> dict[str, object]:
             np.nan,
         ),
     }
+
 
 def _fundamental_fields(fundamental_context: object) -> dict[str, object]:
     """Row fields `fundamental_quality_zh` … `fundamental_revenue_growth_trend` taken from `fundamental_context`."""
@@ -782,42 +771,27 @@ def _fundamental_fields(fundamental_context: object) -> dict[str, object]:
             fundamental_context, "cash_flow_quality_score", np.nan
         ),
         "fundamental_gross_margin": _context_float(fundamental_context, "gross_margin", np.nan),
-        "fundamental_operating_margin": _context_float(
-            fundamental_context, "operating_margin", np.nan
-        ),
+        "fundamental_operating_margin": _context_float(fundamental_context, "operating_margin", np.nan),
         "fundamental_fcf_margin": _context_float(fundamental_context, "fcf_margin", np.nan),
-        "fundamental_cash_conversion": _context_float(
-            fundamental_context, "cash_conversion", np.nan
-        ),
-        "fundamental_net_debt_to_equity": _context_float(
-            fundamental_context, "net_debt_to_equity", np.nan
-        ),
+        "fundamental_cash_conversion": _context_float(fundamental_context, "cash_conversion", np.nan),
+        "fundamental_net_debt_to_equity": _context_float(fundamental_context, "net_debt_to_equity", np.nan),
         "fundamental_trend_status": _context_text(
             fundamental_context, "trend_status", "insufficient_history"
         ),
-        "fundamental_trend_direction": _context_text(
-            fundamental_context, "trend_direction", "unknown"
-        ),
-        "fundamental_trend_direction_zh": _context_text(
-            fundamental_context, "trend_direction_zh", "未知"
-        ),
+        "fundamental_trend_direction": _context_text(fundamental_context, "trend_direction", "unknown"),
+        "fundamental_trend_direction_zh": _context_text(fundamental_context, "trend_direction_zh", "未知"),
         "fundamental_trend_score": _context_float(fundamental_context, "trend_score", np.nan),
-        "fundamental_gross_margin_trend": _context_text(
-            fundamental_context, "gross_margin_trend", "unknown"
-        ),
+        "fundamental_gross_margin_trend": _context_text(fundamental_context, "gross_margin_trend", "unknown"),
         "fundamental_operating_margin_trend": _context_text(
             fundamental_context, "operating_margin_trend", "unknown"
         ),
-        "fundamental_net_margin_trend": _context_text(
-            fundamental_context, "net_margin_trend", "unknown"
-        ),
-        "fundamental_fcf_margin_trend": _context_text(
-            fundamental_context, "fcf_margin_trend", "unknown"
-        ),
+        "fundamental_net_margin_trend": _context_text(fundamental_context, "net_margin_trend", "unknown"),
+        "fundamental_fcf_margin_trend": _context_text(fundamental_context, "fcf_margin_trend", "unknown"),
         "fundamental_revenue_growth_trend": _context_text(
             fundamental_context, "revenue_growth_trend", "unknown"
         ),
     }
+
 
 def _entry_backtest_fields(entry_backtest: object) -> dict[str, object]:
     """Row fields `backtest_execution_model` … `entry_backtest_note_zh` taken from `entry_backtest`."""
@@ -841,9 +815,7 @@ def _entry_backtest_fields(entry_backtest: object) -> dict[str, object]:
         "regime_coverage_level_zh": entry_backtest["regime_coverage_level_zh"],
         "regime_coverage_regime_count": entry_backtest["regime_coverage_regime_count"],
         "regime_coverage_dominant_regime": entry_backtest["regime_coverage_dominant_regime"],
-        "regime_coverage_dominant_regime_zh": entry_backtest[
-            "regime_coverage_dominant_regime_zh"
-        ],
+        "regime_coverage_dominant_regime_zh": entry_backtest["regime_coverage_dominant_regime_zh"],
         "regime_coverage_dominant_share": entry_backtest["regime_coverage_dominant_share"],
         "regime_coverage_note": entry_backtest["regime_coverage_note"],
         "regime_coverage_note_zh": entry_backtest["regime_coverage_note_zh"],
@@ -863,16 +835,10 @@ def _entry_backtest_fields(entry_backtest: object) -> dict[str, object]:
         "backtest_decay_late_trade_count": entry_backtest["backtest_decay_late_trade_count"],
         "backtest_decay_early_win_rate": entry_backtest["backtest_decay_early_win_rate"],
         "backtest_decay_late_win_rate": entry_backtest["backtest_decay_late_win_rate"],
-        "backtest_decay_early_average_return": entry_backtest[
-            "backtest_decay_early_average_return"
-        ],
-        "backtest_decay_late_average_return": entry_backtest[
-            "backtest_decay_late_average_return"
-        ],
+        "backtest_decay_early_average_return": entry_backtest["backtest_decay_early_average_return"],
+        "backtest_decay_late_average_return": entry_backtest["backtest_decay_late_average_return"],
         "backtest_decay_win_rate_delta": entry_backtest["backtest_decay_win_rate_delta"],
-        "backtest_decay_average_return_delta": entry_backtest[
-            "backtest_decay_average_return_delta"
-        ],
+        "backtest_decay_average_return_delta": entry_backtest["backtest_decay_average_return_delta"],
         "backtest_decay_note": entry_backtest["backtest_decay_note"],
         "backtest_decay_note_zh": entry_backtest["backtest_decay_note_zh"],
         "breakout_trade_count": entry_backtest["breakout_trade_count"],
@@ -899,6 +865,7 @@ def _entry_backtest_fields(entry_backtest: object) -> dict[str, object]:
         "entry_backtest_note_zh": entry_backtest["entry_backtest_note_zh"],
     }
 
+
 def _backtest_trust_fields(backtest_trust: object) -> dict[str, object]:
     """Row fields `backtest_trust_score` … `backtest_trust_note_zh` taken from `backtest_trust`."""
     return {
@@ -912,6 +879,7 @@ def _backtest_trust_fields(backtest_trust: object) -> dict[str, object]:
         "backtest_trust_note": backtest_trust["note"],
         "backtest_trust_note_zh": backtest_trust["note_zh"],
     }
+
 
 def _price_health_fields(price_health: object) -> dict[str, object]:
     """Row fields `price_health_score` … `price_health_note_zh` taken from `price_health`."""
@@ -931,6 +899,7 @@ def _price_health_fields(price_health: object) -> dict[str, object]:
         "price_health_note": price_health["note"],
         "price_health_note_zh": price_health["note_zh"],
     }
+
 
 def _event_risk_fields(event_risk_context: object) -> dict[str, object]:
     """Row fields `event_risk_level_zh` … `event_risk_warning` taken from `event_risk_context`."""
@@ -1197,15 +1166,9 @@ def _action_explanation(
     fundamental_quality: str,
 ) -> tuple[str, str]:
     event_days_text = (
-        f"{int(days_until_earnings)} days"
-        if _is_finite(days_until_earnings)
-        else "an unknown number of days"
+        f"{int(days_until_earnings)} days" if _is_finite(days_until_earnings) else "an unknown number of days"
     )
-    event_days_text_zh = (
-        f"{int(days_until_earnings)}天"
-        if _is_finite(days_until_earnings)
-        else "未知天数"
-    )
+    event_days_text_zh = f"{int(days_until_earnings)}天" if _is_finite(days_until_earnings) else "未知天数"
     explanations = {
         "entry_breakout_confirmed": (
             "Breakout is confirmed by trend, momentum, and volume.",

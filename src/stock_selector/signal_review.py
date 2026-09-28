@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -11,13 +11,13 @@ import pandas as pd
 
 from .json_io import dataframe_records, write_json
 
-
 FORWARD_WINDOWS = (5, 20, 60)
 
 
 @dataclass(frozen=True)
 class SignalReviewResult:
     """Paths and tables written when recording a ticker's signals for review."""
+
     review_dir: Path
     history_path: Path
     report_path: Path
@@ -29,6 +29,7 @@ class SignalReviewResult:
 @dataclass(frozen=True)
 class SignalReviewDueScanResult:
     """Signals whose review window has arrived or is pending, with the report paths."""
+
     review_root: Path
     output_dir: Path
     due_items: pd.DataFrame
@@ -41,6 +42,7 @@ class SignalReviewDueScanResult:
 @dataclass(frozen=True)
 class SignalReviewFeedbackContext:
     """What the ticker's past reviewed signals say: sample count, win rate, returns and the resulting score adjustment."""
+
     status: str
     score: float
     adjustment: float
@@ -117,7 +119,9 @@ def scan_signal_review_due_items(
     output_path.mkdir(parents=True, exist_ok=True)
     history_path = review_path / "signal_history.csv"
     history = _read_history(history_path)
-    as_of = pd.Timestamp(as_of_date).normalize() if as_of_date is not None else pd.Timestamp.today().normalize()
+    as_of = (
+        pd.Timestamp(as_of_date).normalize() if as_of_date is not None else pd.Timestamp.today().normalize()
+    )
     due_items = _build_due_items(history, as_of)
     summary = _build_due_summary(due_items, history)
     csv_path = output_path / "signal_review_due.csv"
@@ -294,7 +298,11 @@ def render_signal_review_report(ticker_history: pd.DataFrame, summary: pd.DataFr
     for column in display_columns:
         if column not in display_history.columns:
             display_history[column] = np.nan
-    lines.extend(_markdown_table(display_history.tail(20)[display_columns] if not display_history.empty else display_history))
+    lines.extend(
+        _markdown_table(
+            display_history.tail(20)[display_columns] if not display_history.empty else display_history
+        )
+    )
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -318,7 +326,11 @@ def render_signal_review_due_report(
     due_now = _due_items_by_status(due_items, "due_now")
     lines.extend(_markdown_table(_due_display_frame(due_now)))
     lines.extend(["", "## Pending / 等待中", ""])
-    pending = due_items[due_items["review_status"].isin(["pending", "pending_unknown"])] if not due_items.empty else due_items
+    pending = (
+        due_items[due_items["review_status"].isin(["pending", "pending_unknown"])]
+        if not due_items.empty
+        else due_items
+    )
     lines.extend(_markdown_table(_due_display_frame(pending)))
     lines.extend(
         [
@@ -354,9 +366,7 @@ def summarize_ticker_signal_review(ticker_history: pd.DataFrame, summary: pd.Dat
             else None
         )
         metrics[f"next_estimated_review_date_{window}d"] = (
-            ticker_summary.get(f"next_estimated_review_date_{window}d")
-            if ticker_summary is not None
-            else ""
+            ticker_summary.get(f"next_estimated_review_date_{window}d") if ticker_summary is not None else ""
         )
         metrics[f"win_rate_{window}d"] = _safe_optional_float(
             ticker_summary.get(f"win_rate_{window}d") if ticker_summary is not None else None
@@ -368,7 +378,9 @@ def summarize_ticker_signal_review(ticker_history: pd.DataFrame, summary: pd.Dat
             ticker_summary.get(f"median_return_{window}d") if ticker_summary is not None else None
         )
     for key in _review_learning_state_columns():
-        metrics[key] = ticker_summary.get(key) if ticker_summary is not None else _default_learning_state_value(key)
+        metrics[key] = (
+            ticker_summary.get(key) if ticker_summary is not None else _default_learning_state_value(key)
+        )
     return metrics
 
 
@@ -430,7 +442,9 @@ def _feedback_from_metrics(metrics: dict[str, object]) -> SignalReviewFeedbackCo
         return SignalReviewFeedbackContext(
             status="ok",
             score=round(float(_safe_optional_float(metrics.get("review_learning_score")) or 50.0), 2),
-            adjustment=round(float(_safe_optional_float(metrics.get("review_learning_adjustment")) or 0.0), 2),
+            adjustment=round(
+                float(_safe_optional_float(metrics.get("review_learning_adjustment")) or 0.0), 2
+            ),
             sample_count=sample_count,
             focus_window=str(metrics.get("review_learning_focus_window") or "none"),
             win_rate=_safe_optional_float(metrics.get("review_learning_win_rate")),
@@ -695,13 +709,19 @@ def _build_current_signal_row(
         "final_decision_zh": focus.get("final_decision_zh", ""),
         "watchlist_status": focus.get("calibrated_watchlist_status", focus.get("watchlist_status", "")),
         "screening_action": focus.get("calibrated_screening_action", focus.get("screening_action", "")),
-        "quality_gate_passed": bool(focus.get("calibrated_quality_gate_passed", focus.get("quality_gate_passed", False))),
+        "quality_gate_passed": bool(
+            focus.get("calibrated_quality_gate_passed", focus.get("quality_gate_passed", False))
+        ),
         "signal_price": round(float(signal_price), 6),
-        "high_probability_score": _safe_float(focus.get("calibrated_high_probability_score", focus.get("high_probability_score"))),
+        "high_probability_score": _safe_float(
+            focus.get("calibrated_high_probability_score", focus.get("high_probability_score"))
+        ),
         "signal_score": _safe_float(focus.get("signal_score")),
         "calibrated_win_probability": _safe_float(focus.get("calibrated_win_probability")),
         "primary_blocker": focus.get("primary_blocker", ""),
-        "quality_gate_fail_reasons_zh": focus.get("calibrated_quality_gate_fail_reasons_zh", focus.get("quality_gate_fail_reasons_zh", "")),
+        "quality_gate_fail_reasons_zh": focus.get(
+            "calibrated_quality_gate_fail_reasons_zh", focus.get("quality_gate_fail_reasons_zh", "")
+        ),
         "report_path": str(source_report_path or ""),
     }
 
@@ -748,10 +768,14 @@ def _update_forward_outcomes(history: pd.DataFrame, prices: pd.DataFrame) -> pd.
             target_price = float(close_values.iloc[target_index])
             forward_return = target_price / signal_price - 1.0
             updated.at[index, return_column] = round(float(forward_return), 6)
-            updated.at[index, date_column] = pd.Timestamp(ticker_prices.loc[target_index, "date"]).date().isoformat()
+            updated.at[index, date_column] = (
+                pd.Timestamp(ticker_prices.loc[target_index, "date"]).date().isoformat()
+            )
             updated.at[index, status_column] = "win" if forward_return > 0 else "loss"
             updated.at[index, remaining_column] = 0
-            updated.at[index, due_column] = pd.Timestamp(ticker_prices.loc[target_index, "date"]).date().isoformat()
+            updated.at[index, due_column] = (
+                pd.Timestamp(ticker_prices.loc[target_index, "date"]).date().isoformat()
+            )
     return updated
 
 
@@ -971,10 +995,7 @@ def _markdown_table(frame: pd.DataFrame) -> list[str]:
         "| " + " | ".join("---" for _ in columns) + " |",
     ]
     for row in frame.itertuples(index=False):
-        values = [
-            _format_value_for_column(column, value)
-            for column, value in zip(columns, row)
-        ]
+        values = [_format_value_for_column(column, value) for column, value in zip(columns, row)]
         lines.append("| " + " | ".join(values) + " |")
     return lines
 
@@ -1068,4 +1089,4 @@ def _estimated_business_date(start_date: object, remaining_days: int) -> str:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()

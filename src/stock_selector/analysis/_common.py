@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 
 
-
 def _clamp_score(value: float) -> float:
     return max(0.0, min(100.0, float(value)))
 

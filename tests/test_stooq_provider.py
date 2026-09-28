@@ -7,7 +7,6 @@ import pandas as pd
 
 from stock_selector import data
 
-
 STOOQ_CSV = """Date,Open,High,Low,Close,Volume
 2024-01-02,100.0,102.0,99.0,101.0,1000000
 2024-01-03,101.0,103.0,100.0,102.0,1100000
@@ -98,16 +97,18 @@ class TiingoTests(unittest.TestCase):
 
 class ProviderRegistryTests(unittest.TestCase):
     def test_registry_contains_expected_providers(self) -> None:
-        self.assertEqual(
-            set(data.PRICE_PROVIDERS), {"polygon", "alpaca", "tiingo", "yfinance", "stooq"}
-        )
+        self.assertEqual(set(data.PRICE_PROVIDERS), {"polygon", "alpaca", "tiingo", "yfinance", "stooq"})
 
     def test_is_known_provider(self) -> None:
         self.assertTrue(data._is_known_provider("stooq"))
         self.assertFalse(data._is_known_provider("nasdaq_data_link"))
 
     def test_defaults_include_free_second_source(self) -> None:
-        with patch.dict("os.environ", {"POLYGON_API_KEY": "", "ALPACA_API_KEY_ID": "", "STOCK_SELECTOR_DISABLE_STOOQ": ""}, clear=False):
+        with patch.dict(
+            "os.environ",
+            {"POLYGON_API_KEY": "", "ALPACA_API_KEY_ID": "", "STOCK_SELECTOR_DISABLE_STOOQ": ""},
+            clear=False,
+        ):
             self.assertEqual(data._available_default_providers(), ("yfinance", "stooq"))
 
     def test_stooq_can_be_disabled(self) -> None:
@@ -116,7 +117,9 @@ class ProviderRegistryTests(unittest.TestCase):
 
     def test_fetch_late_binds_for_patching(self) -> None:
         provider = data.PRICE_PROVIDERS["stooq"]
-        with patch("stock_selector.data.download_stooq_prices_for_period", return_value=pd.DataFrame({"x": [1]})) as mock:
+        with patch(
+            "stock_selector.data.download_stooq_prices_for_period", return_value=pd.DataFrame({"x": [1]})
+        ) as mock:
             provider.fetch(["AAPL"], period="1mo", timeout_seconds=10)
             mock.assert_called_once()
 
@@ -141,8 +144,12 @@ class CrossValidationActivationTests(unittest.TestCase):
     def test_yfinance_plus_stooq_activates_validation(self) -> None:
         # No paid keys: default order is (yfinance, stooq). Both succeed and agree,
         # so cross-source validation runs instead of "single source".
-        with patch("stock_selector.data.download_yfinance_prices_for_period", return_value=self._frame(100.0)):
-            with patch("stock_selector.data.download_stooq_prices_for_period", return_value=self._frame(100.1)):
+        with patch(
+            "stock_selector.data.download_yfinance_prices_for_period", return_value=self._frame(100.0)
+        ):
+            with patch(
+                "stock_selector.data.download_stooq_prices_for_period", return_value=self._frame(100.1)
+            ):
                 with patch.dict("os.environ", {"POLYGON_API_KEY": "", "ALPACA_API_KEY_ID": ""}, clear=False):
                     result = data.download_prices_for_period_multi_source(["AAPL"], period="1mo")
         self.assertEqual(result.provider, "yfinance")

@@ -10,7 +10,6 @@ import pandas as pd
 
 from .json_io import dataframe_records, write_json
 
-
 STATUS_RANK = {
     "filtered_out": 0,
     "not_ready": 0,
@@ -23,6 +22,7 @@ STATUS_RANK = {
 @dataclass(frozen=True)
 class JournalResult:
     """Paths and tables written by one daily journal run: today's snapshot, the previous one and the changes."""
+
     journal_dir: Path
     snapshot_path: Path
     report_path: Path
@@ -113,19 +113,21 @@ def compare_scan_snapshots(current: pd.DataFrame, previous: pd.DataFrame) -> pd.
                 "current_status": current_status,
                 "previous_score": previous_score,
                 "current_score": current_score,
-                "score_change": current_score - previous_score
-                if pd.notna(previous_score)
-                else float("nan"),
+                "score_change": current_score - previous_score if pd.notna(previous_score) else float("nan"),
                 "quality_gate_passed": bool(row.quality_gate_passed),
                 "watchlist_trigger_price": _safe_float(row.watchlist_trigger_price),
                 "missing_items_zh": row.watchlist_missing_items_zh,
                 "report_path": row.report_path,
             }
         )
-    return pd.DataFrame(rows).sort_values(
-        ["change_type", "current_score"],
-        ascending=[True, False],
-    ).reset_index(drop=True)
+    return (
+        pd.DataFrame(rows)
+        .sort_values(
+            ["change_type", "current_score"],
+            ascending=[True, False],
+        )
+        .reset_index(drop=True)
+    )
 
 
 def render_daily_journal(

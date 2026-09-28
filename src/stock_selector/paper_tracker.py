@@ -14,7 +14,6 @@ from dataclasses import asdict, dataclass
 import numpy as np
 import pandas as pd
 
-
 CASH_TICKER = "CASH"
 # Minimum forward trading days before a paper track is worth judging at all.
 PAPER_MIN_TRACK_DAYS = 20
@@ -24,6 +23,7 @@ EQUITY_HISTORY_COLUMNS = ("date", "equity", "benchmark_close")
 @dataclass(frozen=True)
 class PaperPerformance:
     """Paper-portfolio performance to date: returns, excess return, drawdown and readiness verdict."""
+
     status: str
     status_zh: str
     days_tracked: int
@@ -57,9 +57,7 @@ def mark_to_market(
     if "ticker" not in frame.columns or "quantity" not in frame.columns:
         return 0.0
     prices = {str(k).upper().strip(): float(v) for k, v in (price_lookup or {}).items()}
-    fallback_prices = {
-        str(k).upper().strip(): float(v) for k, v in (fallback_price_lookup or {}).items()
-    }
+    fallback_prices = {str(k).upper().strip(): float(v) for k, v in (fallback_price_lookup or {}).items()}
     equity = 0.0
     for _, row in frame.iterrows():
         ticker = str(row["ticker"]).upper().strip()
@@ -82,8 +80,10 @@ def record_equity_point(
 ) -> pd.DataFrame:
     """Append (or replace) one day's equity point, keeping one row per date."""
     row = {"date": str(date), "equity": float(equity), "benchmark_close": benchmark_close}
-    base = history.copy() if history is not None and not history.empty else pd.DataFrame(
-        columns=list(EQUITY_HISTORY_COLUMNS)
+    base = (
+        history.copy()
+        if history is not None and not history.empty
+        else pd.DataFrame(columns=list(EQUITY_HISTORY_COLUMNS))
     )
     base = base[base["date"].astype(str) != str(date)] if "date" in base.columns else base
     updated = pd.concat([base, pd.DataFrame([row])], ignore_index=True)
@@ -120,9 +120,7 @@ def summarize_paper_performance(
         if len(bench) >= 2 and float(bench.iloc[0]) > 0:
             benchmark_return = float(bench.iloc[-1]) / float(bench.iloc[0]) - 1.0
     excess = (
-        total_return - benchmark_return
-        if total_return is not None and benchmark_return is not None
-        else None
+        total_return - benchmark_return if total_return is not None and benchmark_return is not None else None
     )
 
     running_max = equity.cummax()
@@ -150,9 +148,7 @@ def summarize_paper_performance(
     )
 
 
-def expected_annual_from_walk_forward(
-    summary: pd.DataFrame, window: int = 20
-) -> float | None:
+def expected_annual_from_walk_forward(summary: pd.DataFrame, window: int = 20) -> float | None:
     """Backtest's expected annual return, from the walk-forward per-signal return.
 
     ``avg_return_{window}d`` is the mean return per signal over ``window`` trading

@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta, timezone
 import json
 import os
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.request import Request, urlopen
 
 import numpy as np
 import pandas as pd
-
 
 SEC_COMPANY_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 SEC_COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
@@ -41,6 +40,7 @@ SEC_FUNDAMENTAL_HISTORY_COLUMNS = [
 @dataclass(frozen=True)
 class SecFundamentalSnapshot:
     """Latest fundamentals extracted from SEC companyfacts, with coverage and warnings."""
+
     ticker: str
     cik: str
     company_name: str
@@ -152,7 +152,7 @@ def extract_sec_fundamental_history(
 ) -> pd.DataFrame:
     """Turn a companyfacts payload into one row per fiscal period, keyed by the filing date."""
     ticker = ticker.upper().strip()
-    facts = ((facts_payload.get("facts") or {}).get("us-gaap") or {})
+    facts = (facts_payload.get("facts") or {}).get("us-gaap") or {}
     annual: dict[str, dict[str, Any]] = {}
 
     _merge_fact_values(
@@ -259,10 +259,14 @@ def extract_sec_fundamental_history(
         }
     ]
     frame[numeric_columns] = frame[numeric_columns].apply(pd.to_numeric, errors="coerce")
-    return frame.sort_values(["ticker", "report_date"]).drop_duplicates(
-        ["ticker", "report_date"],
-        keep="last",
-    ).reset_index(drop=True)
+    return (
+        frame.sort_values(["ticker", "report_date"])
+        .drop_duplicates(
+            ["ticker", "report_date"],
+            keep="last",
+        )
+        .reset_index(drop=True)
+    )
 
 
 def _lookup_cik(
@@ -327,9 +331,9 @@ def _sec_user_agent() -> str:
 def _cache_is_fresh(path: Path, max_cache_age_days: int) -> bool:
     if not path.exists():
         return False
-    age = datetime.now(timezone.utc) - datetime.fromtimestamp(
+    age = datetime.now(UTC) - datetime.fromtimestamp(
         path.stat().st_mtime,
-        tz=timezone.utc,
+        tz=UTC,
     )
     return age <= timedelta(days=max_cache_age_days)
 
@@ -338,7 +342,7 @@ def _extract_snapshot_fields(
     ticker: str,
     facts_payload: dict[str, Any],
 ) -> tuple[dict[str, object], float, list[str]]:
-    facts = ((facts_payload.get("facts") or {}).get("us-gaap") or {})
+    facts = (facts_payload.get("facts") or {}).get("us-gaap") or {}
     company_name = str(facts_payload.get("entityName") or "")
     warnings: list[str] = []
 
@@ -594,7 +598,7 @@ def _sec_root(data_root: Path) -> Path:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _json_safe(value: Any) -> Any:

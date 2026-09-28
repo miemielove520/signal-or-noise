@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 
 from ..screening_config import ScreeningConfig
-
 from ._common import (
     _first_text,
     _is_finite,
@@ -503,10 +502,14 @@ def build_tightening_impact_validation(
                 "win_rate_change": _metric_change(after_metrics["win_rate"], before_metrics["win_rate"]),
                 "before_avg_return": before_metrics["avg_return"],
                 "after_avg_return": after_metrics["avg_return"],
-                "avg_return_change": _metric_change(after_metrics["avg_return"], before_metrics["avg_return"]),
+                "avg_return_change": _metric_change(
+                    after_metrics["avg_return"], before_metrics["avg_return"]
+                ),
                 "before_avg_drawdown": before_metrics["avg_drawdown"],
                 "after_avg_drawdown": after_metrics["avg_drawdown"],
-                "drawdown_change": _metric_change(after_metrics["avg_drawdown"], before_metrics["avg_drawdown"]),
+                "drawdown_change": _metric_change(
+                    after_metrics["avg_drawdown"], before_metrics["avg_drawdown"]
+                ),
                 "impact_decision": decision["decision"],
                 "impact_decision_zh": decision["decision_zh"],
                 "impact_note": decision["note"],
@@ -779,8 +782,7 @@ def build_threshold_sensitivity_grid(
                             rule_set=f"{first_spec['rule']}+{second_spec['rule']}",
                             rule_set_zh=f"{first_spec['rule_zh']}+{second_spec['rule_zh']}",
                             threshold_expression=(
-                                f"{first_attr}>={first_candidate:g}; "
-                                f"{second_attr}>={second_candidate:g}"
+                                f"{first_attr}>={first_candidate:g}; {second_attr}>={second_candidate:g}"
                             ),
                             threshold_expression_zh=(
                                 f"{first_spec['threshold_attr_zh']}>={first_candidate:g}；"
@@ -796,15 +798,19 @@ def build_threshold_sensitivity_grid(
     result = pd.DataFrame(rows, columns=columns)
     if result.empty:
         return result
-    result["_decision_order"] = result["sensitivity_decision"].map(
-        {
-            "promising_threshold": 0,
-            "baseline": 1,
-            "mixed_threshold": 2,
-            "insufficient_samples": 3,
-            "reject_threshold": 4,
-        }
-    ).fillna(5)
+    result["_decision_order"] = (
+        result["sensitivity_decision"]
+        .map(
+            {
+                "promising_threshold": 0,
+                "baseline": 1,
+                "mixed_threshold": 2,
+                "insufficient_samples": 3,
+                "reject_threshold": 4,
+            }
+        )
+        .fillna(5)
+    )
     result = result.sort_values(
         ["screening_profile", "_decision_order", "sensitivity_score", "sample_count"],
         ascending=[True, True, False, False],

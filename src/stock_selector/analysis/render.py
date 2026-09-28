@@ -71,10 +71,7 @@ def render_ticker_analysis(analysis: pd.DataFrame) -> str:
             f"- Latest price: `{_format_number(first['latest_price'])}`",
             f"- Requested period / 请求周期: `{first.get('requested_period', 'unknown')}`",
             f"- Effective period / 实际使用周期: `{first.get('analysis_period', 'unknown')}`",
-            (
-                "- Auto period upgrade / 自动周期升级: "
-                f"`{first.get('auto_period_upgraded', False)}`"
-            ),
+            (f"- Auto period upgrade / 自动周期升级: `{first.get('auto_period_upgraded', False)}`"),
             (
                 "- Period note / 周期说明: "
                 f"{first.get('auto_period_upgrade_reason', '')} / "
@@ -252,10 +249,7 @@ def _high_probability_filter_section(screening_focus: pd.Series) -> list[str]:
                 f"{screening_focus['calibrated_probability_note']} / "
                 f"{screening_focus['calibrated_probability_note_zh']}"
             ),
-            (
-                "- Quality gate passed / 是否通过质量门槛: "
-                f"`{screening_focus['quality_gate_passed']}`"
-            ),
+            (f"- Quality gate passed / 是否通过质量门槛: `{screening_focus['quality_gate_passed']}`"),
             (
                 "- Backtest used / 使用的买点回测: "
                 f"`{screening_focus['screening_backtest_entry_type']}`，"
@@ -490,18 +484,9 @@ def _signal_review_feedback_section(screening_focus: pd.Series) -> list[str]:
                 f"`{screening_focus['signal_review_level']}` / "
                 f"`{screening_focus['signal_review_level_zh']}`"
             ),
-            (
-                "- Completed samples / 已完成样本: "
-                f"`{screening_focus['signal_review_sample_count']}`"
-            ),
-            (
-                "- Focus window / 重点复盘窗口: "
-                f"`{screening_focus['signal_review_focus_window']}`"
-            ),
-            (
-                "- Review win rate / 复盘胜率: "
-                f"`{_format_percent(screening_focus['signal_review_win_rate'])}`"
-            ),
+            (f"- Completed samples / 已完成样本: `{screening_focus['signal_review_sample_count']}`"),
+            (f"- Focus window / 重点复盘窗口: `{screening_focus['signal_review_focus_window']}`"),
+            (f"- Review win rate / 复盘胜率: `{_format_percent(screening_focus['signal_review_win_rate'])}`"),
             (
                 "- Review average return / 复盘平均收益: "
                 f"`{_format_percent(screening_focus['signal_review_avg_return'])}`"
@@ -617,10 +602,7 @@ def _data_quality_section(first: pd.Series) -> list[str]:
         [
             "## Data Quality / 数据质量",
             "",
-            (
-                "- Data quality score / 数据质量分数: "
-                f"`{_format_number(first['data_quality_score'])}`"
-            ),
+            (f"- Data quality score / 数据质量分数: `{_format_number(first['data_quality_score'])}`"),
             (
                 "- Data quality level / 数据质量等级: "
                 f"`{first['data_quality_level']}` / `{first['data_quality_level_zh']}`"
@@ -1070,19 +1052,13 @@ def _entry_backtest_section(analysis: pd.DataFrame, first: pd.Series) -> list[st
                 "- Execution model / 执行模型: "
                 f"`{first['backtest_execution_model']}` / `{first['backtest_execution_model_zh']}`"
             ),
-            (
-                "- Time stop / 时间止损: "
-                f"`{first['backtest_time_stop_days']}` trading sessions"
-            ),
+            (f"- Time stop / 时间止损: `{first['backtest_time_stop_days']}` trading sessions"),
             (
                 "- Trailing stop / 移动止损: "
                 f"trigger `{_format_number(first['backtest_trailing_stop_trigger_r'])}R`, "
                 f"lock `{_format_number(first['backtest_trailing_stop_lock_r'])}R`"
             ),
-            (
-                "- Slippage / 滑点: "
-                f"`{_format_percent(first['backtest_slippage_pct'])}`"
-            ),
+            (f"- Slippage / 滑点: `{_format_percent(first['backtest_slippage_pct'])}`"),
             (
                 "- Slippage drivers / 滑点依据: "
                 f"avg dollar volume `{_format_number(first['backtest_avg_dollar_volume'])}`, "
@@ -1094,10 +1070,7 @@ def _entry_backtest_section(analysis: pd.DataFrame, first: pd.Series) -> list[st
                 "- Execution note / 执行说明: "
                 f"{first['backtest_execution_note']} / {first['backtest_execution_note_zh']}"
             ),
-            (
-                "- Backtest trust score / 回测可信度分: "
-                f"`{_format_number(first['backtest_trust_score'])}`"
-            ),
+            (f"- Backtest trust score / 回测可信度分: `{_format_number(first['backtest_trust_score'])}`"),
             (
                 "- Backtest trust level / 回测可信度等级: "
                 f"`{first['backtest_trust_level']}` / `{first['backtest_trust_level_zh']}`"
@@ -1213,19 +1186,13 @@ def _rationale_section(analysis: pd.DataFrame) -> list[str]:
         lines.append(f"- `{row.horizon}`: {row.rationale}")
         lines.append(f"  中文: {row.rationale_zh}")
         lines.append(
-            f"  Action explanation / 动作解释: "
-            f"{row.action_explanation} / {row.action_explanation_zh}"
+            f"  Action explanation / 动作解释: {row.action_explanation} / {row.action_explanation_zh}"
         )
         lines.append(
-            f"  Relative strength / 相对强弱: "
-            f"{row.relative_strength_note} / {row.relative_strength_note_zh}"
+            f"  Relative strength / 相对强弱: {row.relative_strength_note} / {row.relative_strength_note_zh}"
         )
+        lines.append(f"  Event risk / 事件风险: {row.event_risk_note} / {row.event_risk_note_zh}")
         lines.append(
-            f"  Event risk / 事件风险: "
-            f"{row.event_risk_note} / {row.event_risk_note_zh}"
-        )
-        lines.append(
-            f"  Fundamental quality / 基本面质量: "
-            f"{row.fundamental_note} / {row.fundamental_note_zh}"
+            f"  Fundamental quality / 基本面质量: {row.fundamental_note} / {row.fundamental_note_zh}"
         )
     return lines

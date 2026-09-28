@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import numpy as np
 import pandas as pd
@@ -14,6 +14,7 @@ from .json_io import dataframe_records
 @dataclass(frozen=True)
 class DataLayerReadiness:
     """Readiness of one data layer: source, status, freshness, coverage and notes."""
+
     layer: str
     layer_zh: str
     source: str
@@ -35,6 +36,7 @@ class DataLayerReadiness:
 @dataclass(frozen=True)
 class DataReadinessReport:
     """Overall readiness status and score, repair priority, main blockers and the per-layer details."""
+
     overall_status: str
     overall_status_zh: str
     overall_score: float
@@ -116,9 +118,7 @@ def build_data_readiness_report(
     blockers = tuple(layer.layer for layer in layers if not layer.usable_for_scoring)
     blockers_zh = tuple(layer.layer_zh for layer in layers if not layer.usable_for_scoring)
     sec_status, sec_status_zh = _sec_status(snapshot)
-    fundamentals_source, fundamentals_source_zh = _fundamentals_source_status(
-        contexts.get("fundamental")
-    )
+    fundamentals_source, fundamentals_source_zh = _fundamentals_source_status(contexts.get("fundamental"))
     return DataReadinessReport(
         overall_status=status,
         overall_status_zh=status_zh,
@@ -203,17 +203,21 @@ def scan_data_readiness_summary(summary: pd.DataFrame) -> pd.DataFrame:
     for column in columns:
         if column not in frame.columns:
             frame[column] = "" if column != "data_readiness_score" else np.nan
-    return frame[columns].sort_values(
-        ["data_readiness_score", "ticker"],
-        ascending=[True, True],
-        na_position="last",
-    ).reset_index(drop=True)
+    return (
+        frame[columns]
+        .sort_values(
+            ["data_readiness_score", "ticker"],
+            ascending=[True, True],
+            na_position="last",
+        )
+        .reset_index(drop=True)
+    )
 
 
 def data_readiness_payload(report: DataReadinessReport) -> dict[str, object]:
     """The data-readiness report as a JSON-serialisable dict."""
     payload = report.to_dict()
-    payload["generated_at_utc"] = datetime.now(timezone.utc).isoformat()
+    payload["generated_at_utc"] = datetime.now(UTC).isoformat()
     payload["layer_records"] = dataframe_records(data_readiness_frame(report))
     return payload
 
@@ -272,11 +276,7 @@ def _benchmark_layer(
 ) -> DataLayerReadiness:
     expected = ("SPY", "QQQ", "^VIX")
     available = [symbol for symbol in expected if not benchmark_prices.get(symbol, pd.DataFrame()).empty]
-    warnings = tuple(
-        warning
-        for symbol in expected
-        for warning in benchmark_warnings.get(symbol, ())
-    )
+    warnings = tuple(warning for symbol in expected for warning in benchmark_warnings.get(symbol, ()))
     coverage = len(available) / len(expected)
     if coverage == 1.0:
         status, status_zh, usable = "available", "可用", True

@@ -16,8 +16,8 @@ Five questions, one section each:
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -52,11 +52,11 @@ SURFACE = "#fcfcfb"
 INK = "#0b0b0b"
 INK_2 = "#52514e"
 GRID = "#e4e3df"
-MODEL = "#2a78d6"      # slot 1 blue
-QQQ = "#eb6834"        # slot 2 orange
-UNIVERSE = "#1baf7a"   # slot 3 aqua
-NEG = "#e34948"        # diverging negative pole
-POS = MODEL            # diverging positive pole
+MODEL = "#2a78d6"  # slot 1 blue
+QQQ = "#eb6834"  # slot 2 orange
+UNIVERSE = "#1baf7a"  # slot 3 aqua
+NEG = "#e34948"  # diverging negative pole
+POS = MODEL  # diverging positive pole
 
 
 def _style(ax, title: str, subtitle: str = "") -> None:
@@ -94,6 +94,7 @@ def _save(fig, name: str) -> None:
 # 1. Forward test
 # ---------------------------------------------------------------------------
 
+
 def forward_test() -> dict:
     eq = pd.read_csv(DATA / "paper_equity_history.csv", parse_dates=["date"]).set_index("date")
     px = pd.read_csv(DATA / "forward_window_prices.csv", parse_dates=["date"]).set_index("date")
@@ -128,13 +129,23 @@ def forward_test() -> dict:
     ):
         y = (curve - 1) * 100
         ax.plot(y.index, y.values, color=color, linewidth=2, label=label)
-        ax.annotate(f"{y.iloc[-1]:+.1f}%", (y.index[-1], y.iloc[-1]), xytext=(6, 0),
-                    textcoords="offset points", va="center", fontsize=9, color=INK)
+        ax.annotate(
+            f"{y.iloc[-1]:+.1f}%",
+            (y.index[-1], y.iloc[-1]),
+            xytext=(6, 0),
+            textcoords="offset points",
+            va="center",
+            fontsize=9,
+            color=INK,
+        )
     ax.axhline(0, color=INK_2, linewidth=0.8)
     ax.set_ylabel("Return since start (%)", color=INK_2, fontsize=9)
     ax.legend(frameon=False, fontsize=9, loc="lower left", labelcolor=INK)
-    _style(ax, "Forward test: the model lost while its own universe gained",
-           f"Frozen policy v2, $1,000 paper portfolio, {start:%b %d} – {end:%b %d, %Y}")
+    _style(
+        ax,
+        "Forward test: the model lost while its own universe gained",
+        f"Frozen policy v2, $1,000 paper portfolio, {start:%b %d} – {end:%b %d, %Y}",
+    )
     ax.margins(x=0.08)
     _save(fig, "forward_equity.png")
 
@@ -142,12 +153,22 @@ def forward_test() -> dict:
     bins = np.arange(0, max(holds) + 2) - 0.5
     ax.hist(holds, bins=bins, color=MODEL, edgecolor=SURFACE, linewidth=2)
     ax.axvline(28, color=INK, linewidth=1.2, linestyle="--")
-    ax.text(27.5, ax.get_ylim()[1] * 0.9, "backtest assumes\n20 trading days\n(≈28 calendar days)",
-            ha="right", va="top", fontsize=9, color=INK)
+    ax.text(
+        27.5,
+        ax.get_ylim()[1] * 0.9,
+        "backtest assumes\n20 trading days\n(≈28 calendar days)",
+        ha="right",
+        va="top",
+        fontsize=9,
+        color=INK,
+    )
     ax.set_xlabel("Calendar days from buy to full exit", color=INK_2, fontsize=9)
     ax.set_ylabel("Round trips", color=INK_2, fontsize=9)
-    _style(ax, "The live strategy was not the one that was backtested",
-           f"{len(holds)} closed round trips; median hold {np.median(holds):.0f} days")
+    _style(
+        ax,
+        "The live strategy was not the one that was backtested",
+        f"{len(holds)} closed round trips; median hold {np.median(holds):.0f} days",
+    )
     _save(fig, "holding_periods.png")
 
     return {
@@ -178,7 +199,9 @@ def _holding_periods(orders: pd.DataFrame) -> list[int]:
         for _, row in g.iterrows():
             if row["action"] == "BUY" and opened is None:
                 opened = row["as_of_date"]
-            elif row["action"] == "SELL" and opened is not None and abs(row["position_quantity_after"]) < 1e-9:
+            elif (
+                row["action"] == "SELL" and opened is not None and abs(row["position_quantity_after"]) < 1e-9
+            ):
                 holds.append(int((row["as_of_date"] - opened).days))
                 opened = None
     return holds
@@ -187,6 +210,7 @@ def _holding_periods(orders: pd.DataFrame) -> list[int]:
 # ---------------------------------------------------------------------------
 # 2. Bad luck? Compare with the backtest's own distribution
 # ---------------------------------------------------------------------------
+
 
 def luck_test(forward: dict) -> dict:
     bt = pd.read_csv(DATA / "backtest_portfolio_vs_benchmark.csv", parse_dates=["date"])
@@ -204,14 +228,24 @@ def luck_test(forward: dict) -> dict:
     fig, ax = _figure()
     ax.hist(sim_excess * 100, bins=60, color=MODEL, edgecolor=SURFACE, linewidth=0.5)
     ax.axvline(observed_excess * 100, color=NEG, linewidth=2)
-    ax.text(observed_excess * 100 - 1.5, ax.get_ylim()[1] * 0.95, f"forward test\n{observed_excess:+.1%}",
-            color=INK, fontsize=9, va="top", ha="right")
+    ax.text(
+        observed_excess * 100 - 1.5,
+        ax.get_ylim()[1] * 0.95,
+        f"forward test\n{observed_excess:+.1%}",
+        color=INK,
+        fontsize=9,
+        va="top",
+        ha="right",
+    )
     ax.axvline(0, color=INK_2, linewidth=0.8)
     ax.set_xlabel(f"Excess return vs QQQ over {days} trading days (%)", color=INK_2, fontsize=9)
     ax.set_ylabel("Simulated windows", color=INK_2, fontsize=9)
-    _style(ax, f"If the backtest were true, a result this bad would happen {p_as_bad:.0%} of the time",
-           f"{N_RESAMPLES:,} block-bootstrap windows drawn from the backtest's daily returns; "
-           f"{p_as_bad:.2%} are as bad as the forward test")
+    _style(
+        ax,
+        f"If the backtest were true, a result this bad would happen {p_as_bad:.0%} of the time",
+        f"{N_RESAMPLES:,} block-bootstrap windows drawn from the backtest's daily returns; "
+        f"{p_as_bad:.2%} are as bad as the forward test",
+    )
     _save(fig, "backtest_vs_forward.png")
 
     total = compounded_return(bt["portfolio_daily_return"].to_numpy())
@@ -252,13 +286,21 @@ def _horizon_signals(raw: pd.DataFrame, horizon: str) -> tuple[pd.DataFrame, int
 def _horizon_row(sig: pd.DataFrame) -> dict:
     ic = one_sample_mean_test(information_coefficients(sig, "high_probability_score", "forward_return_20d"))
     universe = sig.groupby("date")["forward_return_20d"].mean()
-    top5 = (sig.sort_values("high_probability_score", ascending=False)
-            .groupby("date").head(5).groupby("date")["forward_return_20d"].mean())
+    top5 = (
+        sig.sort_values("high_probability_score", ascending=False)
+        .groupby("date")
+        .head(5)
+        .groupby("date")["forward_return_20d"]
+        .mean()
+    )
     top = one_sample_mean_test(top5 - universe)
     brier = brier_skill(sig["calibrated_win_probability"], sig["win"])
     return {
-        "ic_mean": ic.mean, "ic_t_stat": ic.t_stat, "ic_p_value": ic.p_value_two_sided,
-        "top5_minus_universe_mean_20d": top.mean, "top5_minus_universe_t_stat": top.t_stat,
+        "ic_mean": ic.mean,
+        "ic_t_stat": ic.t_stat,
+        "ic_p_value": ic.p_value_two_sided,
+        "top5_minus_universe_mean_20d": top.mean,
+        "top5_minus_universe_t_stat": top.t_stat,
         "top5_minus_universe_p_value": top.p_value_two_sided,
         "brier_skill_score": brier.skill_score,
     }
@@ -275,8 +317,13 @@ def signal_tests() -> dict:
     ic_test = one_sample_mean_test(ic)
 
     universe = sig.groupby("date")["forward_return_20d"].mean()
-    top5 = (sig.sort_values("high_probability_score", ascending=False)
-            .groupby("date").head(5).groupby("date")["forward_return_20d"].mean())
+    top5 = (
+        sig.sort_values("high_probability_score", ascending=False)
+        .groupby("date")
+        .head(5)
+        .groupby("date")["forward_return_20d"]
+        .mean()
+    )
     top_test = one_sample_mean_test(top5 - universe)
 
     qqq = pd.read_csv(DATA / "qqq_history.csv", parse_dates=["date"]).set_index("date")["QQQ"]
@@ -294,31 +341,55 @@ def signal_tests() -> dict:
     ax.bar(ic.index.strftime("%Y-%m-%d"), ic.values, color=colors, width=0.7)
     ax.axhline(0, color=INK_2, linewidth=0.8)
     ax.axhline(ic_test.mean, color=INK, linewidth=1.2, linestyle="--")
-    ax.text(-0.4, ic_test.mean + 0.01, f"mean {ic_test.mean:+.3f}", va="bottom", ha="left", fontsize=9, color=INK)
+    ax.text(
+        -0.4, ic_test.mean + 0.01, f"mean {ic_test.mean:+.3f}", va="bottom", ha="left", fontsize=9, color=INK
+    )
     ax.set_ylabel("Rank correlation (IC)", color=INK_2, fontsize=9)
     ax.tick_params(axis="x", rotation=45)
-    _style(ax, "Does a higher score mean a higher 20-day return?",
-           f"Spearman IC per signal date, {n_dates} dates × ~{len(sig) // n_dates} stocks; "
-           f"t = {ic_test.t_stat:.2f}, p = {ic_test.p_value_two_sided:.2f}")
+    _style(
+        ax,
+        "Does a higher score mean a higher 20-day return?",
+        f"Spearman IC per signal date, {n_dates} dates × ~{len(sig) // n_dates} stocks; "
+        f"t = {ic_test.t_stat:.2f}, p = {ic_test.p_value_two_sided:.2f}",
+    )
     _save(fig, "information_coefficient.png")
 
     fig, ax = _figure(5.6, 5.0)
     ax.plot([0, 1], [0, 1], color=INK_2, linewidth=1, linestyle="--")
     ax.text(0.9, 0.93, "perfect\ncalibration", fontsize=8, color=INK_2, ha="right")
     ax.axhline(brier.base_rate, color=GRID, linewidth=1)
-    ax.errorbar(rel["mean_predicted"], rel["observed"],
-                yerr=[rel["observed"] - rel["ci_low"], rel["ci_high"] - rel["observed"]],
-                fmt="o", color=MODEL, ecolor=MODEL, elinewidth=1.5, capsize=0, markersize=8,
-                markeredgecolor=SURFACE, markeredgewidth=2)
+    ax.errorbar(
+        rel["mean_predicted"],
+        rel["observed"],
+        yerr=[rel["observed"] - rel["ci_low"], rel["ci_high"] - rel["observed"]],
+        fmt="o",
+        color=MODEL,
+        ecolor=MODEL,
+        elinewidth=1.5,
+        capsize=0,
+        markersize=8,
+        markeredgecolor=SURFACE,
+        markeredgewidth=2,
+    )
     for _, r in rel.iterrows():
-        ax.annotate(f"n={r['n']}", (r["mean_predicted"], r["ci_high"]), xytext=(0, 4),
-                    textcoords="offset points", ha="center", fontsize=8, color=INK_2)
+        ax.annotate(
+            f"n={r['n']}",
+            (r["mean_predicted"], r["ci_high"]),
+            xytext=(0, 4),
+            textcoords="offset points",
+            ha="center",
+            fontsize=8,
+            color=INK_2,
+        )
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.set_xlabel("Model's predicted win probability", color=INK_2, fontsize=9)
     ax.set_ylabel("Observed share of winners (20 days)", color=INK_2, fontsize=9)
-    _style(ax, "The probabilities are close to a coin flip",
-           f"Brier skill score {brier.skill_score:+.2f} vs. always guessing {brier.base_rate:.0%}")
+    _style(
+        ax,
+        "The probabilities are close to a coin flip",
+        f"Brier skill score {brier.skill_score:+.2f} vs. always guessing {brier.base_rate:.0%}",
+    )
     _save(fig, "calibration.png")
 
     return {
@@ -362,7 +433,11 @@ def main() -> None:
     out.write_text(json.dumps(summary, indent=2, default=float) + "\n")
     print(f"wrote {out.relative_to(ROOT)}")
     print(json.dumps({k: v for k, v in summary.items() if k != "signal_tests"}, indent=2, default=float))
-    print(json.dumps({k: v for k, v in summary["signal_tests"].items() if k != "reliability"}, indent=2, default=float))
+    print(
+        json.dumps(
+            {k: v for k, v in summary["signal_tests"].items() if k != "reliability"}, indent=2, default=float
+        )
+    )
 
 
 if __name__ == "__main__":

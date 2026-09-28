@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import pandas as pd
 
 from ..real_data import normalize_ticker
-
 from ._common import (
     _clamp,
     _format_percent,
@@ -84,9 +83,7 @@ def build_ticker_validation_ranking(
     for ticker, group in events.groupby("ticker", dropna=False):
         returns = pd.to_numeric(group[return_column], errors="coerce").dropna()
         sample_count = len(returns)
-        high_probability_sample_count = int(
-            (group["validation_bucket"] == "high_probability").sum()
-        )
+        high_probability_sample_count = int((group["validation_bucket"] == "high_probability").sum())
         watchlist_or_better_sample_count = int(
             group["validation_bucket"].isin(["high_probability", "near_watchlist"]).sum()
         )
@@ -356,7 +353,9 @@ def _sample_guidance_row(
 ) -> dict[str, object]:
     status, status_zh = _sample_status(sample_count, target_sample_count)
     suggested_step_days = _suggested_step_days(step_days, sample_count, target_sample_count)
-    suggested_min_history_days = _suggested_min_history_days(min_history_days, sample_count, target_sample_count)
+    suggested_min_history_days = _suggested_min_history_days(
+        min_history_days, sample_count, target_sample_count
+    )
     suggested_period = _suggested_period(sample_count, target_sample_count)
     if sample_count >= target_sample_count:
         action = "keep_settings"
@@ -372,14 +371,8 @@ def _sample_guidance_row(
         f"--period {suggested_period} --step-days {suggested_step_days} "
         f"--min-history-days {suggested_min_history_days}"
     )
-    reason = (
-        f"{scope} sample count is {sample_count}, target is {target_sample_count}. "
-        f"{reason_suffix}"
-    )
-    reason_zh = (
-        f"{scope} 当前样本数为 {sample_count}，目标样本数为 {target_sample_count}。"
-        f"{reason_suffix_zh}"
-    )
+    reason = f"{scope} sample count is {sample_count}, target is {target_sample_count}. {reason_suffix}"
+    reason_zh = f"{scope} 当前样本数为 {sample_count}，目标样本数为 {target_sample_count}。{reason_suffix_zh}"
     return {
         "scope": scope,
         "ticker": ticker,
@@ -468,9 +461,7 @@ def summarize_walk_forward_profiles(
             "avg_high_probability_score": float(group["high_probability_score"].mean())
             if "high_probability_score" in group
             else np.nan,
-            "avg_calibrated_win_probability": float(
-                group["calibrated_win_probability"].mean()
-            )
+            "avg_calibrated_win_probability": float(group["calibrated_win_probability"].mean())
             if "calibrated_win_probability" in group
             else np.nan,
         }
@@ -483,9 +474,7 @@ def summarize_walk_forward_profiles(
         drawdowns = group["max_drawdown_after_signal"].dropna()
         row["avg_max_drawdown_after_signal"] = float(drawdowns.mean()) if len(drawdowns) else np.nan
         rows.append(row)
-    return pd.DataFrame(rows).sort_values(
-        ["screening_profile", "validation_bucket"]
-    ).reset_index(drop=True)
+    return pd.DataFrame(rows).sort_values(["screening_profile", "validation_bucket"]).reset_index(drop=True)
 
 
 def summarize_walk_forward_segments(
@@ -590,14 +579,18 @@ def summarize_walk_forward_segments(
         rows.append(row)
 
     result = pd.DataFrame(rows)
-    result["_decision_rank"] = result["segment_decision"].map(
-        {
-            "strong_segment": 0,
-            "watch_segment": 1,
-            "thin_sample": 2,
-            "weak_segment": 3,
-        }
-    ).fillna(9)
+    result["_decision_rank"] = (
+        result["segment_decision"]
+        .map(
+            {
+                "strong_segment": 0,
+                "watch_segment": 1,
+                "thin_sample": 2,
+                "weak_segment": 3,
+            }
+        )
+        .fillna(9)
+    )
     result = result.sort_values(
         ["_decision_rank", "sample_count", f"win_rate_{_target_window(forward_windows)}d"],
         ascending=[True, False, False],
@@ -695,14 +688,18 @@ def summarize_market_regime_validation(
         rows.append(row)
 
     result = pd.DataFrame(rows)
-    result["_decision_rank"] = result["regime_decision"].map(
-        {
-            "robust_regime": 0,
-            "usable_regime": 1,
-            "thin_sample": 2,
-            "weak_regime": 3,
-        }
-    ).fillna(9)
+    result["_decision_rank"] = (
+        result["regime_decision"]
+        .map(
+            {
+                "robust_regime": 0,
+                "usable_regime": 1,
+                "thin_sample": 2,
+                "weak_regime": 3,
+            }
+        )
+        .fillna(9)
+    )
     result = result.sort_values(
         ["_decision_rank", "sample_count", f"win_rate_{_target_window(forward_windows)}d"],
         ascending=[True, False, False],
@@ -814,13 +811,17 @@ def build_market_regime_protection_policy(
             }
         )
     result = pd.DataFrame(rows, columns=columns)
-    result["_severity_rank"] = result["policy_severity"].map(
-        {"critical": 0, "high": 1, "medium": 2, "info": 3}
-    ).fillna(9)
-    return result.sort_values(
-        ["_severity_rank", "sample_count"],
-        ascending=[True, False],
-    ).drop(columns=["_severity_rank"]).reset_index(drop=True)
+    result["_severity_rank"] = (
+        result["policy_severity"].map({"critical": 0, "high": 1, "medium": 2, "info": 3}).fillna(9)
+    )
+    return (
+        result.sort_values(
+            ["_severity_rank", "sample_count"],
+            ascending=[True, False],
+        )
+        .drop(columns=["_severity_rank"])
+        .reset_index(drop=True)
+    )
 
 
 def _market_regime_policy_decision(
@@ -1160,9 +1161,7 @@ def _overall_probability_calibration_row(
     adjusted_estimated = min(max(estimated + adjustment, 0.05), 0.90)
     adjusted_error_abs = abs(actual - adjusted_estimated)
     outcomes = (returns > 0).astype(float)
-    brier_score = float(
-        ((outcomes - frame.loc[returns.index, "calibrated_win_probability"]) ** 2).mean()
-    )
+    brier_score = float(((outcomes - frame.loc[returns.index, "calibrated_win_probability"]) ** 2).mean())
     quality, quality_zh = _probability_calibration_quality(
         sample_count=len(returns),
         error_abs=abs(error),
@@ -1185,9 +1184,7 @@ def _overall_probability_calibration_row(
         "adjusted_estimated_probability": adjusted_estimated,
         "adjusted_calibration_error_abs": adjusted_error_abs,
         "brier_score": brier_score,
-        "expected_calibration_error_component": abs(error)
-        * len(returns)
-        / total_samples
+        "expected_calibration_error_component": abs(error) * len(returns) / total_samples
         if total_samples
         else np.nan,
         "formula_action": formula_action,

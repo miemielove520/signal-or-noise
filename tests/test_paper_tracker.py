@@ -13,9 +13,7 @@ from stock_selector.paper_tracker import (
 
 class MarkToMarketTests(unittest.TestCase):
     def test_cash_plus_positions(self) -> None:
-        state = pd.DataFrame(
-            [{"ticker": "AAPL", "quantity": 10}, {"ticker": "CASH", "quantity": 500.0}]
-        )
+        state = pd.DataFrame([{"ticker": "AAPL", "quantity": 10}, {"ticker": "CASH", "quantity": 500.0}])
         equity = mark_to_market(state, {"AAPL": 100.0})
         self.assertEqual(equity, 1500.0)  # 10*100 + 500
 
@@ -80,15 +78,28 @@ if __name__ == "__main__":
 class BacktestGateTests(unittest.TestCase):
     def _perf(self, days, total_return):
         from stock_selector.paper_tracker import PaperPerformance
+
         return PaperPerformance(
-            status="", status_zh="", days_tracked=days, start_date="a", latest_date="b",
-            start_equity=1000.0, latest_equity=1000.0 * (1 + total_return),
-            total_return=total_return, benchmark_return=None, excess_return=None,
-            max_drawdown=-0.05, readiness="", readiness_zh="", note="", note_zh="",
+            status="",
+            status_zh="",
+            days_tracked=days,
+            start_date="a",
+            latest_date="b",
+            start_equity=1000.0,
+            latest_equity=1000.0 * (1 + total_return),
+            total_return=total_return,
+            benchmark_return=None,
+            excess_return=None,
+            max_drawdown=-0.05,
+            readiness="",
+            readiness_zh="",
+            note="",
+            note_zh="",
         )
 
     def test_expected_annual_from_walk_forward(self) -> None:
         from stock_selector.paper_tracker import expected_annual_from_walk_forward
+
         summary = pd.DataFrame({"avg_return_20d": [0.02, 0.03], "sample_count": [10, 30]})
         exp = expected_annual_from_walk_forward(summary, window=20)
         # sample-weighted per-20d = (0.02*10+0.03*30)/40 = 0.0275, annualized
@@ -96,27 +107,32 @@ class BacktestGateTests(unittest.TestCase):
 
     def test_gate_divergent_when_backtest_positive_but_paper_losing(self) -> None:
         from stock_selector.paper_tracker import compare_paper_to_backtest
+
         r = compare_paper_to_backtest(self._perf(30, -0.05), expected_annual_return=0.30, min_days=20)
         self.assertEqual(r["gate"], "divergent")
 
     def test_gate_consistent_when_matching(self) -> None:
         from stock_selector.paper_tracker import compare_paper_to_backtest
+
         # 30 days +3% -> annualized ~29% vs expected 30% -> consistent
         r = compare_paper_to_backtest(self._perf(30, 0.03), expected_annual_return=0.30, min_days=20)
         self.assertEqual(r["gate"], "consistent")
 
     def test_gate_below_expectation(self) -> None:
         from stock_selector.paper_tracker import compare_paper_to_backtest
+
         # tiny positive, well under 40% of expected
         r = compare_paper_to_backtest(self._perf(60, 0.005), expected_annual_return=0.40, min_days=20)
         self.assertEqual(r["gate"], "below_expectation")
 
     def test_gate_accumulating_when_too_few_days(self) -> None:
         from stock_selector.paper_tracker import compare_paper_to_backtest
+
         r = compare_paper_to_backtest(self._perf(5, 0.02), expected_annual_return=0.30, min_days=20)
         self.assertEqual(r["gate"], "accumulating")
 
     def test_gate_no_backtest(self) -> None:
         from stock_selector.paper_tracker import compare_paper_to_backtest
+
         r = compare_paper_to_backtest(self._perf(30, 0.03), expected_annual_return=None)
         self.assertEqual(r["gate"], "no_backtest")

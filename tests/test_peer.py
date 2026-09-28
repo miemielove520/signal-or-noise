@@ -135,9 +135,7 @@ def make_analysis(
                 "quality_gate_fail_reasons": "all strict quality gates passed"
                 if passed
                 else "backtest win rate too low",
-                "quality_gate_fail_reasons_zh": "所有严格质量门槛通过"
-                if passed
-                else "回测胜率不足",
+                "quality_gate_fail_reasons_zh": "所有严格质量门槛通过" if passed else "回测胜率不足",
                 "signal_score": 75.0,
                 "confidence_score": 80.0,
                 "data_quality_score": 90.0,

@@ -199,15 +199,9 @@ class WalkForwardTest(unittest.TestCase):
             self.assertTrue((Path(directory) / "historical_win_rate_gate.md").exists())
             self.assertTrue((Path(directory) / "historical_win_rate_gate.json").exists())
             self.assertTrue((Path(directory) / "historical_win_rate_gate.csv").exists())
-            self.assertTrue(
-                (Path(directory) / "historical_threshold_recommendations.md").exists()
-            )
-            self.assertTrue(
-                (Path(directory) / "historical_threshold_recommendations.json").exists()
-            )
-            self.assertTrue(
-                (Path(directory) / "historical_threshold_recommendations.csv").exists()
-            )
+            self.assertTrue((Path(directory) / "historical_threshold_recommendations.md").exists())
+            self.assertTrue((Path(directory) / "historical_threshold_recommendations.json").exists())
+            self.assertTrue((Path(directory) / "historical_threshold_recommendations.csv").exists())
             self.assertTrue((Path(directory) / "profile_rule_calibration.csv").exists())
             self.assertTrue((Path(directory) / "suggested_screening.toml").exists())
             self.assertTrue((Path(directory) / "walk_forward_report.md").exists())
@@ -733,12 +727,8 @@ class WalkForwardTest(unittest.TestCase):
             target_window=20,
             top_n=2,
         )
-        top_row = summary[
-            summary["portfolio_name"] == "top_calibrated_probability"
-        ].iloc[0]
-        strict_row = summary[
-            summary["portfolio_name"] == "strict_high_probability_only"
-        ].iloc[0]
+        top_row = summary[summary["portfolio_name"] == "top_calibrated_probability"].iloc[0]
+        strict_row = summary[summary["portfolio_name"] == "strict_high_probability_only"].iloc[0]
 
         self.assertEqual(int(top_row["rebalance_count"]), 2)
         self.assertAlmostEqual(float(top_row["avg_forward_return"]), 0.03)
@@ -836,9 +826,7 @@ class WalkForwardTest(unittest.TestCase):
                     "equity": equity,
                     "drawdown": min(equity / max(equity_values[: index + 1]) - 1.0, 0.0),
                 }
-                for index, (date, daily_return, equity) in enumerate(
-                    zip(dates, daily_returns, equity_values)
-                )
+                for index, (date, daily_return, equity) in enumerate(zip(dates, daily_returns, equity_values))
             ]
         )
 
@@ -1397,7 +1385,10 @@ class FailedSignalReportingTest(unittest.TestCase):
                 raise RuntimeError("boom")
             return real_analyze(*args, **kwargs)
 
-        with tempfile.TemporaryDirectory() as directory, patch.object(core, "analyze_ticker", side_effect=flaky_analyze):
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(core, "analyze_ticker", side_effect=flaky_analyze),
+        ):
             result = run_walk_forward_validation(
                 prices=make_price_frame(),
                 tickers=["AAA"],

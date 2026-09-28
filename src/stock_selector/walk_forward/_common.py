@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 
 
-
 def _coerce_bool(value: object, default: bool = False) -> bool:
     if isinstance(value, bool):
         return value

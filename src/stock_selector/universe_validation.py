@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Iterable
 
 import numpy as np
 import pandas as pd
@@ -24,6 +24,7 @@ from .walk_forward import DEFAULT_BENCHMARK_TICKERS, WalkForwardResult, run_walk
 @dataclass(frozen=True)
 class UniverseValidationBatchResult:
     """Summary, ranking, report and failures of validating all built-in universes."""
+
     summary: pd.DataFrame
     ranking: pd.DataFrame
     report: str
@@ -240,9 +241,7 @@ def render_suggested_universe_screening_config(
     summary: pd.DataFrame,
 ) -> str:
     """Screening config with thresholds suggested by the all-universe run."""
-    suggested_thresholds = {
-        profile.name: profile.thresholds for profile in screening_config.profiles
-    }
+    suggested_thresholds = {profile.name: profile.thresholds for profile in screening_config.profiles}
     suggested_thresholds["default"] = screening_config.default_thresholds
     applied_notes: list[str] = []
     skipped_notes: list[str] = []
@@ -469,16 +468,18 @@ def _candidate_ranking_decision(row: dict[str, object], ranking_score: float) ->
         return "data_issue", "数据问题"
     if event_count < 20:
         return "need_more_samples", "需要更多样本"
-    if diagnostic_level == "optimize_first" or (
-        ranking_score >= 75 and high_probability_sample >= 10
-    ):
+    if diagnostic_level == "optimize_first" or (ranking_score >= 75 and high_probability_sample >= 10):
         return "optimize_first", "优先优化"
-    if diagnostic_level in {
-        "promising_but_needs_filtering",
-        "thresholds_too_strict",
-        "research_candidate",
-        "gate_not_working_well",
-    } or ranking_score >= 55:
+    if (
+        diagnostic_level
+        in {
+            "promising_but_needs_filtering",
+            "thresholds_too_strict",
+            "research_candidate",
+            "gate_not_working_well",
+        }
+        or ranking_score >= 55
+    ):
         return "research_next", "继续研究"
     return "deprioritize", "降低优先级"
 
@@ -836,8 +837,7 @@ def _diagnose_universe(row: dict[str, object]) -> dict[str, object]:
                 "watchlist samples have positive average return."
             )
             diagnosis_reasons_zh = (
-                f"目前只有 {high_probability_sample} 个高概率样本，样本仍然太少；"
-                "观察名单样本平均收益为正。"
+                f"目前只有 {high_probability_sample} 个高概率样本，样本仍然太少；观察名单样本平均收益为正。"
             )
         else:
             diagnosis_reasons = (
@@ -861,8 +861,7 @@ def _diagnose_universe(row: dict[str, object]) -> dict[str, object]:
                 "more evidence is needed before prioritizing this universe."
             )
             diagnosis_reasons_zh = (
-                f"目前只有 {high_probability_sample} 个高概率样本，"
-                "需要更多证据后再优先优化这个股票池。"
+                f"目前只有 {high_probability_sample} 个高概率样本，需要更多证据后再优先优化这个股票池。"
             )
         else:
             diagnosis_reasons = (
@@ -884,8 +883,7 @@ def _diagnose_universe(row: dict[str, object]) -> dict[str, object]:
         "diagnostic_level": "deprioritize",
         "diagnostic_level_zh": "降低优先级",
         "recommendation": (
-            "Do not optimize this universe first; improve data, features, "
-            "or universe construction later."
+            "Do not optimize this universe first; improve data, features, or universe construction later."
         ),
         "recommendation_zh": "不要优先优化这个股票池，后续再改数据、特征或股票池构成。",
         "diagnosis_reasons": "Validation did not show enough positive evidence.",
@@ -903,9 +901,7 @@ def _bucket_metrics(events: pd.DataFrame, bucket: str | None) -> dict[str, objec
         }
     subset = events if bucket is None else events[events["validation_bucket"] == bucket]
     returns = (
-        subset["forward_return_20d"].dropna()
-        if "forward_return_20d" in subset
-        else pd.Series(dtype=float)
+        subset["forward_return_20d"].dropna() if "forward_return_20d" in subset else pd.Series(dtype=float)
     )
     drawdowns = (
         subset["max_drawdown_after_signal"].dropna()
@@ -1046,11 +1042,16 @@ def _top_semicolon_items(events: pd.DataFrame, column: str, limit: int = 3) -> s
         normalized_value = str(value).replace("；", ";")
         for item in normalized_value.split(";"):
             clean = item.strip(" ；")
-            if not clean or clean.lower() in {
-                "none",
-                "nan",
-                "all strict quality gates passed",
-            } or clean in {"无", "所有严格质量门槛通过"}:
+            if (
+                not clean
+                or clean.lower()
+                in {
+                    "none",
+                    "nan",
+                    "all strict quality gates passed",
+                }
+                or clean in {"无", "所有严格质量门槛通过"}
+            ):
                 continue
             counts[clean] = counts.get(clean, 0) + 1
     if not counts:

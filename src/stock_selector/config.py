@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
-import tomllib
 
 
 @dataclass(frozen=True)
 class DataConfig:
     """Paths to the local price, fundamental, macro and metadata CSVs and the column names to use."""
+
     prices_csv: Path
     fundamentals_csv: Path | None = None
     macro_csv: Path | None = None
@@ -23,6 +24,7 @@ class DataConfig:
 @dataclass(frozen=True)
 class UniverseConfig:
     """Eligibility filters: minimum price history and average dollar volume."""
+
     min_history_days: int = 252
     min_avg_dollar_volume: float = 5_000_000.0
 
@@ -30,6 +32,7 @@ class UniverseConfig:
 @dataclass(frozen=True)
 class FactorConfig:
     """Lookback windows for the momentum, volatility, trend, liquidity and money-flow factors."""
+
     momentum_windows: tuple[int, ...] = (20, 60, 126)
     volatility_window: int = 20
     trend_window: int = 50
@@ -40,6 +43,7 @@ class FactorConfig:
 @dataclass(frozen=True)
 class ScoringConfig:
     """How many names to hold, how often to rebalance and the factor weights of the composite score."""
+
     top_n: int = 20
     rebalance_frequency: str = "M"
     factor_weights: dict[str, float] = field(default_factory=dict)
@@ -48,6 +52,7 @@ class ScoringConfig:
 @dataclass(frozen=True)
 class RiskConfig:
     """Portfolio weighting method and limits: volatility target, position and sector caps."""
+
     weighting_method: str = "equal"
     volatility_lookback_days: int = 60
     target_annual_volatility: float | None = None
@@ -61,6 +66,7 @@ class RiskConfig:
 @dataclass(frozen=True)
 class BacktestConfig:
     """Initial capital, annualisation, risk-free rate, transaction cost and execution lag."""
+
     initial_capital: float = 100_000.0
     annualization_days: int = 252
     risk_free_rate: float = 0.0
@@ -71,6 +77,7 @@ class BacktestConfig:
 @dataclass(frozen=True)
 class MLConfig:
     """Features, label horizon, training window and model settings of the rolling ML baseline."""
+
     feature_columns: tuple[str, ...] = ()
     label_forward_days: int = 20
     train_window_days: int = 252
@@ -85,6 +92,7 @@ class MLConfig:
 @dataclass(frozen=True)
 class PaperTradingConfig:
     """Paper-trading state file, starting cash, trade thresholds and slippage, spread and commission costs."""
+
     state_csv: Path | None = None
     initial_cash: float = 100_000.0
     min_trade_value: float = 100.0
@@ -100,6 +108,7 @@ class PaperTradingConfig:
 @dataclass(frozen=True)
 class MonitorConfig:
     """Thresholds for the daily monitor: data age, missing features, feature drift and candidate checks."""
+
     max_data_age_days: int = 7
     max_average_feature_missing_rate: float = 0.10
     max_single_feature_missing_rate: float = 0.25
@@ -113,6 +122,7 @@ class MonitorConfig:
 @dataclass(frozen=True)
 class ResearchConfig:
     """The complete research configuration, one section per concern."""
+
     data: DataConfig
     universe: UniverseConfig
     factors: FactorConfig
@@ -158,9 +168,7 @@ def load_config(path: str | Path) -> ResearchConfig:
         data=data,
         universe=UniverseConfig(
             min_history_days=int(universe_raw.get("min_history_days", 252)),
-            min_avg_dollar_volume=float(
-                universe_raw.get("min_avg_dollar_volume", 5_000_000.0)
-            ),
+            min_avg_dollar_volume=float(universe_raw.get("min_avg_dollar_volume", 5_000_000.0)),
         ),
         factors=FactorConfig(
             momentum_windows=tuple(
@@ -175,16 +183,13 @@ def load_config(path: str | Path) -> ResearchConfig:
             top_n=int(scoring_raw.get("top_n", 20)),
             rebalance_frequency=scoring_raw.get("rebalance_frequency", "M"),
             factor_weights={
-                str(key): float(value)
-                for key, value in scoring_raw.get("factor_weights", {}).items()
+                str(key): float(value) for key, value in scoring_raw.get("factor_weights", {}).items()
             },
         ),
         risk=RiskConfig(
             weighting_method=str(risk_raw.get("weighting_method", "equal")),
             volatility_lookback_days=int(risk_raw.get("volatility_lookback_days", 60)),
-            target_annual_volatility=_optional_float(
-                risk_raw.get("target_annual_volatility")
-            ),
+            target_annual_volatility=_optional_float(risk_raw.get("target_annual_volatility")),
             max_position_weight=float(risk_raw.get("max_position_weight", 1.0)),
             max_sector_weight=_optional_float(risk_raw.get("max_sector_weight")),
             sector_column=str(risk_raw.get("sector_column", "sector")),
@@ -221,20 +226,12 @@ def load_config(path: str | Path) -> ResearchConfig:
         ),
         monitor=MonitorConfig(
             max_data_age_days=int(monitor_raw.get("max_data_age_days", 7)),
-            max_average_feature_missing_rate=float(
-                monitor_raw.get("max_average_feature_missing_rate", 0.10)
-            ),
-            max_single_feature_missing_rate=float(
-                monitor_raw.get("max_single_feature_missing_rate", 0.25)
-            ),
+            max_average_feature_missing_rate=float(monitor_raw.get("max_average_feature_missing_rate", 0.10)),
+            max_single_feature_missing_rate=float(monitor_raw.get("max_single_feature_missing_rate", 0.25)),
             drift_lookback_days=int(monitor_raw.get("drift_lookback_days", 60)),
-            max_feature_drift_zscore=float(
-                monitor_raw.get("max_feature_drift_zscore", 3.0)
-            ),
+            max_feature_drift_zscore=float(monitor_raw.get("max_feature_drift_zscore", 3.0)),
             min_candidate_overlap=float(monitor_raw.get("min_candidate_overlap", 0.50)),
-            max_score_concentration=float(
-                monitor_raw.get("max_score_concentration", 0.80)
-            ),
+            max_score_concentration=float(monitor_raw.get("max_score_concentration", 0.80)),
             min_rank_ic_mean=float(monitor_raw.get("min_rank_ic_mean", 0.0)),
         ),
     )

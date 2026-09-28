@@ -17,6 +17,7 @@ from .portfolio import build_risk_managed_portfolio, summarize_exposures
 @dataclass(frozen=True)
 class PipelineResult:
     """Everything produced by the factor research pipeline."""
+
     prices: pd.DataFrame
     scored: pd.DataFrame
     selections: pd.DataFrame
@@ -29,6 +30,7 @@ class PipelineResult:
 @dataclass(frozen=True)
 class MLPipelineResult:
     """Everything produced by the ML research pipeline."""
+
     prices: pd.DataFrame
     scored: pd.DataFrame
     ml: RollingMLResult
@@ -43,9 +45,7 @@ def build_scored_features(config: ResearchConfig) -> tuple[pd.DataFrame, pd.Data
     """Load the configured data, build factors and composite scores; returns prices and the scored frame."""
     prices = load_price_csv(config.data)
     fundamentals = (
-        load_fundamental_csv(config.data.fundamentals_csv)
-        if config.data.fundamentals_csv
-        else None
+        load_fundamental_csv(config.data.fundamentals_csv) if config.data.fundamentals_csv else None
     )
     macro = load_macro_csv(config.data.macro_csv) if config.data.macro_csv else None
     factors = add_basic_factors(
@@ -99,9 +99,7 @@ def run_ml_pipeline(config: ResearchConfig) -> MLPipelineResult:
 
     prediction_scores = ml_result.predictions.rename(columns={"ml_prediction": "score"})
     metadata_columns = [
-        column
-        for column in ["sector", "industry", "country", "exchange"]
-        if column in scored.columns
+        column for column in ["sector", "industry", "country", "exchange"] if column in scored.columns
     ]
     if metadata_columns and not prediction_scores.empty:
         prediction_scores = prediction_scores.merge(

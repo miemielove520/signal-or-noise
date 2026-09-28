@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Callable
-
-
+from collections.abc import Callable
 
 DEFAULT_FORWARD_WINDOWS = (5, 20, 60)
 DEFAULT_SIGNAL_THRESHOLDS = (55, 60, 65, 70, 75)

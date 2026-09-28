@@ -12,6 +12,7 @@ from .config import MonitorConfig
 @dataclass(frozen=True)
 class DailyMonitorResult:
     """Latest candidates, the monitoring checks and the rendered daily report."""
+
     candidates: pd.DataFrame
     checks: pd.DataFrame
     report: str
@@ -81,9 +82,7 @@ def monitoring_checks(
     price_latest_date = pd.Timestamp(prices["date"].max())
     monitor_date = pd.Timestamp(as_of_date) if as_of_date else pd.Timestamp.today().normalize()
     data_age_days = max(0, int((monitor_date - price_latest_date).days))
-    latest_price_tickers = prices[pd.to_datetime(prices["date"]) == price_latest_date][
-        "ticker"
-    ].nunique()
+    latest_price_tickers = prices[pd.to_datetime(prices["date"]) == price_latest_date]["ticker"].nunique()
 
     rows.append(
         _check_row(
@@ -183,10 +182,7 @@ def monitoring_checks(
     if not feature_missing.empty:
         average_missing = float(feature_missing["missing_rate"].mean())
         high_missing_count = int(
-            (
-                feature_missing["missing_rate"]
-                > monitor_config.max_single_feature_missing_rate
-            ).sum()
+            (feature_missing["missing_rate"] > monitor_config.max_single_feature_missing_rate).sum()
         )
         rows.append(
             _check_row(
@@ -215,9 +211,7 @@ def monitoring_checks(
     )
     if not drift.empty:
         max_abs_drift = float(drift["drift_zscore"].abs().max())
-        high_drift_count = int(
-            (drift["drift_zscore"].abs() > monitor_config.max_feature_drift_zscore).sum()
-        )
+        high_drift_count = int((drift["drift_zscore"].abs() > monitor_config.max_feature_drift_zscore).sum())
         rows.append(
             _check_row(
                 "max_feature_drift_zscore",
@@ -295,8 +289,7 @@ def feature_drift_report(
     latest_date = frame["date"].max()
     latest = frame[frame["date"] == latest_date]
     history = frame[
-        (frame["date"] < latest_date)
-        & (frame["date"] >= latest_date - pd.Timedelta(days=lookback_days))
+        (frame["date"] < latest_date) & (frame["date"] >= latest_date - pd.Timedelta(days=lookback_days))
     ]
 
     rows: list[dict[str, object]] = []
@@ -318,11 +311,15 @@ def feature_drift_report(
                 "history_days": int(daily_history.index.nunique()),
             }
         )
-    return pd.DataFrame(rows).sort_values(
-        "drift_zscore",
-        key=lambda series: series.abs(),
-        ascending=False,
-    ).reset_index(drop=True)
+    return (
+        pd.DataFrame(rows)
+        .sort_values(
+            "drift_zscore",
+            key=lambda series: series.abs(),
+            ascending=False,
+        )
+        .reset_index(drop=True)
+    )
 
 
 def selection_turnover(selections: pd.DataFrame) -> float:
@@ -338,7 +335,11 @@ def selection_turnover(selections: pd.DataFrame) -> float:
     previous = frame[frame["date"] == dates[-2]].set_index("ticker")["weight"].astype(float)
     current = frame[frame["date"] == dates[-1]].set_index("ticker")["weight"].astype(float)
     all_tickers = previous.index.union(current.index)
-    turnover = (current.reindex(all_tickers, fill_value=0.0) - previous.reindex(all_tickers, fill_value=0.0)).abs().sum()
+    turnover = (
+        (current.reindex(all_tickers, fill_value=0.0) - previous.reindex(all_tickers, fill_value=0.0))
+        .abs()
+        .sum()
+    )
     return float(turnover / 2.0)
 
 

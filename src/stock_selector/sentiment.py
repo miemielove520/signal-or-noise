@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
-from typing import Any, Iterable
+from typing import Any
 
 
 @dataclass(frozen=True)
 class SentimentContext:
     """News-sentiment score (0-100), risk level, entry-block flag and the headline counts behind them."""
+
     ticker: str
     sentiment_score: float
     sentiment_label: str
@@ -271,9 +273,7 @@ def build_sentiment_context(
     fake_catalyst_count = int(risk_news["fake_catalyst_count"])
     # A pump / short-seller report / reverse split is a genuine reason not to chase,
     # even when the raw score still looks acceptable.
-    block_new_entries = (
-        risk_level == "high" or high_risk_count >= 2 or fake_catalyst_count >= 1
-    )
+    block_new_entries = risk_level == "high" or high_risk_count >= 2 or fake_catalyst_count >= 1
 
     note = (
         f"Used {len(titles)} recent headline(s); positive keywords={positive_count}, "

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from datetime import datetime
 from pathlib import Path
-import sys
-
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 SRC_DIR = PROJECT_ROOT / "src"
@@ -25,9 +24,7 @@ def main(argv: list[str] | None = None) -> int:
 
     now = datetime.now()
     stamp = now.strftime("%Y-%m-%d %H:%M")
-    index_path = build_dashboard(
-        outputs_dir=args.outputs_dir, generated_at=stamp, today=now.date()
-    )
+    index_path = build_dashboard(outputs_dir=args.outputs_dir, generated_at=stamp, today=now.date())
     print(f"Dashboard / 看板: {index_path}")
 
     if args.open:

@@ -13,12 +13,30 @@ def _portfolio(tmp: str) -> Path:
     path = Path(tmp) / "portfolio.csv"
     pd.DataFrame(
         [
-            {"ticker": "AVGO", "shares": 6.881, "avg_cost": 385.65, "current_price": 389.86,
-             "market_value": 2682.62, "weight_pct": 37.95},
-            {"ticker": "MRVL", "shares": 9.037, "avg_cost": 268.33, "current_price": 233.80,
-             "market_value": 2112.85, "weight_pct": 29.89},
-            {"ticker": "CASH", "shares": None, "avg_cost": None, "current_price": None,
-             "market_value": 719.58, "weight_pct": 10.18},
+            {
+                "ticker": "AVGO",
+                "shares": 6.881,
+                "avg_cost": 385.65,
+                "current_price": 389.86,
+                "market_value": 2682.62,
+                "weight_pct": 37.95,
+            },
+            {
+                "ticker": "MRVL",
+                "shares": 9.037,
+                "avg_cost": 268.33,
+                "current_price": 233.80,
+                "market_value": 2112.85,
+                "weight_pct": 29.89,
+            },
+            {
+                "ticker": "CASH",
+                "shares": None,
+                "avg_cost": None,
+                "current_price": None,
+                "market_value": 719.58,
+                "weight_pct": 10.18,
+            },
         ]
     ).to_csv(path, index=False)
     return path
@@ -55,7 +73,9 @@ class PositionContextTests(unittest.TestCase):
     def test_weight_override_recomputes_concentration(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             ctx = build_position_context(
-                "AVGO", latest_price=401.11, portfolio_path=_portfolio(tmp),
+                "AVGO",
+                latest_price=401.11,
+                portfolio_path=_portfolio(tmp),
                 weight_pct_override=41.2,
             )
             self.assertAlmostEqual(ctx.weight_pct, 41.2)
@@ -64,7 +84,9 @@ class PositionContextTests(unittest.TestCase):
     def test_falls_back_to_latest_when_no_stored_price(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "p.csv"
-            pd.DataFrame([{"ticker": "AVGO", "shares": 6.881, "avg_cost": 385.65, "weight_pct": 38.0}]).to_csv(path, index=False)
+            pd.DataFrame(
+                [{"ticker": "AVGO", "shares": 6.881, "avg_cost": 385.65, "weight_pct": 38.0}]
+            ).to_csv(path, index=False)
             ctx = build_position_context("AVGO", latest_price=420.0, portfolio_path=path)
             self.assertAlmostEqual(ctx.unrealized_pl_pct, 420.0 / 385.65 - 1, places=4)
 
@@ -89,8 +111,17 @@ class PositionContextTests(unittest.TestCase):
     def test_deep_loss_prompts_thesis_review(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "p.csv"
-            pd.DataFrame([{"ticker": "NVTS", "shares": 20.0, "avg_cost": 16.94,
-                           "current_price": 13.0, "weight_pct": 3.8}]).to_csv(path, index=False)
+            pd.DataFrame(
+                [
+                    {
+                        "ticker": "NVTS",
+                        "shares": 20.0,
+                        "avg_cost": 16.94,
+                        "current_price": 13.0,
+                        "weight_pct": 3.8,
+                    }
+                ]
+            ).to_csv(path, index=False)
             ctx = build_position_context("NVTS", portfolio_path=path)
             self.assertLess(ctx.unrealized_pl_pct, -0.15)
             self.assertIn("重新检视", ctx.next_step_zh)

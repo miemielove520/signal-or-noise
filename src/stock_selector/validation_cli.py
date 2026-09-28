@@ -6,9 +6,10 @@ Shared by ``validate.py`` and ``stock-selector validate``.
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable, NoReturn
+from typing import NoReturn
 
 from .data import download_prices_for_period_multi_source
 from .json_io import write_json
@@ -24,7 +25,7 @@ def run_validation(args: argparse.Namespace, fail: Callable[[str], NoReturn]) ->
 
     ``fail`` reports an invalid argument combination; it must not return.
     """
-    run_started_at = datetime.now(timezone.utc)
+    run_started_at = datetime.now(UTC)
     if args.all_universes:
         if args.tickers or args.universe_file or args.historical_universe_file:
             fail(
@@ -56,7 +57,12 @@ def run_validation(args: argparse.Namespace, fail: Callable[[str], NoReturn]) ->
         if args.historical_universe_file
         else None
     )
-    if historical_membership is not None and not args.tickers and not args.universe and not args.universe_file:
+    if (
+        historical_membership is not None
+        and not args.tickers
+        and not args.universe
+        and not args.universe_file
+    ):
         tickers = historical_membership.tickers()
     else:
         tickers = load_universe_tickers(
@@ -66,7 +72,10 @@ def run_validation(args: argparse.Namespace, fail: Callable[[str], NoReturn]) ->
         )
     screening_config = load_screening_config(args.screening_config)
     output_dir = Path(args.output_dir)
-    data_path = Path("data/real_prices") / f"walk_forward_{_validation_stem(tickers, args.universe)}_{args.period}.csv"
+    data_path = (
+        Path("data/real_prices")
+        / f"walk_forward_{_validation_stem(tickers, args.universe)}_{args.period}.csv"
+    )
 
     download_tickers = _with_benchmark_tickers(tickers)
     print(
@@ -377,8 +386,7 @@ def _print_price_download_result(price_result) -> None:
     missing_tickers = getattr(price_result, "missing_tickers", ())
     if missing_tickers:
         print(
-            "Missing price tickers / 缺失价格股票: "
-            f"{', '.join(missing_tickers)}",
+            f"Missing price tickers / 缺失价格股票: {', '.join(missing_tickers)}",
             flush=True,
         )
     for warning in getattr(price_result, "warnings", ()):
@@ -402,7 +410,7 @@ def _write_validation_run_manifest(
     result,
     started_at: datetime,
 ) -> Path:
-    completed_at = datetime.now(timezone.utc)
+    completed_at = datetime.now(UTC)
     output_dir.mkdir(parents=True, exist_ok=True)
     output_files = {
         "walk_forward_report": str(output_dir / "walk_forward_report.md"),
@@ -413,9 +421,7 @@ def _write_validation_run_manifest(
         "sample_sufficiency_csv": str(output_dir / "sample_sufficiency_guidance.csv"),
         "profile_summary_csv": str(output_dir / "profile_validation_summary.csv"),
         "segment_summary_csv": str(output_dir / "segment_validation_summary.csv"),
-        "market_regime_summary_csv": str(
-            output_dir / "market_regime_validation_summary.csv"
-        ),
+        "market_regime_summary_csv": str(output_dir / "market_regime_validation_summary.csv"),
         "market_regime_policy_csv": str(output_dir / "market_regime_policy.csv"),
         "probability_calibration_csv": str(output_dir / "probability_calibration.csv"),
         "win_rate_dashboard_md": str(output_dir / "win_rate_dashboard.md"),
@@ -428,15 +434,9 @@ def _write_validation_run_manifest(
         "profile_health_dashboard_md": str(output_dir / "profile_health_dashboard.md"),
         "profile_health_dashboard_json": str(output_dir / "profile_health_dashboard.json"),
         "profile_health_dashboard_csv": str(output_dir / "profile_health_dashboard.csv"),
-        "profile_action_recommendations_md": str(
-            output_dir / "profile_action_recommendations.md"
-        ),
-        "profile_action_recommendations_json": str(
-            output_dir / "profile_action_recommendations.json"
-        ),
-        "profile_action_recommendations_csv": str(
-            output_dir / "profile_action_recommendations.csv"
-        ),
+        "profile_action_recommendations_md": str(output_dir / "profile_action_recommendations.md"),
+        "profile_action_recommendations_json": str(output_dir / "profile_action_recommendations.json"),
+        "profile_action_recommendations_csv": str(output_dir / "profile_action_recommendations.csv"),
         "profile_blocker_dashboard_md": str(output_dir / "profile_blocker_dashboard.md"),
         "profile_blocker_dashboard_json": str(output_dir / "profile_blocker_dashboard.json"),
         "profile_blocker_dashboard_csv": str(output_dir / "profile_blocker_dashboard.csv"),
@@ -580,9 +580,7 @@ def _print_historical_win_rate_gate(result) -> None:
         return
     print()
     print("Historical win-rate gate / 历史胜率部署门槛")
-    focus = gate[
-        gate["scope"].isin(["overall", "validation_bucket", "quality_gate"])
-    ].head(5)
+    focus = gate[gate["scope"].isin(["overall", "validation_bucket", "quality_gate"])].head(5)
     if focus.empty:
         focus = gate.head(5)
     for row in focus.itertuples(index=False):
@@ -618,10 +616,7 @@ def _print_historical_threshold_recommendations(result) -> None:
             f"{row.recommendation_action_zh}, {threshold_text}, "
             f"priority={row.priority_zh}, reason={row.recommendation_reason_zh}"
         )
-    print(
-        "- Full recommendations / 完整建议: "
-        "historical_threshold_recommendations.md"
-    )
+    print("- Full recommendations / 完整建议: historical_threshold_recommendations.md")
 
 
 def _print_all_universe_progress(universe_name: str, status: str, index: int, total: int) -> None:

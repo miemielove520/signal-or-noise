@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from pathlib import Path
-from types import SimpleNamespace
 import json
 import tempfile
 import unittest
+from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 
@@ -14,8 +14,8 @@ from stock_selector.universe_validation import (
     _diagnose_universe,
     build_best_universe_ranking,
     build_validation_coverage_plan,
-    render_validation_coverage_plan,
     render_suggested_universe_screening_config,
+    render_validation_coverage_plan,
     run_all_builtin_universe_validations,
 )
 from stock_selector.walk_forward import WalkForwardResult
@@ -144,8 +144,12 @@ class UniverseValidationTest(unittest.TestCase):
         plan = build_validation_coverage_plan(["semiconductors", "healthcare-quality"])
         markdown = render_validation_coverage_plan(plan)
 
-        self.assertEqual(plan.loc[plan["universe"] == "semiconductors", "mapped_profile"].iloc[0], "semiconductor")
-        self.assertEqual(plan.loc[plan["universe"] == "healthcare-quality", "mapped_profile"].iloc[0], "default")
+        self.assertEqual(
+            plan.loc[plan["universe"] == "semiconductors", "mapped_profile"].iloc[0], "semiconductor"
+        )
+        self.assertEqual(
+            plan.loc[plan["universe"] == "healthcare-quality", "mapped_profile"].iloc[0], "default"
+        )
         self.assertIn("python3 validate.py --universe semiconductors", plan["deep_command"].iloc[0])
         self.assertIn("compare_runs.py", markdown)
         self.assertIn("安全配置流程", markdown)
@@ -397,12 +401,9 @@ class UniverseValidationTest(unittest.TestCase):
                     {
                         "validation_bucket": "early_watchlist",
                         "quality_gate_fail_reasons": (
-                            "signal score too low; confidence too low; "
-                            "breakout backtest sample too small"
+                            "signal score too low; confidence too low; breakout backtest sample too small"
                         ),
-                        "quality_gate_fail_reasons_zh": (
-                            "信号分数不足；置信度不足；突破买点回测样本不足"
-                        ),
+                        "quality_gate_fail_reasons_zh": ("信号分数不足；置信度不足；突破买点回测样本不足"),
                         "watchlist_missing_items": (
                             "signal score >= 68; confidence >= 65; entry backtest sample >= 12"
                         ),

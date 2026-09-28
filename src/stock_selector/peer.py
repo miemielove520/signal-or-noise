@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pandas as pd
 
-
 PEER_GROUPS = {
     "software": ["NOW", "CRM", "MSFT", "ADBE", "ORCL", "INTU", "SNOW", "DDOG", "PANW", "PLTR"],
     "cloud": ["NOW", "CRM", "MSFT", "ADBE", "ORCL", "SNOW", "DDOG", "NET", "MDB"],
@@ -109,10 +108,7 @@ def render_peer_comparison_report(frame: pd.DataFrame) -> str:
     lines = [
         "## Peer Comparison / 同业比较",
         "",
-        (
-            f"- Target rank / 目标排名: `{int(target_row['peer_rank'])}` "
-            f"of `{len(frame)}`"
-        ),
+        (f"- Target rank / 目标排名: `{int(target_row['peer_rank'])}` of `{len(frame)}`"),
         (
             "- Target high probability score / 目标高概率分数: "
             f"`{_format_number(target_row['high_probability_score'])}`"
@@ -301,9 +297,11 @@ def _peer_valuation_label(row: pd.Series) -> tuple[str, str]:
     available = [value for value in [score_diff, pe_diff, peg_diff] if value is not None]
     if not available:
         return "unknown", "未知"
-    cheaper_signal = (score_diff is not None and score_diff >= 8) or (
-        pe_diff is not None and pe_diff <= -0.20
-    ) or (peg_diff is not None and peg_diff <= -0.20)
+    cheaper_signal = (
+        (score_diff is not None and score_diff >= 8)
+        or (pe_diff is not None and pe_diff <= -0.20)
+        or (peg_diff is not None and peg_diff <= -0.20)
+    )
     richer_signal = (
         (score_diff is not None and score_diff <= -8)
         or (pe_diff is not None and pe_diff >= 0.25)

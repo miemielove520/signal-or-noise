@@ -18,6 +18,7 @@ import pandas as pd
 @dataclass(frozen=True)
 class PositionContext:
     """The user's position in a ticker: shares, cost, value, weight and unrealised profit, with bilingual notes."""
+
     ticker: str
     is_held: bool
     shares: float | None = None
@@ -77,14 +78,8 @@ def build_position_context(
     price = _f(latest_price)
     if price is None or price <= 0:
         price = _f(row.get("current_price"))
-    market_value = (
-        shares * price if shares is not None and price is not None else _f(row.get("market_value"))
-    )
-    upl_pct = (
-        price / avg_cost - 1.0
-        if avg_cost is not None and price is not None and avg_cost > 0
-        else None
-    )
+    market_value = shares * price if shares is not None and price is not None else _f(row.get("market_value"))
+    upl_pct = price / avg_cost - 1.0 if avg_cost is not None and price is not None and avg_cost > 0 else None
     upl = (
         (price - avg_cost) * shares
         if avg_cost is not None and price is not None and shares is not None

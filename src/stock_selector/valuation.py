@@ -12,6 +12,7 @@ import pandas as pd
 @dataclass(frozen=True)
 class ValuationContext:
     """Valuation score (0-100), risk level and entry-block flag for one ticker."""
+
     ticker: str
     valuation_score: float
     valuation_label: str
@@ -51,7 +52,12 @@ def build_valuation_context(
     market_cap = _safe_float(snapshot.get("market_cap"))
     free_cash_flow = _safe_float(snapshot.get("free_cash_flow"))
     free_cash_flow_yield = _safe_float(snapshot.get("free_cash_flow_yield"))
-    if free_cash_flow_yield is None and market_cap is not None and market_cap > 0 and free_cash_flow is not None:
+    if (
+        free_cash_flow_yield is None
+        and market_cap is not None
+        and market_cap > 0
+        and free_cash_flow is not None
+    ):
         free_cash_flow_yield = free_cash_flow / market_cap
     revenue_growth = _safe_float(snapshot.get("revenue_growth"))
     earnings_growth = _safe_float(snapshot.get("earnings_growth"))

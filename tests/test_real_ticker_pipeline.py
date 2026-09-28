@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
@@ -23,10 +23,18 @@ def _synthetic_prices(tickers: list[str], days: int = 520) -> pd.DataFrame:
         rng = np.random.default_rng(offset + 7)
         close = 100.0 * np.cumprod(1.0 + 0.0006 + rng.normal(0, 0.015, days))
         for date, price in zip(dates, close):
-            rows.append({
-                "date": date, "ticker": ticker, "open": price * 0.996, "high": price * 1.012,
-                "low": price * 0.988, "close": price, "adj_close": price, "volume": 2_000_000,
-            })
+            rows.append(
+                {
+                    "date": date,
+                    "ticker": ticker,
+                    "open": price * 0.996,
+                    "high": price * 1.012,
+                    "low": price * 0.988,
+                    "close": price,
+                    "adj_close": price,
+                    "volume": 2_000_000,
+                }
+            )
     return pd.DataFrame(rows)
 
 
@@ -41,15 +49,23 @@ def _fake_download(tickers, period, output_path=None, **_kwargs):
 
 def _fake_event_risk(ticker, as_of_date):
     return build_event_risk_context(
-        ticker=ticker, as_of_date=as_of_date, earnings_dates=[], source="test", warning="offline test",
+        ticker=ticker,
+        as_of_date=as_of_date,
+        earnings_dates=[],
+        source="test",
+        warning="offline test",
     )
 
 
 class RealTickerPipelineTest(unittest.TestCase):
     def test_offline_run_writes_every_output(self) -> None:
-        with tempfile.TemporaryDirectory() as root, \
-                patch("stock_selector.real_data.download_prices_for_period_multi_source", side_effect=_fake_download), \
-                patch("stock_selector.real_data.fetch_yfinance_event_risk", side_effect=_fake_event_risk):
+        with (
+            tempfile.TemporaryDirectory() as root,
+            patch(
+                "stock_selector.real_data.download_prices_for_period_multi_source", side_effect=_fake_download
+            ),
+            patch("stock_selector.real_data.fetch_yfinance_event_risk", side_effect=_fake_event_risk),
+        ):
             result = run_real_ticker_analysis(
                 "TEST",
                 period="2y",
@@ -61,10 +77,19 @@ class RealTickerPipelineTest(unittest.TestCase):
             )
             out = Path(root) / "real_ticker" / "TEST"
             expected = [
-                "ticker_analysis.md", "ticker_analysis.csv", "analysis_result.json", "cache_metadata.json",
-                "data_sources.json", "data_readiness.json", "data_readiness.csv", "data_readiness.md",
-                "event_risk.json", "fundamental_quality.json", "sentiment_risk.json",
-                "analyst_expectations.json", "valuation_risk.json",
+                "ticker_analysis.md",
+                "ticker_analysis.csv",
+                "analysis_result.json",
+                "cache_metadata.json",
+                "data_sources.json",
+                "data_readiness.json",
+                "data_readiness.csv",
+                "data_readiness.md",
+                "event_risk.json",
+                "fundamental_quality.json",
+                "sentiment_risk.json",
+                "analyst_expectations.json",
+                "valuation_risk.json",
             ]
             missing = [name for name in expected if not (out / name).exists()]
             report = (out / "ticker_analysis.md").read_text(encoding="utf-8")

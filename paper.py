@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
 import json
-from pathlib import Path
 import sys
+from dataclasses import asdict
+from pathlib import Path
 
 import pandas as pd
-
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 SRC_DIR = PROJECT_ROOT / "src"
@@ -28,7 +27,6 @@ from stock_selector.paper_audit import (  # noqa: E402
     record_rebalance_success,
     utc_timestamp,
 )
-
 
 DEFAULT_SCAN_CSV = PROJECT_ROOT / "outputs" / "scans" / "latest" / "high_probability_scan.csv"
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "outputs" / "paper_latest"
@@ -281,9 +279,7 @@ def _source_snapshot(
         "state_csv": str(args.state_csv),
         "output_dir": str(output_dir),
         "history_dir": str(history_dir),
-        "market_regime_policy": None
-        if args.ignore_market_regime_policy
-        else str(args.market_regime_policy),
+        "market_regime_policy": None if args.ignore_market_regime_policy else str(args.market_regime_policy),
     }
 
 
@@ -362,11 +358,7 @@ def _read_analysis_json(path: Path) -> pd.DataFrame:
             value = payload.get(key)
             if isinstance(value, list):
                 return pd.DataFrame(value)
-        row = {
-            key: value
-            for key, value in payload.items()
-            if not isinstance(value, (list, dict))
-        }
+        row = {key: value for key, value in payload.items() if not isinstance(value, (list, dict))}
         if "ticker" in row:
             return pd.DataFrame([row])
     raise ValueError(f"Could not find analysis rows in {path}")
@@ -445,6 +437,7 @@ def _augment_prices_with_held_tickers(
     if not missing:
         return prices
     if fetch_close_fn is None:
+
         def fetch_close_fn(ticker: str) -> float | None:  # pragma: no cover - network
             from stock_selector.data import download_prices_for_period_multi_source
 
@@ -453,6 +446,7 @@ def _augment_prices_with_held_tickers(
             if frame is None or frame.empty:
                 return None
             return float(frame.sort_values("date")["adj_close"].iloc[-1])
+
     extra: list[dict[str, object]] = []
     for ticker in missing:
         close = None

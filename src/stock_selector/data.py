@@ -2,21 +2,20 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
-from contextlib import redirect_stderr
 import io
 import json
 import os
+from collections.abc import Callable
+from contextlib import redirect_stderr
+from dataclasses import dataclass
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
-from typing import Callable
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 import pandas as pd
 
 from .config import DataConfig
-
 
 REQUIRED_PRICE_COLUMNS = {
     "date",
@@ -54,6 +53,7 @@ REQUIRED_METADATA_COLUMNS = {
 @dataclass(frozen=True)
 class PriceDownloadResult:
     """Prices from the first provider that returned data, with the providers attempted, warnings, missing tickers and the cross-source validation result."""
+
     prices: pd.DataFrame
     provider: str
     attempts: tuple[str, ...]
@@ -112,9 +112,7 @@ def load_fundamental_csv(path: str | Path) -> pd.DataFrame:
             "yfinance_restated"
         )
     numeric_columns = sorted(REQUIRED_FUNDAMENTAL_COLUMNS - {"report_date", "period_end", "ticker"})
-    fundamentals[numeric_columns] = fundamentals[numeric_columns].apply(
-        pd.to_numeric, errors="coerce"
-    )
+    fundamentals[numeric_columns] = fundamentals[numeric_columns].apply(pd.to_numeric, errors="coerce")
     fundamentals = fundamentals.dropna(subset=["report_date", "period_end", "ticker"])
     fundamentals = fundamentals.sort_values(["ticker", "report_date"]).reset_index(drop=True)
 
@@ -223,9 +221,7 @@ def download_yfinance_prices(
 
     prices = pd.concat(frames, ignore_index=True)
     prices = prices.rename(columns={"date": "date"})
-    prices = prices[
-        ["date", "ticker", "open", "high", "low", "close", "adj_close", "volume"]
-    ]
+    prices = prices[["date", "ticker", "open", "high", "low", "close", "adj_close", "volume"]]
     prices = prices.dropna(subset=["date", "ticker", "adj_close", "volume"])
     prices = prices.sort_values(["ticker", "date"]).reset_index(drop=True)
 
@@ -296,9 +292,7 @@ def download_yfinance_prices_for_period(
     if "adj_close" not in prices.columns:
         prices["adj_close"] = prices["close"]
 
-    prices = prices[
-        ["date", "ticker", "open", "high", "low", "close", "adj_close", "volume"]
-    ]
+    prices = prices[["date", "ticker", "open", "high", "low", "close", "adj_close", "volume"]]
     prices = prices.dropna(subset=["date", "ticker", "adj_close", "volume"])
     prices = prices.sort_values(["ticker", "date"]).reset_index(drop=True)
 
@@ -356,9 +350,7 @@ def download_prices_for_period_multi_source(
         prices = normalize_price_frame(prices)
         missing_tickers = _missing_price_tickers(tickers, prices)
         if missing_tickers:
-            warnings.append(
-                f"{provider}: missing price rows for {', '.join(missing_tickers)}"
-            )
+            warnings.append(f"{provider}: missing price rows for {', '.join(missing_tickers)}")
         if output_path is not None:
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
             prices.to_csv(output_path, index=False)
@@ -452,9 +444,7 @@ def _cross_validate_price_sources(
         if comparison.empty:
             validation_warnings.append(f"{provider}: validation fetch returned no rows")
             continue
-        comparison_rows.extend(
-            _price_source_comparison_rows(primary_prices, comparison, provider)
-        )
+        comparison_rows.extend(_price_source_comparison_rows(primary_prices, comparison, provider))
 
     if not comparison_rows:
         return {
@@ -468,12 +458,8 @@ def _cross_validate_price_sources(
             "warnings": validation_warnings,
         }
 
-    max_close_diff = _max_numeric(
-        row["latest_close_diff_pct"] for row in comparison_rows
-    )
-    max_volume_diff = _max_numeric(
-        row["latest_volume_diff_pct"] for row in comparison_rows
-    )
+    max_close_diff = _max_numeric(row["latest_close_diff_pct"] for row in comparison_rows)
+    max_volume_diff = _max_numeric(row["latest_volume_diff_pct"] for row in comparison_rows)
     max_missing_dates = max(int(row["missing_date_count"]) for row in comparison_rows)
     conflict = max_close_diff > 0.005 or max_volume_diff > 0.25 or max_missing_dates > 5
     status = "conflict_warning" if conflict else "validated"
@@ -506,9 +492,7 @@ def _price_source_comparison_rows(
         if primary_ticker.empty or comparison_ticker.empty:
             continue
         primary_by_date = primary_ticker.assign(_d=pd.to_datetime(primary_ticker["date"]).dt.date)
-        comparison_by_date = comparison_ticker.assign(
-            _d=pd.to_datetime(comparison_ticker["date"]).dt.date
-        )
+        comparison_by_date = comparison_ticker.assign(_d=pd.to_datetime(comparison_ticker["date"]).dt.date)
         primary_dates = set(primary_by_date["_d"])
         comparison_dates = set(comparison_by_date["_d"])
         # Compare on the latest COMMON trading day. Otherwise one source having an
@@ -522,9 +506,7 @@ def _price_source_comparison_rows(
             close_diff = _relative_difference(
                 primary_latest.get("adj_close"), comparison_latest.get("adj_close")
             )
-            volume_diff = _relative_difference(
-                primary_latest.get("volume"), comparison_latest.get("volume")
-            )
+            volume_diff = _relative_difference(primary_latest.get("volume"), comparison_latest.get("volume"))
             primary_latest_date = latest_common.isoformat()
             comparison_latest_date = latest_common.isoformat()
         else:
@@ -610,7 +592,7 @@ def download_polygon_prices_for_period(
             timestamp = int(item["t"]) / 1000
             rows.append(
                 {
-                    "date": datetime.fromtimestamp(timestamp, tz=timezone.utc).date().isoformat(),
+                    "date": datetime.fromtimestamp(timestamp, tz=UTC).date().isoformat(),
                     "ticker": requested_ticker,
                     "open": item.get("o"),
                     "high": item.get("h"),
@@ -693,9 +675,7 @@ def download_tiingo_prices_for_period(
 ) -> pd.DataFrame:
     """Daily adjusted prices from Tiingo (free API token). Reliable from datacenter
     IPs, so it works where Stooq's anti-bot challenge blocks cloud servers."""
-    token = os.environ.get("TIINGO_API_TOKEN", "").strip() or os.environ.get(
-        "TIINGO_API_KEY", ""
-    ).strip()
+    token = os.environ.get("TIINGO_API_TOKEN", "").strip() or os.environ.get("TIINGO_API_KEY", "").strip()
     if not token:
         raise RuntimeError("TIINGO_API_TOKEN is not set")
 
@@ -854,7 +834,11 @@ def _available_default_providers() -> tuple[str, ...]:
     # yfinance is the primary free source; stooq is a free second source so that
     # cross-source validation runs even when no paid API keys are configured.
     providers.append("yfinance")
-    if "stooq" in PRICE_PROVIDERS and os.environ.get("STOCK_SELECTOR_DISABLE_STOOQ", "").strip() not in {"1", "true", "yes"}:
+    if "stooq" in PRICE_PROVIDERS and os.environ.get("STOCK_SELECTOR_DISABLE_STOOQ", "").strip() not in {
+        "1",
+        "true",
+        "yes",
+    }:
         providers.append("stooq")
     return tuple(providers)
 
@@ -990,8 +974,7 @@ def _alpaca_available() -> bool:
 
 def _tiingo_available() -> bool:
     return bool(
-        os.environ.get("TIINGO_API_TOKEN", "").strip()
-        or os.environ.get("TIINGO_API_KEY", "").strip()
+        os.environ.get("TIINGO_API_TOKEN", "").strip() or os.environ.get("TIINGO_API_KEY", "").strip()
     )
 
 

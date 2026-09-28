@@ -122,8 +122,7 @@ def make_high_probability_gate_row() -> pd.Series:
             "backtest_slippage_score": 90.0,
             "backtest_return_evidence_score": 75.0,
             "backtest_trust_note": (
-                "Trust score blends sample count, price health, liquidity, "
-                "slippage, and return evidence."
+                "Trust score blends sample count, price health, liquidity, slippage, and return evidence."
             ),
             "backtest_trust_note_zh": "可信度分综合样本数、价格健康、流动性、滑点和收益证据。",
         }
@@ -519,16 +518,10 @@ class AnalysisTest(unittest.TestCase):
         )
 
         self.assertTrue(
-            (
-                result["calibrated_win_probability"]
-                >= result["calibrated_win_probability_raw"]
-            ).all()
+            (result["calibrated_win_probability"] >= result["calibrated_win_probability_raw"]).all()
         )
         self.assertTrue(
-            (
-                result["calibrated_win_probability"]
-                > result["calibrated_win_probability_raw"]
-            ).any()
+            (result["calibrated_win_probability"] > result["calibrated_win_probability_raw"]).any()
         )
         self.assertTrue((result["probability_calibration_adjustment"] <= 0.08).all())
         self.assertEqual(
@@ -555,14 +548,26 @@ class AnalysisTest(unittest.TestCase):
         self.assertTrue(((result["overall_risk_score"] >= 0) & (result["overall_risk_score"] <= 100)).all())
         self.assertTrue(((result["data_quality_score"] >= 0) & (result["data_quality_score"] <= 100)).all())
         self.assertTrue(((result["price_health_score"] >= 0) & (result["price_health_score"] <= 100)).all())
-        self.assertTrue(((result["backtest_trust_score"] >= 0) & (result["backtest_trust_score"] <= 100)).all())
-        self.assertTrue(((result["regime_coverage_score"] >= 0) & (result["regime_coverage_score"] <= 100)).all())
-        self.assertTrue(((result["recent_backtest_score"] >= 0) & (result["recent_backtest_score"] <= 100)).all())
-        self.assertTrue(((result["backtest_decay_score"] >= 0) & (result["backtest_decay_score"] <= 100)).all())
+        self.assertTrue(
+            ((result["backtest_trust_score"] >= 0) & (result["backtest_trust_score"] <= 100)).all()
+        )
+        self.assertTrue(
+            ((result["regime_coverage_score"] >= 0) & (result["regime_coverage_score"] <= 100)).all()
+        )
+        self.assertTrue(
+            ((result["recent_backtest_score"] >= 0) & (result["recent_backtest_score"] <= 100)).all()
+        )
+        self.assertTrue(
+            ((result["backtest_decay_score"] >= 0) & (result["backtest_decay_score"] <= 100)).all()
+        )
         self.assertTrue(result["data_quality_weakest_layer"].notna().all())
         self.assertTrue(result["data_quality_repair_actions"].notna().all())
-        self.assertTrue(((result["high_probability_score"] >= 0) & (result["high_probability_score"] <= 100)).all())
-        self.assertTrue(((result["blocker_resolution_score"] >= 0) & (result["blocker_resolution_score"] <= 100)).all())
+        self.assertTrue(
+            ((result["high_probability_score"] >= 0) & (result["high_probability_score"] <= 100)).all()
+        )
+        self.assertTrue(
+            ((result["blocker_resolution_score"] >= 0) & (result["blocker_resolution_score"] <= 100)).all()
+        )
         self.assertTrue(np.isfinite(result["entry_distance_pct"]).all())
 
     def test_normalize_horizons_rejects_unknown_value(self) -> None:
@@ -777,7 +782,7 @@ class AnalysisTest(unittest.TestCase):
         prefix = "- Final next step / 下一步: "
         next_step_lines = [line for line in report.splitlines() if line.startswith(prefix)]
         self.assertEqual(len(next_step_lines), 1)
-        payload = next_step_lines[0][len(prefix):]
+        payload = next_step_lines[0][len(prefix) :]
         self.assertFalse(payload.startswith("("))
         first = result.iloc[0]
         self.assertEqual(payload, f"{first['final_next_step']} / {first['final_next_step_zh']}")
@@ -844,9 +849,7 @@ class AnalysisTest(unittest.TestCase):
 
     def test_regime_coverage_profile_penalizes_concentrated_samples(self) -> None:
         narrow = _regime_coverage_profile(["steady_uptrend"] * 20)
-        broad = _regime_coverage_profile(
-            ["steady_uptrend"] * 10 + ["strong_uptrend"] * 8 + ["volatile"] * 7
-        )
+        broad = _regime_coverage_profile(["steady_uptrend"] * 10 + ["strong_uptrend"] * 8 + ["volatile"] * 7)
 
         self.assertLess(narrow["score"], broad["score"])
         self.assertEqual(narrow["regime_count"], 1)

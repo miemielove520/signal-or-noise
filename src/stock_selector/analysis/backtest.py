@@ -25,7 +25,6 @@ from .indicators import (
     _window_return,
 )
 
-
 MIN_BACKTEST_SLIPPAGE_PCT = 0.0005
 MAX_BACKTEST_SLIPPAGE_PCT = 0.01
 SLIPPAGE_LIQUIDITY_WINDOW = 20
@@ -123,9 +122,7 @@ def _entry_backtest_summary(
 ) -> dict[str, object]:
     close = frame["adj_close"].astype(float).reset_index(drop=True)
     open_price = (
-        frame["open"].astype(float).fillna(close).reset_index(drop=True)
-        if "open" in frame
-        else close.copy()
+        frame["open"].astype(float).fillna(close).reset_index(drop=True) if "open" in frame else close.copy()
     )
     high = frame["high"].astype(float).fillna(close).reset_index(drop=True)
     low = frame["low"].astype(float).fillna(close).reset_index(drop=True)
@@ -193,12 +190,7 @@ def _entry_backtest_summary(
         if future_close.empty:
             continue
 
-        if (
-            uptrend
-            and positive_momentum
-            and volume_ratio >= 1.0
-            and latest_price >= breakout_entry
-        ):
+        if uptrend and positive_momentum and volume_ratio >= 1.0 and latest_price >= breakout_entry:
             executed_entry = _realistic_long_entry_price(
                 planned_entry=latest_price,
                 next_open=float(future_open.iloc[0]),
@@ -392,6 +384,7 @@ def _entry_backtest_summary(
         "entry_backtest_note_zh": note_zh,
     }
 
+
 def _regime_coverage_fields(regime_coverage: object) -> dict[str, object]:
     """Row fields `regime_coverage_score` … `regime_coverage_note_zh` taken from `regime_coverage`."""
     return {
@@ -406,6 +399,7 @@ def _regime_coverage_fields(regime_coverage: object) -> dict[str, object]:
         "regime_coverage_note_zh": regime_coverage["note_zh"],
     }
 
+
 def _recent_backtest_fields(recent_backtest: object) -> dict[str, object]:
     """Row fields `recent_backtest_score` … `recent_backtest_note_zh` taken from `recent_backtest`."""
     return {
@@ -419,6 +413,7 @@ def _recent_backtest_fields(recent_backtest: object) -> dict[str, object]:
         "recent_backtest_note": recent_backtest["note"],
         "recent_backtest_note_zh": recent_backtest["note_zh"],
     }
+
 
 def _backtest_decay_fields(backtest_decay: object) -> dict[str, object]:
     """Row fields `backtest_decay_score` … `backtest_decay_note_zh` taken from `backtest_decay`."""
@@ -530,9 +525,7 @@ def _regime_coverage_profile(regime_labels: list[str]) -> dict[str, object]:
 
 def _recent_backtest_profile(trade_returns: list[tuple[int, float]]) -> dict[str, object]:
     ordered_returns = [
-        float(value)
-        for _, value in sorted(trade_returns, key=lambda item: item[0])
-        if _is_finite(value)
+        float(value) for _, value in sorted(trade_returns, key=lambda item: item[0]) if _is_finite(value)
     ]
     total_count = len(ordered_returns)
     if total_count == 0:
@@ -600,9 +593,7 @@ def _recent_backtest_profile(trade_returns: list[tuple[int, float]]) -> dict[str
 
 def _backtest_decay_profile(trade_returns: list[tuple[int, float]]) -> dict[str, object]:
     ordered_returns = [
-        float(value)
-        for _, value in sorted(trade_returns, key=lambda item: item[0])
-        if _is_finite(value)
+        float(value) for _, value in sorted(trade_returns, key=lambda item: item[0]) if _is_finite(value)
     ]
     total_count = len(ordered_returns)
     if total_count < 6:
@@ -757,10 +748,7 @@ def _realistic_long_entry_price(
 def _win_rate(outcomes: list[str]) -> float:
     if not outcomes:
         return np.nan
-    wins = sum(
-        outcome in {"target_hit", "timeout_win", "trailing_stop_win"}
-        for outcome in outcomes
-    )
+    wins = sum(outcome in {"target_hit", "timeout_win", "trailing_stop_win"} for outcome in outcomes)
     return float(wins / len(outcomes))
 
 
@@ -770,8 +758,7 @@ def _outcome_rate(outcomes: list[str], target_outcome: str) -> float:
     if target_outcome == "trailing_stop":
         return float(
             sum(
-                outcome
-                in {"trailing_stop_win", "trailing_stop_loss", "gap_trailing_stop_hit"}
+                outcome in {"trailing_stop_win", "trailing_stop_loss", "gap_trailing_stop_hit"}
                 for outcome in outcomes
             )
             / len(outcomes)

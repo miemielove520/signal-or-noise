@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
-import json
 
 import numpy as np
 import pandas as pd
@@ -15,6 +15,7 @@ from .json_io import dataframe_records, write_json
 @dataclass(frozen=True)
 class RunComparisonResult:
     """Summary, per-ticker comparison, adoption decision and report of two validation runs."""
+
     summary: pd.DataFrame
     ticker_comparison: pd.DataFrame
     adoption_decision: pd.DataFrame

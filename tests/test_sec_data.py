@@ -90,15 +90,9 @@ def _companyfacts_payload() -> dict[str, object]:
                 "PaymentsToAcquirePropertyPlantAndEquipment": {
                     "units": {"USD": [_duration("2024-09-30", 5_000_000_000)]}
                 },
-                "StockholdersEquity": {
-                    "units": {"USD": [_instant("2024-09-30", 40_000_000_000)]}
-                },
-                "LongTermDebtCurrent": {
-                    "units": {"USD": [_instant("2024-09-30", 2_500_000_000)]}
-                },
-                "LongTermDebtNoncurrent": {
-                    "units": {"USD": [_instant("2024-09-30", 25_000_000_000)]}
-                },
+                "StockholdersEquity": {"units": {"USD": [_instant("2024-09-30", 40_000_000_000)]}},
+                "LongTermDebtCurrent": {"units": {"USD": [_instant("2024-09-30", 2_500_000_000)]}},
+                "LongTermDebtNoncurrent": {"units": {"USD": [_instant("2024-09-30", 25_000_000_000)]}},
             }
         },
     }

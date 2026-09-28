@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import argparse
 import difflib
-from pathlib import Path
 import sys
-
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 SRC_DIR = PROJECT_ROOT / "src"
@@ -15,7 +14,6 @@ from stock_selector.console_report import print_ticker_report  # noqa: E402
 from stock_selector.real_data import normalize_ticker, run_real_ticker_analysis  # noqa: E402
 from stock_selector.screening_config import load_screening_config  # noqa: E402
 from stock_selector.universe import BUILT_IN_UNIVERSES  # noqa: E402
-
 
 PROJECT_COMMAND = f"cd {PROJECT_ROOT}"
 
@@ -97,10 +95,7 @@ def format_user_error(ticker: str, error: Exception) -> str:
     ]
 
     if suggestions and normalized not in suggestions:
-        lines.append(
-            "Possible ticker match / 可能想输入的是: "
-            + ", ".join(suggestions[:5])
-        )
+        lines.append("Possible ticker match / 可能想输入的是: " + ", ".join(suggestions[:5]))
     if _looks_like_price_data_error(error_message):
         lines.extend(
             [
@@ -117,11 +112,7 @@ def format_user_error(ticker: str, error: Exception) -> str:
 
 def _ticker_suggestions(ticker: str) -> list[str]:
     candidates = sorted(
-        {
-            symbol
-            for tickers in BUILT_IN_UNIVERSES.values()
-            for symbol in tickers
-        }
+        {symbol for tickers in BUILT_IN_UNIVERSES.values() for symbol in tickers}
         | {"AAPL", "MSFT", "NVDA", "AVGO", "AAON", "NOW", "CRM"}
     )
     if not ticker:

@@ -70,7 +70,9 @@ def _stop_loss(
     entry_buffer_pct: float,
 ) -> float:
     fallback_risk = max(entry_price * 0.05, 0.01)
-    atr_stop = entry_price - atr * atr_multiple if _is_finite(atr) and atr > 0 else entry_price - fallback_risk
+    atr_stop = (
+        entry_price - atr * atr_multiple if _is_finite(atr) and atr > 0 else entry_price - fallback_risk
+    )
     structure_stop = support * (1.0 - entry_buffer_pct) if _is_finite(support) else np.nan
     candidates = [value for value in [atr_stop, structure_stop] if _is_finite(value) and value < entry_price]
     if not candidates:
