@@ -110,6 +110,19 @@ To track your own holdings, copy `portfolio.example.csv` → `portfolio.csv` and
 - **Small samples.** The backtest has only 14 independent signal dates, and the forward test 51 trading days. The analysis reports intervals and p-values instead of verdicts.
 - **Free data only.** The "money flow" indicators are price/volume proxies, not institutional flow data.
 
+## Project timeline (May → November 2026)
+
+| When | Milestone |
+|---|---|
+| **May 2026** | Research framework: price loading, data-quality audit, factor scores, backtest and paper-trading engine on sample data |
+| **June 2026** | Real-data single-ticker analysis. Walk-forward validation (from Jun 15), sector rule profiles, strict quality gates (Jun 22–24), backtest trust / regime coverage / decay checks (Jun 25–27), probability calibration (Jun 27), portfolio-vs-benchmark replays, sensitivity grids and a minimum-sample guard (Jun 29) |
+| **July 2026** | Daily automated pipeline and dashboard. Policy v1 discarded after 2 days because the rules changed mid-test; **policy v2 frozen and forward test started on Jul 9** |
+| **Jul – Sep 2026** | Forward test runs untouched every trading day; fundamentals from point-in-time SEC filings; transaction-cost model |
+| **September 2026** | Statistical post-mortem ([report](results/REPORT.md)), public release, refactor of the largest modules with output-equivalence checks |
+| **Oct – Nov 2026** | Forward test keeps running; results refreshed before release |
+
+Development happened in a private repository. The public git history starts at the September 2026 release, because the earlier history contained my personal portfolio data. The dates above come from the project's file timestamps and [`docs/POLICY_LOG.md`](docs/POLICY_LOG.md).
+
 ## About this project
 
 <!-- TODO (you): 3–5 sentences in your own voice. Why you started this, what you learned, what surprised you. -->
