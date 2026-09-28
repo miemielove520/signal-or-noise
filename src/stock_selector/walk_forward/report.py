@@ -42,46 +42,98 @@ def render_walk_forward_report(
     survivorship_bias_report: dict[str, object] | None = None,
 ) -> str:
     survivorship = survivorship_bias_report or survivorship_report_without_historical_membership()
-    lines = [
-        "# Walk-Forward Validation / 滚动历史验证",
-        "",
-        "This report replays historical signal dates using only price data available up to each signal date.",
-        "本报告按历史信号日期回放，只使用每个信号日以前可见的价格数据。",
-        "",
-        "Validation mode uses neutral historical-safe market, sector, fundamental, and event contexts.",
-        "验证模式使用中性、历史安全的大盘、板块、基本面和事件上下文，避免把当前快照回填到历史。",
-        "",
-        f"- Event rows / 信号样本行数: `{len(events)}`",
-        f"- Forward windows / 未来观察窗口: `{', '.join(str(window) + 'd' for window in forward_windows)}`",
-        f"- survivorship_bias_handled: `{str(bool(survivorship.get('survivorship_bias_handled'))).lower()}`",
-        f"- contains_delisted_tickers / 样本包含退市股票: `{str(bool(survivorship.get('contains_delisted_tickers'))).lower()}`",
-        f"- historical_universe_source / 历史股票池来源: `{survivorship.get('source', 'none')}`",
-        "",
-        "## Survivorship Bias / 幸存者偏差",
-        "",
-        (
-            "This section states whether the validation used point-in-time universe "
-            "membership instead of today's surviving ticker list."
-        ),
-        "本区块说明验证是否使用了历史时点成分股，而不是今天仍然存在的股票列表。",
-        "",
-        f"- survivorship_bias_handled: `{str(bool(survivorship.get('survivorship_bias_handled'))).lower()}`",
-        f"- point_in_time_universe: `{str(bool(survivorship.get('point_in_time_universe'))).lower()}`",
-        f"- contains_delisted_tickers: `{str(bool(survivorship.get('contains_delisted_tickers'))).lower()}`",
-        f"- historical_constituent_count: `{int(survivorship.get('historical_constituent_count') or 0)}`",
-        f"- delisted_ticker_count: `{int(survivorship.get('delisted_ticker_count') or 0)}`",
-        f"- source: `{survivorship.get('source', 'none')}`",
-        "",
-        *[f"- warning: {warning}" for warning in survivorship.get("warnings", [])],
-        *[f"- 警告: {warning}" for warning in survivorship.get("warnings_zh", [])],
-        "",
-        "## Performance Summary / 表现摘要",
-        "",
-    ]
+    lines: list[str] = []
+    lines.extend(
+        [
+            "# Walk-Forward Validation / 滚动历史验证",
+            "",
+            "This report replays historical signal dates using only price data available up to each signal date.",
+            "本报告按历史信号日期回放，只使用每个信号日以前可见的价格数据。",
+            "",
+            "Validation mode uses neutral historical-safe market, sector, fundamental, and event contexts.",
+            "验证模式使用中性、历史安全的大盘、板块、基本面和事件上下文，避免把当前快照回填到历史。",
+            "",
+            f"- Event rows / 信号样本行数: `{len(events)}`",
+            f"- Forward windows / 未来观察窗口: `{', '.join(str(window) + 'd' for window in forward_windows)}`",
+            f"- survivorship_bias_handled: `{str(bool(survivorship.get('survivorship_bias_handled'))).lower()}`",
+            f"- contains_delisted_tickers / 样本包含退市股票: `{str(bool(survivorship.get('contains_delisted_tickers'))).lower()}`",
+            f"- historical_universe_source / 历史股票池来源: `{survivorship.get('source', 'none')}`",
+            "",
+        ]
+    )
+    lines.extend(_survivorship_bias_section(survivorship))
+    lines.extend(_performance_summary_section(summary))
+    lines.extend(_ticker_validation_ranking_section(ticker_ranking))
+    lines.extend(_sample_sufficiency_guidance_section(sample_sufficiency))
+    lines.extend(_profile_summary_section(profile_summary))
+    lines.extend(_segment_validation_summary_section(segment_summary))
+    lines.extend(_market_regime_validation_section(market_regime_summary))
+    lines.extend(_market_regime_protection_policy_section(market_regime_policy))
+    lines.extend(_probability_calibration_section(probability_calibration))
+    lines.extend(_portfolio_validation_section(portfolio_summary))
+    lines.extend(_portfolio_equity_curve_section(portfolio_equity_summary))
+    lines.extend(_portfolio_equity_curve_sample_section(portfolio_equity_curve))
+    lines.extend(_benchmark_comparison_section(benchmark_summary))
+    lines.extend(_benchmark_aware_rule_policy_section(benchmark_policy))
+    lines.extend(_specific_tightening_recommendations_section(benchmark_tightening))
+    lines.extend(_tightening_impact_validation_section(tightening_impact))
+    lines.extend(_threshold_sensitivity_grid_section(threshold_sensitivity))
+    lines.extend(_minimum_sample_guard_section(minimum_sample_guard))
+    lines.extend(_benchmark_comparison_sample_section(benchmark_curve))
+    lines.extend(_portfolio_rebalances_section(portfolio_rebalances))
+    lines.extend(_profile_rule_calibration_section(profile_calibration))
+    lines.extend(_rule_calibration_section(calibration))
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _survivorship_bias_section(survivorship: dict[str, object]) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
+            "## Survivorship Bias / 幸存者偏差",
+            "",
+            (
+                "This section states whether the validation used point-in-time universe "
+                "membership instead of today's surviving ticker list."
+            ),
+            "本区块说明验证是否使用了历史时点成分股，而不是今天仍然存在的股票列表。",
+            "",
+            f"- survivorship_bias_handled: `{str(bool(survivorship.get('survivorship_bias_handled'))).lower()}`",
+            f"- point_in_time_universe: `{str(bool(survivorship.get('point_in_time_universe'))).lower()}`",
+            f"- contains_delisted_tickers: `{str(bool(survivorship.get('contains_delisted_tickers'))).lower()}`",
+            f"- historical_constituent_count: `{int(survivorship.get('historical_constituent_count') or 0)}`",
+            f"- delisted_ticker_count: `{int(survivorship.get('delisted_ticker_count') or 0)}`",
+            f"- source: `{survivorship.get('source', 'none')}`",
+            "",
+            *[f"- warning: {warning}" for warning in survivorship.get("warnings", [])],
+            *[f"- 警告: {warning}" for warning in survivorship.get("warnings_zh", [])],
+            "",
+        ]
+    )
+    return lines
+
+
+def _performance_summary_section(summary: pd.DataFrame) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
+            "## Performance Summary / 表现摘要",
+            "",
+        ]
+    )
     lines.extend(_markdown_table(_format_metric_frame(summary)))
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _ticker_validation_ranking_section(ticker_ranking: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Ticker Validation Ranking / 个股验证排名",
             "",
             (
@@ -100,6 +152,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _sample_sufficiency_guidance_section(sample_sufficiency: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Sample Sufficiency Guidance / 样本充分性建议",
             "",
             (
@@ -120,6 +181,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _profile_summary_section(profile_summary: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Profile Summary / 分类规则表现",
             "",
         ]
@@ -129,6 +199,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _segment_validation_summary_section(segment_summary: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Segment Validation Summary / 分层验证表现",
             "",
             (
@@ -147,6 +226,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _market_regime_validation_section(market_regime_summary: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Market Regime Validation / 市场状态验证",
             "",
             (
@@ -162,6 +250,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _market_regime_protection_policy_section(market_regime_policy: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Market Regime Protection Policy / 市场状态保护规则",
             "",
             (
@@ -177,6 +274,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _probability_calibration_section(probability_calibration: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Probability Calibration / 概率校准",
             "",
             (
@@ -194,6 +300,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _portfolio_validation_section(portfolio_summary: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Portfolio Validation / 组合验证",
             "",
             (
@@ -209,6 +324,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _portfolio_equity_curve_section(portfolio_equity_summary: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Portfolio Equity Curve / 组合逐日净值曲线",
             "",
             (
@@ -226,6 +350,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _portfolio_equity_curve_sample_section(portfolio_equity_curve: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Portfolio Equity Curve Sample / 组合净值曲线样本",
             "",
         ]
@@ -238,6 +371,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _benchmark_comparison_section(benchmark_summary: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Benchmark Comparison / 基准对比",
             "",
             (
@@ -253,6 +395,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _benchmark_aware_rule_policy_section(benchmark_policy: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Benchmark-Aware Rule Policy / 基准感知规则建议",
             "",
             (
@@ -268,6 +419,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _specific_tightening_recommendations_section(benchmark_tightening: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Specific Tightening Recommendations / 具体收紧建议",
             "",
             (
@@ -283,6 +443,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _tightening_impact_validation_section(tightening_impact: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Tightening Impact Validation / 收紧效果验证",
             "",
             (
@@ -298,6 +467,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _threshold_sensitivity_grid_section(threshold_sensitivity: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Threshold Sensitivity Grid / 阈值敏感度网格",
             "",
             (
@@ -316,6 +494,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _minimum_sample_guard_section(minimum_sample_guard: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Minimum Sample Guard / 最小样本保护",
             "",
             (
@@ -334,6 +521,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _benchmark_comparison_sample_section(benchmark_curve: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Benchmark Comparison Sample / 基准对比样本",
             "",
         ]
@@ -346,6 +542,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _portfolio_rebalances_section(portfolio_rebalances: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Portfolio Rebalances / 组合历史调仓",
             "",
         ]
@@ -358,6 +563,15 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _profile_rule_calibration_section(profile_calibration: pd.DataFrame | None) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Profile Rule Calibration / 分类规则阈值建议",
             "",
         ]
@@ -369,9 +583,18 @@ def render_walk_forward_report(
     lines.extend(
         [
             "",
+        ]
+    )
+    return lines
+
+
+def _rule_calibration_section(calibration: pd.DataFrame) -> list[str]:
+    lines: list[str] = []
+    lines.extend(
+        [
             "## Rule Calibration / 规则校准",
             "",
         ]
     )
     lines.extend(_markdown_table(_format_metric_frame(calibration)))
-    return "\n".join(lines).rstrip() + "\n"
+    return lines
