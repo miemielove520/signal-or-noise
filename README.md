@@ -107,7 +107,7 @@ To track your own holdings, copy `portfolio.example.csv` → `portfolio.csv` and
 
 ```text
 src/stock_selector/   the library: data, factors, analysis/, walk_forward/, paper trading, stats_tests.py
-tests/                348 unit and end-to-end tests (offline; network calls are stubbed)
+tests/                348 unit and end-to-end tests
 research/             forward_test.py — regenerates every number and figure in the report
 results/              REPORT.md, summary.json, figures/, and the exported data/ behind them
 scripts/              export_results.py (pipeline → results/data), sample-data generator
