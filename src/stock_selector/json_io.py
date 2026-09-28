@@ -12,6 +12,7 @@ import pandas as pd
 
 
 def write_json(path: str | Path, payload: Any) -> None:
+    """Write a payload as UTF-8 JSON after converting pandas/numpy values."""
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
@@ -21,10 +22,12 @@ def write_json(path: str | Path, payload: Any) -> None:
 
 
 def dataframe_records(frame: pd.DataFrame) -> list[dict[str, Any]]:
+    """A DataFrame as a list of JSON-safe row dicts."""
     return [json_safe(row) for row in frame.to_dict(orient="records")]
 
 
 def json_safe(value: Any) -> Any:
+    """Recursively convert NaN, timestamps, paths and numpy scalars into JSON-safe values."""
     if isinstance(value, dict):
         return {str(key): json_safe(nested) for key, nested in value.items()}
     if isinstance(value, (list, tuple, set)):

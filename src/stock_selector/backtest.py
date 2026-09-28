@@ -15,6 +15,7 @@ def run_backtest(
     target_weights: pd.DataFrame,
     config: BacktestConfig,
 ) -> tuple[pd.DataFrame, dict[str, float]]:
+    """Backtest target weights: returns are earned after ``execution_lag_days`` and turnover is charged ``transaction_cost_bps``. Returns the equity curve and summary metrics."""
     if config.execution_lag_days < 1:
         raise ValueError("backtest.execution_lag_days must be at least 1.")
 
@@ -57,6 +58,7 @@ def run_backtest(
 
 
 def summarize_performance(curve: pd.DataFrame, config: BacktestConfig) -> dict[str, float]:
+    """Total return, CAGR, volatility, Sharpe, max drawdown, turnover and invested-days ratio of an equity curve."""
     if curve.empty:
         return {
             "total_return": 0.0,

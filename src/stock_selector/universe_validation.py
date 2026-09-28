@@ -23,6 +23,7 @@ from .walk_forward import DEFAULT_BENCHMARK_TICKERS, WalkForwardResult, run_walk
 
 @dataclass(frozen=True)
 class UniverseValidationBatchResult:
+    """Summary, ranking, report and failures of validating all built-in universes."""
     summary: pd.DataFrame
     ranking: pd.DataFrame
     report: str
@@ -69,6 +70,7 @@ def run_all_builtin_universe_validations(
     validation_runner: ValidationRunner = run_walk_forward_validation,
     progress_callback: ProgressCallback | None = None,
 ) -> UniverseValidationBatchResult:
+    """Run walk-forward validation for every built-in universe and collect the results."""
     selected_universes = _normalize_universe_names(universe_names)
     effective_config = screening_config or default_screening_config()
     root = Path(output_dir)
@@ -237,6 +239,7 @@ def render_suggested_universe_screening_config(
     screening_config: ScreeningConfig,
     summary: pd.DataFrame,
 ) -> str:
+    """Screening config with thresholds suggested by the all-universe run."""
     suggested_thresholds = {
         profile.name: profile.thresholds for profile in screening_config.profiles
     }
@@ -329,6 +332,7 @@ def _sorted_summary(rows: list[dict[str, object]]) -> pd.DataFrame:
 
 
 def build_best_universe_ranking(summary: pd.DataFrame) -> pd.DataFrame:
+    """Rank the universes by their validation results."""
     columns = [
         "rank",
         "universe",
@@ -516,6 +520,7 @@ def render_all_universe_validation_report(
     ranking: pd.DataFrame | None = None,
     coverage_plan: pd.DataFrame | None = None,
 ) -> str:
+    """Render the all-universe validation as Markdown."""
     ranking = build_best_universe_ranking(summary) if ranking is None else ranking
     coverage = (
         build_validation_coverage_plan(list(summary["universe"].dropna().astype(str)))
@@ -573,6 +578,7 @@ def build_validation_coverage_plan(
     deep_step_days: int = 10,
     min_history_days: int = 252,
 ) -> pd.DataFrame:
+    """Plan which universes still need standard or deep validation runs."""
     selected_universes = _normalize_universe_names(universe_names)
     rows: list[dict[str, object]] = []
     for universe_name in selected_universes:
@@ -607,6 +613,7 @@ def build_validation_coverage_plan(
 
 
 def render_validation_coverage_plan(coverage_plan: pd.DataFrame) -> str:
+    """Render the validation coverage plan as Markdown."""
     lines = [
         "# Validation Coverage Plan / 验证覆盖计划",
         "",

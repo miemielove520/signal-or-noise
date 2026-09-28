@@ -9,6 +9,7 @@ import tomllib
 
 @dataclass(frozen=True)
 class ScreeningThresholds:
+    """Minimum scores and backtest statistics a setup must meet to pass the strict quality gate."""
     data_quality_min: float = 70.0
     confidence_min: float = 65.0
     market_score_min: float = 55.0
@@ -70,6 +71,7 @@ class ScreeningThresholds:
 
 @dataclass(frozen=True)
 class TradingRules:
+    """Entry style and per-horizon stop, target and chase settings for a profile."""
     preferred_entry_style: str = "balanced"
     preferred_entry_style_zh: str = "均衡"
     short_atr_stop_multiple: float = 1.5
@@ -250,6 +252,7 @@ class ScreeningConfig:
 
 
 def default_screening_config() -> ScreeningConfig:
+    """The built-in default thresholds and sector profiles."""
     default_thresholds = ScreeningThresholds()
     profile_values = {
         "ai_infrastructure": {
@@ -596,6 +599,7 @@ def load_screening_config(path: str | Path | None) -> ScreeningConfig:
 
 
 def load_screening_thresholds(path: str | Path | None) -> ScreeningThresholds:
+    """Load only the default thresholds from a TOML file."""
     return load_screening_config(path).default_thresholds
 
 
@@ -603,6 +607,7 @@ def render_screening_config_toml(
     config: ScreeningConfig,
     header_lines: list[str] | tuple[str, ...] | None = None,
 ) -> str:
+    """Serialise a screening config back to TOML."""
     lines: list[str] = []
     for line in header_lines or ():
         lines.append(f"# {line}" if line else "#")

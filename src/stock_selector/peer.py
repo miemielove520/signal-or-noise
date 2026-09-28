@@ -40,6 +40,7 @@ def choose_peer_tickers(
     industry: str | None,
     max_peers: int = 6,
 ) -> list[str]:
+    """Up to ``max_peers`` comparable tickers from the industry keyword groups, falling back to the sector list."""
     ticker = ticker.upper().strip()
     sector_text = str(sector or "").lower().strip()
     industry_text = str(industry or "").lower().strip()
@@ -67,6 +68,7 @@ def build_peer_comparison_frame(
     target_snapshot: dict[str, object] | None,
     peer_results: list[object],
 ) -> pd.DataFrame:
+    """One row per ticker comparing the target with its peers on analysis scores and gate results."""
     rows = [
         _comparison_row(
             ticker=target_ticker,
@@ -98,6 +100,7 @@ def build_peer_comparison_frame(
 
 
 def render_peer_comparison_report(frame: pd.DataFrame) -> str:
+    """Render the peer comparison as Markdown."""
     if frame.empty:
         return "## Peer Comparison / 同业比较\n\nNo peer comparison rows were produced.\n"
 

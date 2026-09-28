@@ -63,6 +63,7 @@ class PriceDownloadResult:
 
 
 def load_price_csv(config: DataConfig) -> pd.DataFrame:
+    """Load and normalise the price CSV named in the data config."""
     prices = pd.read_csv(config.prices_csv)
     prices.columns = [column.strip().lower() for column in prices.columns]
 
@@ -88,6 +89,7 @@ def load_price_csv(config: DataConfig) -> pd.DataFrame:
 
 
 def load_fundamental_csv(path: str | Path) -> pd.DataFrame:
+    """Load a fundamentals CSV (one row per ticker and report date)."""
     fundamentals = pd.read_csv(path)
     fundamentals.columns = [column.strip().lower() for column in fundamentals.columns]
 
@@ -125,6 +127,7 @@ def load_fundamental_csv(path: str | Path) -> pd.DataFrame:
 
 
 def load_macro_csv(path: str | Path) -> pd.DataFrame:
+    """Load a macro time-series CSV."""
     macro = pd.read_csv(path)
     macro.columns = [column.strip().lower() for column in macro.columns]
     if "date" not in macro.columns:
@@ -146,6 +149,7 @@ def load_macro_csv(path: str | Path) -> pd.DataFrame:
 
 
 def load_metadata_csv(path: str | Path) -> pd.DataFrame:
+    """Load ticker metadata such as sector, industry, country and exchange."""
     metadata = pd.read_csv(path)
     metadata.columns = [column.strip().lower() for column in metadata.columns]
 
@@ -176,6 +180,7 @@ def download_yfinance_prices(
     output_path: str | Path | None = None,
     timeout_seconds: int = 30,
 ) -> pd.DataFrame:
+    """Download daily OHLCV prices from yfinance between ``start`` and ``end``."""
     tickers = [ticker.upper().strip() for ticker in tickers if ticker.strip()]
     if not tickers:
         raise ValueError("At least one ticker is required.")
@@ -237,6 +242,7 @@ def download_yfinance_prices_for_period(
     output_path: str | Path | None = None,
     timeout_seconds: int = 30,
 ) -> pd.DataFrame:
+    """Download daily OHLCV prices from yfinance for a period such as ``2y``."""
     tickers = [ticker.upper().strip() for ticker in tickers if ticker.strip()]
     if not tickers:
         raise ValueError("At least one ticker is required.")
@@ -573,6 +579,7 @@ def download_polygon_prices_for_period(
     period: str = "5y",
     timeout_seconds: int = 30,
 ) -> pd.DataFrame:
+    """Download daily OHLCV prices from Polygon (requires ``POLYGON_API_KEY``)."""
     api_key = os.environ.get("POLYGON_API_KEY", "").strip()
     if not api_key:
         raise RuntimeError("POLYGON_API_KEY is not set")
@@ -625,6 +632,7 @@ def download_alpaca_prices_for_period(
     period: str = "5y",
     timeout_seconds: int = 30,
 ) -> pd.DataFrame:
+    """Download daily OHLCV prices from Alpaca (requires Alpaca API keys)."""
     api_key = os.environ.get("ALPACA_API_KEY_ID", "").strip()
     api_secret = os.environ.get("ALPACA_API_SECRET_KEY", "").strip()
     if not api_key or not api_secret:
@@ -805,6 +813,7 @@ def _parse_stooq_csv(text: str, requested_ticker: str) -> pd.DataFrame:
 
 
 def normalize_price_frame(prices: pd.DataFrame) -> pd.DataFrame:
+    """Standardise column names and types of a price frame, deriving ``adj_close`` from ``close`` when absent."""
     frame = prices.copy()
     frame.columns = [str(column).strip().lower().replace(" ", "_") for column in frame.columns]
     if "adj_close" not in frame.columns and "close" in frame.columns:

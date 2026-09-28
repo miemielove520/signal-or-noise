@@ -284,6 +284,7 @@ def render_dashboard_html(
     sectors: list[dict] | None = None,
     banner: str = "",
 ) -> str:
+    """Render the self-contained HTML dashboard: market, sectors, holdings cards, candidates and the paper portfolio."""
     cards = "\n".join(_render_card(s, today) for s in summaries) or (
         '<p class="empty">还没有分析结果。先运行 <code>python3 run.py AVGO</code>。</p>'
     )
@@ -1061,6 +1062,7 @@ def build_dashboard(
     today: date | None = None,
     portfolio_path: str | Path = "portfolio.csv",
 ) -> Path:
+    """Collect the latest analysis outputs from ``outputs_dir`` and write the dashboard HTML; returns its path."""
     outputs = Path(outputs_dir)
     tickers = _read_watchlist(watchlist_path) if watchlist_path else []
     summaries = collect_ticker_summaries(outputs / "real_ticker", tickers=tickers or None)

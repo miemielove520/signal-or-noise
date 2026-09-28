@@ -17,6 +17,7 @@ FORWARD_WINDOWS = (5, 20, 60)
 
 @dataclass(frozen=True)
 class SignalReviewResult:
+    """Paths and tables written when recording a ticker's signals for review."""
     review_dir: Path
     history_path: Path
     report_path: Path
@@ -27,6 +28,7 @@ class SignalReviewResult:
 
 @dataclass(frozen=True)
 class SignalReviewDueScanResult:
+    """Signals whose review window has arrived or is pending, with the report paths."""
     review_root: Path
     output_dir: Path
     due_items: pd.DataFrame
@@ -38,6 +40,7 @@ class SignalReviewDueScanResult:
 
 @dataclass(frozen=True)
 class SignalReviewFeedbackContext:
+    """What the ticker's past reviewed signals say: sample count, win rate, returns and the resulting score adjustment."""
     status: str
     score: float
     adjustment: float
@@ -88,6 +91,7 @@ def build_signal_review_feedback_context(
     ticker: str,
     review_root: str | Path = "outputs/signal_review",
 ) -> SignalReviewFeedbackContext:
+    """Summarise the ticker's reviewed signal history into a feedback context; neutral when there is none."""
     ticker = ticker.upper().strip()
     if not ticker:
         return NEUTRAL_SIGNAL_REVIEW_FEEDBACK
@@ -107,6 +111,7 @@ def scan_signal_review_due_items(
     output_dir: str | Path | None = None,
     as_of_date: str | pd.Timestamp | None = None,
 ) -> SignalReviewDueScanResult:
+    """Find recorded signals whose outcome window has arrived as of ``as_of_date``."""
     review_path = Path(review_root)
     output_path = Path(output_dir) if output_dir is not None else review_path
     output_path.mkdir(parents=True, exist_ok=True)
@@ -156,6 +161,7 @@ def write_signal_review(
     review_root: str | Path = "outputs/signal_review",
     source_report_path: str | Path | None = None,
 ) -> SignalReviewResult:
+    """Record the analysis's signals in the review history and write the ticker's review report."""
     review_dir = Path(review_root)
     review_dir.mkdir(parents=True, exist_ok=True)
     history_path = review_dir / "signal_history.csv"
@@ -207,6 +213,7 @@ def write_signal_review(
 
 
 def summarize_signal_history(history: pd.DataFrame) -> pd.DataFrame:
+    """Outcome statistics of the reviewed signals."""
     if history.empty:
         return pd.DataFrame(columns=_summary_columns())
     rows: list[dict[str, object]] = []
@@ -249,6 +256,7 @@ def summarize_signal_history(history: pd.DataFrame) -> pd.DataFrame:
 
 
 def render_signal_review_report(ticker_history: pd.DataFrame, summary: pd.DataFrame) -> str:
+    """Render a ticker's signal history and outcomes as Markdown."""
     ticker = str(ticker_history["ticker"].iloc[-1]) if not ticker_history.empty else "N/A"
     lines = [
         "# Signal Review / 信号复盘",
@@ -295,6 +303,7 @@ def render_signal_review_due_report(
     summary: pd.DataFrame,
     as_of_date: str | pd.Timestamp,
 ) -> str:
+    """Render the due and pending reviews as Markdown."""
     as_of = pd.Timestamp(as_of_date).date().isoformat()
     lines = [
         "# Signal Review Due Scan / 信号复盘到期扫描",
@@ -326,6 +335,7 @@ def render_signal_review_due_report(
 
 
 def summarize_ticker_signal_review(ticker_history: pd.DataFrame, summary: pd.DataFrame) -> dict[str, object]:
+    """Key review numbers for one ticker, for the analysis metadata."""
     ticker = str(ticker_history["ticker"].iloc[-1]).upper() if not ticker_history.empty else ""
     metrics: dict[str, object] = {
         "ticker_signal_count": int(len(ticker_history)),
@@ -367,6 +377,7 @@ def render_signal_review_section(
     summary: pd.DataFrame,
     report_path: str | Path | None = None,
 ) -> str:
+    """Short Markdown section on past signal outcomes, appended to the ticker report."""
     metrics = summarize_ticker_signal_review(ticker_history, summary)
     lines = [
         "## Signal Review / 信号复盘",

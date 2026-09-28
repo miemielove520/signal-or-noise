@@ -16,6 +16,7 @@ CASH_TICKER = "CASH"
 
 @dataclass(frozen=True)
 class PaperTradeResult:
+    """Orders, pre- and post-trade state, summary and report of one paper rebalance."""
     as_of_date: pd.Timestamp
     orders: pd.DataFrame
     pre_trade_state: pd.DataFrame
@@ -26,6 +27,7 @@ class PaperTradeResult:
 
 @dataclass(frozen=True)
 class PaperTargetConfig:
+    """Limits for turning scan rows into paper targets: position count and size, cash reserve and score floors."""
     max_positions: int = 5
     max_position_weight: float = 0.20
     min_target_weight: float = 0.02
@@ -93,6 +95,7 @@ def load_portfolio_state(
     path: str | Path | None,
     initial_cash: float,
 ) -> pd.DataFrame:
+    """Load the paper portfolio state, or start with ``initial_cash`` when the file does not exist."""
     if path is None or not Path(path).exists():
         return pd.DataFrame([{"ticker": CASH_TICKER, "quantity": float(initial_cash)}])
 
@@ -115,6 +118,7 @@ def load_portfolio_state(
 
 
 def build_latest_price_table(prices: pd.DataFrame, as_of_date: str | None = None) -> pd.DataFrame:
+    """Latest adjusted close of every ticker on or before ``as_of_date``."""
     frame = prices.copy()
     frame["date"] = pd.to_datetime(frame["date"])
     if as_of_date is not None:
@@ -422,6 +426,7 @@ def render_paper_trade_report(
     post_trade_state: pd.DataFrame,
     summary: dict[str, float | str],
 ) -> str:
+    """Render a paper rebalance (orders, before/after state, costs) as Markdown."""
     lines = [
         "# Paper Trade Rebalance Report / 纸面模拟交易再平衡报告",
         "",

@@ -23,6 +23,7 @@ EQUITY_HISTORY_COLUMNS = ("date", "equity", "benchmark_close")
 
 @dataclass(frozen=True)
 class PaperPerformance:
+    """Paper-portfolio performance to date: returns, excess return, drawdown and readiness verdict."""
     status: str
     status_zh: str
     days_tracked: int

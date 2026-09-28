@@ -10,6 +10,7 @@ import pandas as pd
 
 
 def fetch_yfinance_snapshot(ticker: str) -> dict[str, Any]:
+    """Current company profile, valuation, analyst and news fields from yfinance."""
     ticker = ticker.upper().strip()
     if not ticker:
         raise ValueError("ticker cannot be empty.")
@@ -81,6 +82,7 @@ def fetch_yfinance_snapshot(ticker: str) -> dict[str, Any]:
 
 
 def extract_news_titles(news_items: list[Any]) -> list[str]:
+    """Headline strings from yfinance news items."""
     titles: list[str] = []
 
     def find_titles(value: Any) -> None:

@@ -13,6 +13,7 @@ from .config import MLConfig
 
 @dataclass(frozen=True)
 class RollingMLResult:
+    """Dataset, out-of-sample predictions, evaluation metrics and feature importance of a rolling ML run."""
     dataset: pd.DataFrame
     predictions: pd.DataFrame
     metrics: dict[str, float]
@@ -24,6 +25,7 @@ def build_ml_dataset(
     feature_columns: tuple[str, ...],
     label_forward_days: int,
 ) -> pd.DataFrame:
+    """Attach the forward excess-return label (and its label date) to each feature row."""
     if not feature_columns:
         raise ValueError("ml.feature_columns cannot be empty.")
 
@@ -60,6 +62,7 @@ def build_ml_dataset(
 
 
 def rolling_train_predict(dataset: pd.DataFrame, config: MLConfig) -> RollingMLResult:
+    """For every date, train on rows whose labels were already known before that date and predict the date's cross-section."""
     estimator_factory = _build_estimator_factory(config)
     prediction_rows: list[pd.DataFrame] = []
     importance_rows: list[pd.DataFrame] = []
@@ -143,6 +146,7 @@ def evaluate_predictions(
     top_n: int = 5,
     forward_days: int | None = None,
 ) -> dict[str, float]:
+    """Evaluate out-of-sample predictions: rank IC, error, directional accuracy versus a baseline, and top- versus bottom-bucket returns."""
     evaluated = predictions.dropna(subset=["ml_prediction", "future_return"]).copy()
     if evaluated.empty:
         return {

@@ -40,6 +40,7 @@ SEC_FUNDAMENTAL_HISTORY_COLUMNS = [
 
 @dataclass(frozen=True)
 class SecFundamentalSnapshot:
+    """Latest fundamentals extracted from SEC companyfacts, with coverage and warnings."""
     ticker: str
     cik: str
     company_name: str
@@ -63,6 +64,7 @@ def fetch_sec_fundamental_snapshot(
     max_cache_age_days: int = SEC_CACHE_MAX_AGE_DAYS,
     timeout_seconds: int = 30,
 ) -> SecFundamentalSnapshot:
+    """Latest fundamentals for a ticker from SEC companyfacts, using the local cache when fresh."""
     ticker = ticker.upper().strip()
     if not ticker:
         raise ValueError("ticker cannot be empty.")
@@ -112,6 +114,7 @@ def fetch_sec_fundamental_history(
     max_cache_age_days: int = SEC_CACHE_MAX_AGE_DAYS,
     timeout_seconds: int = 30,
 ) -> pd.DataFrame:
+    """Per-period fundamental history for a ticker from SEC companyfacts, using the local cache when fresh."""
     ticker = ticker.upper().strip()
     if not ticker:
         raise ValueError("ticker cannot be empty.")
@@ -147,6 +150,7 @@ def extract_sec_fundamental_history(
     cik: str,
     facts_payload: dict[str, Any],
 ) -> pd.DataFrame:
+    """Turn a companyfacts payload into one row per fiscal period, keyed by the filing date."""
     ticker = ticker.upper().strip()
     facts = ((facts_payload.get("facts") or {}).get("us-gaap") or {})
     annual: dict[str, dict[str, Any]] = {}

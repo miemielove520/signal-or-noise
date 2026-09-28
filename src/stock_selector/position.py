@@ -17,6 +17,7 @@ import pandas as pd
 
 @dataclass(frozen=True)
 class PositionContext:
+    """The user's position in a ticker: shares, cost, value, weight and unrealised profit, with bilingual notes."""
     ticker: str
     is_held: bool
     shares: float | None = None
@@ -43,6 +44,7 @@ def build_position_context(
     portfolio_path: str | Path = "portfolio.csv",
     weight_pct_override: float | None = None,
 ) -> PositionContext:
+    """Look the ticker up in ``portfolio.csv`` and describe the position; not-held tickers get the standard entry analysis."""
     ticker = str(ticker).upper().strip()
     not_held = PositionContext(
         ticker=ticker,

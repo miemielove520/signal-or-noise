@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class ValidationPreset:
+    """A named set of walk-forward settings: universe, period, step, history and output folder."""
     name: str
     universe: str | None
     all_universes: bool
@@ -67,10 +68,12 @@ VALIDATION_PRESETS = {
 
 
 def validation_preset_choices() -> tuple[str, ...]:
+    """Names of the available presets."""
     return tuple(VALIDATION_PRESETS)
 
 
 def apply_validation_preset(args) -> object:
+    """Fill unset validation arguments from the chosen preset (or the defaults when none is chosen)."""
     preset_name = getattr(args, "preset", None)
     if not preset_name:
         _apply_validation_defaults(args)

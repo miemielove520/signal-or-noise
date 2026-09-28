@@ -579,6 +579,7 @@ def _append_signal_review(
 
 
 def normalize_ticker(ticker: str) -> str:
+    """Upper-case a ticker and apply known aliases."""
     normalized = ticker.upper().strip()
     return TICKER_ALIASES.get(normalized, normalized)
 

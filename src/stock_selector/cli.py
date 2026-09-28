@@ -28,6 +28,7 @@ from .validation_presets import apply_validation_preset, validation_preset_choic
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Argument parser for the ``stock-selector`` command and all its subcommands."""
     parser = argparse.ArgumentParser(description="Run stock selection research pipeline.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -324,6 +325,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def run_command(args: argparse.Namespace) -> int:
+    """``stock-selector run``: run a configured research backtest."""
     config = load_config(args.config)
     result = run_research_pipeline(config)
 
@@ -371,6 +373,7 @@ def run_command(args: argparse.Namespace) -> int:
 
 
 def audit_command(args: argparse.Namespace) -> int:
+    """``stock-selector audit``: audit local OHLCV price data."""
     if not args.config and not args.prices_csv:
         raise SystemExit("Provide either --config or --prices-csv.")
 
@@ -392,6 +395,7 @@ def audit_command(args: argparse.Namespace) -> int:
 
 
 def ml_run_command(args: argparse.Namespace) -> int:
+    """``stock-selector ml-run``: rolling out-of-sample ML prediction and backtest."""
     config = load_config(args.config)
     result = run_ml_pipeline(config)
 
@@ -455,6 +459,7 @@ def ml_run_command(args: argparse.Namespace) -> int:
 
 
 def paper_trade_command(args: argparse.Namespace) -> int:
+    """``stock-selector paper-trade``: generate local paper-trading rebalance orders from target weights."""
     config = load_config(args.config)
     pipeline_result = run_ml_pipeline(config) if args.mode == "ml" else run_research_pipeline(config)
     state_path = Path(args.state_csv) if args.state_csv else config.paper.state_csv
@@ -496,6 +501,7 @@ def paper_trade_command(args: argparse.Namespace) -> int:
 
 
 def daily_report_command(args: argparse.Namespace) -> int:
+    """``stock-selector daily-report``: latest candidate list and monitoring report."""
     config = load_config(args.config)
     if args.mode == "ml":
         result = run_ml_pipeline(config)
@@ -554,6 +560,7 @@ def daily_report_command(args: argparse.Namespace) -> int:
 
 
 def analyze_ticker_command(args: argparse.Namespace) -> int:
+    """``stock-selector analyze-ticker``: short, medium or long horizon trade plans for one ticker from local data."""
     config = load_config(args.config)
     pipeline_result = run_research_pipeline(config)
     analysis = analyze_ticker(
@@ -595,6 +602,7 @@ def analyze_ticker_command(args: argparse.Namespace) -> int:
 
 
 def real_ticker_command(args: argparse.Namespace) -> int:
+    """``stock-selector real``: download live data, analyze one ticker and print the console report."""
     ticker = args.ticker or input("Enter ticker symbol: ").strip().upper()
     screening_config = load_screening_config(args.screening_config)
     result = run_real_ticker_analysis(
@@ -614,6 +622,7 @@ def real_ticker_command(args: argparse.Namespace) -> int:
 
 
 def scan_command(args: argparse.Namespace) -> int:
+    """``stock-selector scan``: scan many tickers for high-probability setups."""
     tickers = load_universe_tickers(
         tickers=args.tickers,
         universe_name=args.universe,
@@ -694,6 +703,7 @@ def scan_command(args: argparse.Namespace) -> int:
 
 
 def validate_command(args: argparse.Namespace) -> int:
+    """``stock-selector validate``: walk-forward validation and rule calibration (shared with ``validate.py``)."""
     return run_validation(apply_validation_preset(args), _raise_argument_error)
 
 
@@ -711,6 +721,7 @@ def _format_optional_percent(value: object) -> str:
 
 
 def download_yfinance_command(args: argparse.Namespace) -> int:
+    """``stock-selector download-yfinance``: download daily OHLCV prices with yfinance."""
     prices = download_yfinance_prices(
         tickers=args.tickers,
         start=args.start,
@@ -722,6 +733,7 @@ def download_yfinance_command(args: argparse.Namespace) -> int:
 
 
 def compare_runs_command(args: argparse.Namespace) -> int:
+    """``stock-selector compare-runs``: compare two walk-forward validation run folders."""
     result = compare_validation_runs(
         previous_dir=args.previous_run,
         current_dir=args.current_run,
@@ -753,6 +765,7 @@ def compare_runs_command(args: argparse.Namespace) -> int:
 
 
 def review_due_command(args: argparse.Namespace) -> int:
+    """``stock-selector review-due``: find signals whose review window has arrived or is still pending."""
     result = scan_signal_review_due_items(
         review_root=args.review_root,
         output_dir=args.output_dir,
@@ -824,6 +837,7 @@ def _due_tickers(result) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Entry point of the ``stock-selector`` command; returns the process exit code."""
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.command == "run":

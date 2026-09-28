@@ -11,6 +11,7 @@ from .config import RiskConfig
 
 
 def select_rebalance_dates(dates: pd.Series, frequency: str) -> pd.DatetimeIndex:
+    """The last trading date of every period at ``frequency`` (for example monthly)."""
     unique_dates = pd.Series(pd.to_datetime(dates).drop_duplicates()).sort_values()
     if unique_dates.empty:
         return pd.DatetimeIndex([])
@@ -26,6 +27,7 @@ def build_equal_weight_portfolio(
     top_n: int,
     rebalance_frequency: str,
 ) -> pd.DataFrame:
+    """Equal weights across the ``top_n`` highest-scored names at each rebalance date."""
     rebalance_dates = select_rebalance_dates(scored["date"], rebalance_frequency)
     candidates = scored[scored["date"].isin(rebalance_dates)].copy()
     candidates = candidates.dropna(subset=["score"])
@@ -48,6 +50,7 @@ def build_risk_managed_portfolio(
     rebalance_frequency: str,
     risk_config: RiskConfig,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Equal or inverse-volatility weights for the top names, scaled to the volatility target and capped by position and sector limits; also returns the risk report."""
     method = risk_config.weighting_method.lower().strip()
     if method not in {"equal", "inverse_volatility"}:
         raise ValueError(f"Unsupported risk weighting_method: {risk_config.weighting_method}")
@@ -127,6 +130,7 @@ def summarize_portfolio_risk(
     prices: pd.DataFrame,
     risk_config: RiskConfig,
 ) -> pd.DataFrame:
+    """Estimated volatility, gross exposure and cash per rebalance."""
     if selections.empty:
         return pd.DataFrame(
             columns=[
@@ -183,6 +187,7 @@ def summarize_exposures(
     selections: pd.DataFrame,
     group_column: str = "sector",
 ) -> pd.DataFrame:
+    """Portfolio weight by group (for example sector) per rebalance."""
     if selections.empty or group_column not in selections.columns:
         return pd.DataFrame(columns=["date", group_column, "weight", "selected_count"])
     report = (

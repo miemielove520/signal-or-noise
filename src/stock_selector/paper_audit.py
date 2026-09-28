@@ -111,6 +111,7 @@ VALUATION_COLUMNS = [
 
 
 def new_audit_identity(prefix: str, now: datetime | None = None) -> tuple[str, str]:
+    """A unique run id and its UTC timestamp."""
     instant = now or datetime.now(timezone.utc)
     if instant.tzinfo is None:
         instant = instant.replace(tzinfo=timezone.utc)
@@ -121,6 +122,7 @@ def new_audit_identity(prefix: str, now: datetime | None = None) -> tuple[str, s
 
 
 def utc_timestamp() -> str:
+    """The current UTC time in ISO format."""
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
@@ -144,6 +146,7 @@ def record_rebalance_success(
     project_root: str | Path,
     status: str = "success",
 ) -> Path:
+    """Append a successful rebalance, its orders and positions to the audit history."""
     root = Path(history_dir)
     run_dir = _new_snapshot_dir(root / "runs", run_id)
     as_of_date = _date_text(result_payload.get("as_of_date"))
@@ -258,6 +261,7 @@ def record_rebalance_failure(
     prices: pd.DataFrame | None = None,
     targets: pd.DataFrame | None = None,
 ) -> Path:
+    """Append a failed rebalance and its error to the audit history."""
     root = Path(history_dir)
     run_dir = _new_snapshot_dir(root / "runs", run_id)
     for name, frame in [
@@ -324,6 +328,7 @@ def record_valuation(
     equity: float | None = None,
     error: str | None = None,
 ) -> Path:
+    """Append a daily mark-to-market valuation to the audit history."""
     root = Path(history_dir)
     snapshot_dir = _new_snapshot_dir(root / "valuations", valuation_id)
     valuation_prices = _valuation_positions(state, current_prices, fallback_prices)
@@ -378,6 +383,7 @@ def record_valuation(
 
 
 def render_paper_journal(history_dir: str | Path) -> Path:
+    """Rebuild the human-readable paper journal from the audit history; returns its path."""
     root = Path(history_dir)
     root.mkdir(parents=True, exist_ok=True)
     runs = _read_csv(root / "paper_runs.csv")

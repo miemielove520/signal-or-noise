@@ -15,6 +15,7 @@ def add_basic_factors(
     fundamentals: pd.DataFrame | None = None,
     macro: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
+    """Add momentum, volatility, trend, liquidity and money-flow factors (plus fundamental and macro ones when given) and the universe-eligibility flag."""
     frame = prices.copy()
     frame = frame.sort_values(["ticker", "date"]).reset_index(drop=True)
     grouped = frame.groupby("ticker", group_keys=False)
@@ -73,6 +74,7 @@ def add_basic_factors(
 
 
 def add_fundamental_factors(frame: pd.DataFrame, fundamentals: pd.DataFrame) -> pd.DataFrame:
+    """Merge fundamentals as of each date (latest ``report_date`` on or before it, preferring SEC point-in-time rows) and add valuation and quality factors."""
     fund = fundamentals.copy().sort_values(["ticker", "report_date"]).reset_index(drop=True)
     if "fundamentals_source" not in fund.columns:
         fund["fundamentals_source"] = "yfinance_restated"
@@ -170,6 +172,7 @@ def _prefer_point_in_time_fundamentals(fundamentals: pd.DataFrame) -> pd.DataFra
 
 
 def add_macro_features(frame: pd.DataFrame, macro: pd.DataFrame) -> pd.DataFrame:
+    """Align macro series to trading days and add them as features."""
     value_columns = [column for column in macro.columns if column != "date"]
     rename_map = {column: f"macro_{column}" for column in value_columns}
     macro_features = macro.rename(columns=rename_map).sort_values("date")
@@ -183,12 +186,14 @@ def add_macro_features(frame: pd.DataFrame, macro: pd.DataFrame) -> pd.DataFrame
 
 
 def safe_divide(numerator: pd.Series, denominator: pd.Series) -> pd.Series:
+    """Element-wise division that returns NaN instead of infinity when the denominator is zero."""
     denominator = denominator.replace(0, np.nan)
     result = numerator / denominator
     return result.replace([np.inf, -np.inf], np.nan)
 
 
 def cross_sectional_zscore(values: pd.Series) -> pd.Series:
+    """Z-score of values within one date's cross-section."""
     valid = values.replace([np.inf, -np.inf], np.nan)
     std = valid.std(ddof=0)
     if pd.isna(std) or std == 0:
@@ -197,6 +202,7 @@ def cross_sectional_zscore(values: pd.Series) -> pd.Series:
 
 
 def score_factors(factors: pd.DataFrame, factor_weights: dict[str, float]) -> pd.DataFrame:
+    """Combine per-date factor z-scores into the weighted composite score."""
     if not factor_weights:
         raise ValueError("factor_weights cannot be empty.")
 

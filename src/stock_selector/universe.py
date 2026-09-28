@@ -360,6 +360,7 @@ def load_universe_tickers(
 
 
 def load_historical_universe_membership(path: str | Path) -> HistoricalUniverseMembership:
+    """Load point-in-time membership records (start, end and delisting dates) from a CSV."""
     source_path = Path(path)
     if not source_path.exists():
         raise FileNotFoundError(f"Historical universe file not found: {source_path}")
@@ -421,6 +422,7 @@ def load_historical_universe_membership(path: str | Path) -> HistoricalUniverseM
 
 
 def survivorship_report_without_historical_membership() -> dict[str, object]:
+    """The survivorship report used when no membership file is given: bias not handled, with a warning."""
     return {
         "survivorship_bias_handled": False,
         "point_in_time_universe": False,

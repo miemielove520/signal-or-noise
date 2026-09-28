@@ -22,6 +22,7 @@ STATUS_RANK = {
 
 @dataclass(frozen=True)
 class JournalResult:
+    """Paths and tables written by one daily journal run: today's snapshot, the previous one and the changes."""
     journal_dir: Path
     snapshot_path: Path
     report_path: Path
@@ -35,6 +36,7 @@ def write_daily_journal(
     journal_root: str | Path = "outputs/journal",
     run_date: date | None = None,
 ) -> JournalResult:
+    """Store today's scan snapshot and write the changes since the previous snapshot."""
     run_date = run_date or date.today()
     root = Path(journal_root)
     snapshots_dir = root / "snapshots"
@@ -81,6 +83,7 @@ def write_daily_journal(
 
 
 def compare_scan_snapshots(current: pd.DataFrame, previous: pd.DataFrame) -> pd.DataFrame:
+    """Compare each ticker with the previous scan (new, upgraded or downgraded) and record its score change."""
     if current.empty:
         return pd.DataFrame(columns=_change_columns())
 
@@ -131,6 +134,7 @@ def render_daily_journal(
     changes: pd.DataFrame,
     run_date: date,
 ) -> str:
+    """Render the day-over-day scan changes as bilingual Markdown."""
     lines = [
         "# Daily Scan Journal / 每日扫描复盘",
         "",

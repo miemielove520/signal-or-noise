@@ -13,6 +13,7 @@ from .data import REQUIRED_PRICE_COLUMNS
 
 @dataclass(frozen=True)
 class AuditIssue:
+    """One data-quality problem: severity, code, message, affected row count and ticker."""
     severity: str
     code: str
     message: str
@@ -22,6 +23,7 @@ class AuditIssue:
 
 @dataclass(frozen=True)
 class AuditReport:
+    """Summary counts plus the list of issues found by the price audit."""
     summary: dict[str, object]
     issues: list[AuditIssue]
 
@@ -50,11 +52,13 @@ class AuditReport:
 
 
 def audit_price_csv(path: str | Path) -> AuditReport:
+    """Load a price CSV and run ``audit_price_data`` on it."""
     prices = pd.read_csv(path)
     return audit_price_data(prices)
 
 
 def audit_price_data(prices: pd.DataFrame) -> AuditReport:
+    """Check an OHLCV frame for missing columns, duplicates, unparseable or non-positive values, broken OHLC ranges, abnormal moves, gaps and stale prices."""
     frame = prices.copy()
     frame.columns = [str(column).strip().lower() for column in frame.columns]
     issues: list[AuditIssue] = []

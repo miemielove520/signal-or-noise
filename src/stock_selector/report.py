@@ -15,6 +15,7 @@ def render_research_report(
     feature_importance: pd.DataFrame | None = None,
     survivorship_bias_report: dict[str, object] | None = None,
 ) -> str:
+    """Render a research-pipeline run (selections, metrics, risk, exposures, survivorship note) as Markdown."""
     lines: list[str] = [
         f"# {title}",
         "",

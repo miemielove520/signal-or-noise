@@ -17,6 +17,7 @@ def build_win_rate_dashboard(
     events: pd.DataFrame,
     forward_windows: Iterable[int] = DEFAULT_DASHBOARD_WINDOWS,
 ) -> dict[str, pd.DataFrame]:
+    """Win-rate tables over walk-forward events: overall and by horizon, entry type, profile and quality gate."""
     windows = tuple(int(window) for window in forward_windows)
     return {
         "overall": _summarize_groups(events, [], windows),
@@ -44,6 +45,7 @@ def build_win_rate_dashboard(
 
 
 def win_rate_dashboard_payload(dashboard: dict[str, pd.DataFrame]) -> dict[str, list[dict[str, object]]]:
+    """The win-rate tables as JSON-serialisable records."""
     return {name: dataframe_records(frame) for name, frame in dashboard.items()}
 
 
@@ -55,6 +57,7 @@ def build_profile_health_dashboard(
     min_avg_return: float = 0.0,
     max_avg_drawdown: float = -0.12,
 ) -> pd.DataFrame:
+    """Rate each screening profile healthy, watch or weak by samples, win rate, average return and drawdown."""
     columns = [
         "screening_profile",
         "screening_profile_zh",
@@ -162,6 +165,7 @@ def build_profile_health_dashboard(
 
 
 def render_profile_health_dashboard(profile_health: pd.DataFrame) -> str:
+    """Render the profile health table as Markdown."""
     lines = [
         "# Profile Health Dashboard / 分类规则健康面板",
         "",
@@ -180,6 +184,7 @@ def render_profile_health_dashboard(profile_health: pd.DataFrame) -> str:
 
 
 def build_profile_action_recommendations(profile_health: pd.DataFrame) -> pd.DataFrame:
+    """Turn profile health into a prioritised action per profile."""
     columns = [
         "screening_profile",
         "screening_profile_zh",
@@ -212,6 +217,7 @@ def build_profile_action_recommendations(profile_health: pd.DataFrame) -> pd.Dat
 
 
 def render_profile_action_recommendations(recommendations: pd.DataFrame) -> str:
+    """Render the profile action recommendations as Markdown."""
     lines = [
         "# Profile Action Recommendations / 分类规则行动建议",
         "",
@@ -230,6 +236,7 @@ def render_profile_action_recommendations(recommendations: pd.DataFrame) -> str:
 
 
 def build_profile_blocker_dashboard(events: pd.DataFrame, top_n: int = 5) -> pd.DataFrame:
+    """The most frequent gate failures per profile."""
     columns = [
         "screening_profile",
         "screening_profile_zh",
@@ -292,6 +299,7 @@ def build_profile_blocker_dashboard(events: pd.DataFrame, top_n: int = 5) -> pd.
 
 
 def render_profile_blocker_dashboard(blockers: pd.DataFrame) -> str:
+    """Render the profile blockers as Markdown."""
     lines = [
         "# Profile Blocker Dashboard / 分类规则卡点面板",
         "",
@@ -317,6 +325,7 @@ def build_historical_win_rate_gate(
     min_avg_return: float = 0.0,
     max_worst_return: float = -0.15,
 ) -> pd.DataFrame:
+    """Check each group against minimum samples, win rate, average return and worst return over ``target_window`` days."""
     columns = [
         "scope",
         "scope_zh",
@@ -432,6 +441,7 @@ def build_historical_win_rate_gate(
 
 
 def render_historical_win_rate_gate(gate: pd.DataFrame) -> str:
+    """Render the historical win-rate gate as Markdown."""
     lines = [
         "# Historical Win-Rate Gate / 历史胜率部署门槛",
         "",
@@ -767,6 +777,7 @@ def build_historical_threshold_recommendations(
     gate: pd.DataFrame,
     screening_config: object | None = None,
 ) -> pd.DataFrame:
+    """Suggest threshold changes for the groups that failed the historical win-rate gate."""
     columns = [
         "scope",
         "scope_zh",
@@ -807,6 +818,7 @@ def build_historical_threshold_recommendations(
 
 
 def render_historical_threshold_recommendations(recommendations: pd.DataFrame) -> str:
+    """Render the historical threshold recommendations as Markdown."""
     lines = [
         "# Historical Threshold Recommendations / 历史阈值建议",
         "",
@@ -825,6 +837,7 @@ def render_historical_threshold_recommendations(recommendations: pd.DataFrame) -
 
 
 def render_win_rate_dashboard(dashboard: dict[str, pd.DataFrame]) -> str:
+    """Render the win-rate tables as Markdown."""
     lines = [
         "# Historical Win-Rate Dashboard / 历史胜率统计面板",
         "",

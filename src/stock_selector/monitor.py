@@ -11,6 +11,7 @@ from .config import MonitorConfig
 
 @dataclass(frozen=True)
 class DailyMonitorResult:
+    """Latest candidates, the monitoring checks and the rendered daily report."""
     candidates: pd.DataFrame
     checks: pd.DataFrame
     report: str
@@ -28,6 +29,7 @@ def build_daily_monitor(
     prediction_metrics: dict[str, float] | None = None,
     monitor_config: MonitorConfig | None = None,
 ) -> DailyMonitorResult:
+    """Build the daily candidate list and run every monitoring check."""
     monitor_config = monitor_config or MonitorConfig()
     candidates = latest_candidates(selections)
     checks = monitoring_checks(
@@ -53,6 +55,7 @@ def build_daily_monitor(
 
 
 def latest_candidates(selections: pd.DataFrame) -> pd.DataFrame:
+    """Selections on the most recent rebalance date."""
     if selections.empty:
         return pd.DataFrame(columns=list(selections.columns))
     frame = selections.copy()
@@ -72,6 +75,7 @@ def monitoring_checks(
     prediction_metrics: dict[str, float] | None = None,
     monitor_config: MonitorConfig | None = None,
 ) -> pd.DataFrame:
+    """``ok``/``warning`` checks for data freshness, missing features, feature drift, turnover, overlap, concentration and risk limits."""
     monitor_config = monitor_config or MonitorConfig()
     rows: list[dict[str, object]] = []
     price_latest_date = pd.Timestamp(prices["date"].max())
@@ -246,6 +250,7 @@ def monitoring_checks(
 
 
 def feature_missing_report(scored: pd.DataFrame, feature_columns: tuple[str, ...]) -> pd.DataFrame:
+    """Missing-value rate of each feature."""
     available_features = [column for column in feature_columns if column in scored.columns]
     if scored.empty or not available_features:
         return pd.DataFrame(columns=["feature", "missing_rate", "row_count"])
@@ -271,6 +276,7 @@ def feature_drift_report(
     feature_columns: tuple[str, ...],
     lookback_days: int,
 ) -> pd.DataFrame:
+    """How far each feature's latest mean has drifted from its recent history, as a z-score."""
     available_features = [column for column in feature_columns if column in scored.columns]
     if scored.empty or not available_features:
         return pd.DataFrame(
@@ -320,6 +326,7 @@ def feature_drift_report(
 
 
 def selection_turnover(selections: pd.DataFrame) -> float:
+    """One-way turnover of weights between the last two rebalances."""
     if selections.empty:
         return 0.0
     frame = selections.copy()
@@ -336,6 +343,7 @@ def selection_turnover(selections: pd.DataFrame) -> float:
 
 
 def candidate_overlap(selections: pd.DataFrame) -> float:
+    """Share of the latest candidates that were also selected at the previous rebalance."""
     if selections.empty:
         return 0.0
     frame = selections.copy()
@@ -351,6 +359,7 @@ def candidate_overlap(selections: pd.DataFrame) -> float:
 
 
 def score_concentration(candidates: pd.DataFrame) -> float:
+    """Largest absolute candidate score as a share of the total."""
     if candidates.empty or "score" not in candidates.columns:
         return 0.0
     scores = pd.to_numeric(candidates["score"], errors="coerce").abs().dropna()
@@ -368,6 +377,7 @@ def render_daily_report(
     exposure_report: pd.DataFrame,
     prediction_metrics: dict[str, float] | None = None,
 ) -> str:
+    """Render candidates, checks and risk as the daily Markdown report."""
     lines = [
         f"# Daily Stock Selection Monitor ({mode})",
         "",

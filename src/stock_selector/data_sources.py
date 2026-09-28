@@ -13,6 +13,7 @@ from .json_io import dataframe_records
 
 @dataclass(frozen=True)
 class DataLayerReadiness:
+    """Readiness of one data layer: source, status, freshness, coverage and notes."""
     layer: str
     layer_zh: str
     source: str
@@ -33,6 +34,7 @@ class DataLayerReadiness:
 
 @dataclass(frozen=True)
 class DataReadinessReport:
+    """Overall readiness status and score, repair priority, main blockers and the per-layer details."""
     overall_status: str
     overall_status_zh: str
     overall_score: float
@@ -87,6 +89,7 @@ def build_data_readiness_report(
     snapshot: dict[str, object] | None,
     contexts: dict[str, object],
 ) -> DataReadinessReport:
+    """Assess every data layer used by a single-ticker analysis and combine them into one readiness report."""
     validation = price_source_validation or _single_source_validation()
     layers = [
         _price_layer(
@@ -136,6 +139,7 @@ def build_data_readiness_report(
 
 
 def data_readiness_frame(report: DataReadinessReport) -> pd.DataFrame:
+    """The per-layer readiness as a table."""
     rows = []
     for layer in report.layers:
         row = layer.to_dict()
@@ -150,6 +154,7 @@ def data_readiness_frame(report: DataReadinessReport) -> pd.DataFrame:
 
 
 def render_data_readiness_report(report: DataReadinessReport) -> str:
+    """Render the data-readiness report as bilingual Markdown."""
     lines = [
         "# Data Source Readiness / 数据源准备度",
         "",
@@ -183,6 +188,7 @@ def render_data_readiness_report(report: DataReadinessReport) -> str:
 
 
 def scan_data_readiness_summary(summary: pd.DataFrame) -> pd.DataFrame:
+    """Summarise data readiness across the tickers of a scan."""
     columns = [
         "ticker",
         "data_readiness_level",
@@ -205,6 +211,7 @@ def scan_data_readiness_summary(summary: pd.DataFrame) -> pd.DataFrame:
 
 
 def data_readiness_payload(report: DataReadinessReport) -> dict[str, object]:
+    """The data-readiness report as a JSON-serialisable dict."""
     payload = report.to_dict()
     payload["generated_at_utc"] = datetime.now(timezone.utc).isoformat()
     payload["layer_records"] = dataframe_records(data_readiness_frame(report))

@@ -219,6 +219,7 @@ def _utc_now() -> str:
 
 
 def render_scan_report(summary: pd.DataFrame, failures: list[dict[str, str]] | tuple[dict[str, str], ...]) -> str:
+    """Render the scan table and failures as Markdown."""
     if not summary.empty and "recheck_priority_score" not in summary.columns:
         summary = _add_recheck_queue_columns(summary)
     lines = [
@@ -270,6 +271,7 @@ def render_scan_report(summary: pd.DataFrame, failures: list[dict[str, str]] | t
 
 
 def build_top_candidates(summary: pd.DataFrame, limit: int = 10) -> pd.DataFrame:
+    """The best ``limit`` scan rows, ordered by category, attention score and calibrated high-probability score."""
     columns = _top_candidate_columns()
     if summary.empty:
         return pd.DataFrame(columns=columns)
@@ -294,6 +296,7 @@ def render_top_candidates_report(
     summary: pd.DataFrame,
     failures: list[dict[str, str]] | tuple[dict[str, str], ...],
 ) -> str:
+    """Render the top candidates as Markdown."""
     lines = [
         "# Top Candidates / 最佳候选总结",
         "",

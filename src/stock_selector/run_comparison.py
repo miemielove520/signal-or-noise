@@ -14,6 +14,7 @@ from .json_io import dataframe_records, write_json
 
 @dataclass(frozen=True)
 class RunComparisonResult:
+    """Summary, per-ticker comparison, adoption decision and report of two validation runs."""
     summary: pd.DataFrame
     ticker_comparison: pd.DataFrame
     adoption_decision: pd.DataFrame
@@ -27,6 +28,7 @@ def compare_validation_runs(
     current_dir: str | Path,
     output_dir: str | Path | None = None,
 ) -> RunComparisonResult:
+    """Compare two walk-forward run folders and write the comparison and adoption decision."""
     previous_path = Path(previous_dir)
     current_path = Path(current_dir)
     root = Path(output_dir) if output_dir is not None else current_path
@@ -109,6 +111,7 @@ def build_run_comparison_summary(
     previous_sample: pd.DataFrame,
     current_sample: pd.DataFrame,
 ) -> pd.DataFrame:
+    """Side-by-side metrics of the previous and current runs."""
     rows = [
         _metric_row(
             "event_count",
@@ -197,6 +200,7 @@ def build_ticker_run_comparison(
     previous_tickers: pd.DataFrame,
     current_tickers: pd.DataFrame,
 ) -> pd.DataFrame:
+    """Per-ticker change in validation results between the runs."""
     columns = [
         "ticker",
         "change_type",
@@ -278,6 +282,7 @@ def build_ticker_run_comparison(
 
 
 def build_config_adoption_decision(summary: pd.DataFrame) -> pd.DataFrame:
+    """Checks that decide whether the newer configuration should be adopted, ending in a final decision row."""
     columns = [
         "check_name",
         "check_name_zh",
@@ -393,6 +398,7 @@ def render_run_comparison_report(
     ticker_comparison: pd.DataFrame,
     adoption_decision: pd.DataFrame | None = None,
 ) -> str:
+    """Render the run comparison as bilingual Markdown."""
     lines = [
         "# Validation Run Comparison / 验证运行对比",
         "",
