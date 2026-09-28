@@ -42,6 +42,7 @@ def build_paper_targets_from_analysis(
     as_of_date: str | pd.Timestamp | None = None,
     market_regime_policy: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
+    """Turn analysis or scan rows into paper-portfolio target weights, keeping only rows that pass the configured gates and applying the optional market-regime policy."""
     target_config = config or PaperTargetConfig()
     if analysis.empty:
         return _empty_paper_targets()
@@ -135,6 +136,7 @@ def run_paper_rebalance(
     config: PaperTradingConfig,
     as_of_date: str | None = None,
 ) -> PaperTradeResult:
+    """Rebalance the simulated portfolio ``state`` toward the latest target weights at ``as_of_date`` prices, with spread-aware fills and transaction costs."""
     latest_prices = build_latest_price_table(prices, as_of_date=as_of_date)
     price_date = pd.Timestamp(latest_prices["date"].max())
     target_weights = _latest_target_weights(selections, price_date)

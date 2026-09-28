@@ -30,6 +30,7 @@ def calibrate_walk_forward_rules(
     target_window: int = 20,
     min_sample_count: int = 5,
 ) -> pd.DataFrame:
+    """For each gate (signal score, high-probability score, win probability, relative strength, market score), pick the threshold from a fixed grid that did best over ``target_window`` days, requiring at least ``min_sample_count`` events."""
     if events.empty:
         return pd.DataFrame(columns=["rule", "current_threshold", "suggested_threshold"])
 

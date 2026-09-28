@@ -94,6 +94,7 @@ SNAPSHOT_CACHE_MAX_AGE_DAYS = 14
 
 @dataclass(frozen=True)
 class RealTickerAnalysisResult:
+    """Everything produced by one ``run_real_ticker_analysis`` call: the data used, the per-horizon analysis and where the outputs were written."""
     ticker: str
     requested_period: str
     effective_period: str
@@ -173,6 +174,18 @@ def run_real_ticker_analysis(
     _auto_period_upgrade_reason: str = "",
     _auto_period_upgrade_reason_zh: str = "",
 ) -> RealTickerAnalysisResult:
+    """Download data for one ticker and run the full single-ticker analysis.
+
+    Fetches prices (trying providers in order), SPY/QQQ/VIX, the matching sector
+    ETF, earnings dates and, when ``include_snapshot`` is set, the company
+    snapshot and SEC filings. It then runs ``analyze_ticker`` for every horizon,
+    attaches the data-readiness report and, if the ticker is held in
+    ``portfolio.csv``, the position context. Reports and JSON files go to
+    ``output_root/<TICKER>/``.
+
+    If ``period`` is shorter than 5y and the resulting data-quality score is below
+    70, the analysis is re-run once with 5y of data (``auto_period_upgrade``).
+    """
     ticker = normalize_ticker(ticker)
     if not ticker:
         raise ValueError("Ticker cannot be empty.")
@@ -1660,6 +1673,7 @@ def build_single_ticker_scored_frame(
     liquidity_window: int = 20,
     min_avg_dollar_volume: float = 1_000_000.0,
 ) -> pd.DataFrame:
+    """Minimal scored frame for single-ticker analysis: history length, 20-day dollar liquidity and a universe-eligibility flag, without cross-sectional factor scores."""
     frame = prices.copy()
     frame["date"] = pd.to_datetime(frame["date"], utc=False)
     frame["ticker"] = frame["ticker"].astype("string").str.upper().str.strip()

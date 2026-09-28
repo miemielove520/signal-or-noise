@@ -53,6 +53,7 @@ REQUIRED_METADATA_COLUMNS = {
 
 @dataclass(frozen=True)
 class PriceDownloadResult:
+    """Prices from the first provider that returned data, with the providers attempted, warnings, missing tickers and the cross-source validation result."""
     prices: pd.DataFrame
     provider: str
     attempts: tuple[str, ...]
@@ -310,6 +311,13 @@ def download_prices_for_period_multi_source(
     timeout_seconds: int | None = None,
     max_attempts: int | None = None,
 ) -> PriceDownloadResult:
+    """Download daily prices, trying providers in order until one returns data.
+
+    The first non-empty provider becomes the primary source (and is cached to
+    ``output_path``). Its closes, volumes and trading dates are then cross-checked
+    against another available provider, and the result is attached as
+    ``source_validation``. Raises ``ValueError`` if no provider returns anything.
+    """
     tickers = [ticker.upper().strip() for ticker in tickers if ticker.strip()]
     if not tickers:
         raise ValueError("At least one ticker is required.")

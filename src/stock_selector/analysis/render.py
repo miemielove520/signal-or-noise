@@ -53,6 +53,7 @@ def _position_section_lines(first) -> list[str]:
 
 
 def render_ticker_analysis(analysis: pd.DataFrame) -> str:
+    """Render the output of ``analyze_ticker`` as a bilingual Markdown report, one section per topic."""
     if analysis.empty:
         return "# Ticker Analysis\n\nNo analysis rows produced.\n"
 

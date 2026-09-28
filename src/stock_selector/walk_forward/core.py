@@ -94,6 +94,7 @@ from .summaries import (
 
 @dataclass(frozen=True)
 class WalkForwardResult:
+    """Every table produced by ``run_walk_forward_validation``, plus the rendered Markdown report."""
     events: pd.DataFrame
     summary: pd.DataFrame
     profile_summary: pd.DataFrame
@@ -148,6 +149,20 @@ def run_walk_forward_validation(
     universe_membership: HistoricalUniverseMembership | None = None,
     progress_callback: WalkForwardProgressCallback | None = None,
 ) -> WalkForwardResult:
+    """Replay historical signal dates and measure what happened next.
+
+    For each ticker a signal date is taken every ``step_days`` trading days once
+    ``min_history_days`` of history exist. At each date the full analysis runs on
+    prices up to that date only; market, sector and fundamental contexts are
+    neutral, because today's snapshots cannot be back-filled into the past. The
+    forward return over each window in ``forward_windows`` is then recorded.
+
+    The resulting events are summarised into win rates, probability calibration,
+    top-N portfolio replays against SPY/QQQ, threshold sensitivity and
+    overfitting checks. With ``universe_membership``, signals are limited to
+    dates on which the ticker was actually a member (survivorship-bias control).
+    If ``output_dir`` is given, every table and the report are written there.
+    """
     if step_days <= 0:
         raise ValueError("step_days must be positive.")
     if not forward_windows:

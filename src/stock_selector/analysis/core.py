@@ -60,6 +60,18 @@ def analyze_ticker(
     probability_calibration_context: object | None = None,
     signal_review_feedback_context: object | None = None,
 ) -> pd.DataFrame:
+    """Analyse one ticker for each requested holding horizon.
+
+    Only price rows dated on or before ``as_of_date`` are used, so the same call
+    can replay a historical signal date without look-ahead. The optional
+    ``*_context`` objects carry market, sector, fundamental, sentiment, analyst,
+    valuation and event information; any that are missing fall back to neutral
+    defaults.
+
+    Returns one row per horizon: the action, entry/stop/target plan, entry
+    backtest, quality-gate result, calibrated win probability and bilingual
+    explanations.
+    """
     if entry_buffer_pct < 0:
         raise ValueError("entry_buffer_pct cannot be negative.")
 

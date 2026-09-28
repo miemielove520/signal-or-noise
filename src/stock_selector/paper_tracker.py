@@ -93,6 +93,12 @@ def summarize_paper_performance(
     history: pd.DataFrame,
     min_days: int = PAPER_MIN_TRACK_DAYS,
 ) -> PaperPerformance:
+    """Summarise the paper portfolio's equity history against its benchmark.
+
+    Returns total and benchmark return, excess return, max drawdown and a
+    readiness verdict. Fewer than ``min_days`` observations are reported as
+    still accumulating rather than judged.
+    """
     if history is None or history.empty or "equity" not in history.columns:
         return _insufficient(0)
     frame = history.copy().sort_values("date").reset_index(drop=True)

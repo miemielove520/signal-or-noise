@@ -14,6 +14,7 @@ from ..screening_config import TradingRules
 
 @dataclass(frozen=True)
 class HorizonSpec:
+    """Parameters of one holding horizon: lookback and indicator windows, stop/target multiples, chase limit and time stop."""
     name: str
     label: str
     zh_label: str
@@ -113,6 +114,7 @@ def _effective_horizon_spec(spec: HorizonSpec, trading_rules: TradingRules) -> H
 
 
 def normalize_horizons(horizons: str | Iterable[str]) -> tuple[str, ...]:
+    """Turn ``"all"``, one horizon name or a list of names into an ordered tuple of known horizons."""
     if isinstance(horizons, str):
         raw = [horizons]
     else:

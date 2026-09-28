@@ -17,6 +17,7 @@ from .data_sources import scan_data_readiness_summary
 
 @dataclass(frozen=True)
 class ScanResult:
+    """Output of ``run_high_probability_scan``: the per-ticker scan table, ranked candidates and any tickers that failed."""
     tickers: tuple[str, ...]
     summary: pd.DataFrame
     top_candidates: pd.DataFrame
@@ -38,6 +39,13 @@ def run_high_probability_scan(
     screening_thresholds: ScreeningThresholds | None = None,
     screening_config: ScreeningConfig | None = None,
 ) -> ScanResult:
+    """Run ``run_real_ticker_analysis`` for every ticker and rank the candidates.
+
+    A ticker that fails (for example, no price data) is recorded in the failures
+    table instead of stopping the scan. Scan tables, top candidates and reports
+    are written to ``output_dir``; with ``write_journal`` the day-over-day changes
+    are recorded as well.
+    """
     normalized_tickers = tuple(
         dict.fromkeys(normalize_ticker(ticker) for ticker in tickers if ticker.strip())
     )

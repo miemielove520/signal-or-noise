@@ -50,6 +50,7 @@ def stationary_bootstrap_indices(
 
 @dataclass(frozen=True)
 class BootstrapResult:
+    """Point estimate, percentile confidence interval and the share of resamples at or below zero."""
     estimate: float
     ci_low: float
     ci_high: float
@@ -135,6 +136,7 @@ def information_coefficients(
 
 @dataclass(frozen=True)
 class MeanTest:
+    """One-sample t-test of mean = 0 together with a sign test on the count of positive values."""
     mean: float
     std: float
     n: int
@@ -177,6 +179,7 @@ def bonferroni_t_threshold(n_trials: int, df: int, alpha: float = 0.05) -> float
 
 @dataclass(frozen=True)
 class BrierResult:
+    """Brier score of the forecasts, of the constant base-rate forecast, and the skill score between them."""
     brier: float
     reference_brier: float  # always predicting the base rate
     skill_score: float  # 1 - brier / reference; < 0 = worse than the base rate
@@ -185,6 +188,7 @@ class BrierResult:
 
 
 def brier_skill(probabilities: np.ndarray, outcomes: np.ndarray) -> BrierResult:
+    """Brier score of probability forecasts and its skill relative to always predicting the observed base rate."""
     p = np.asarray(probabilities, dtype=float)
     y = np.asarray(outcomes, dtype=float)
     mask = ~(np.isnan(p) | np.isnan(y))
@@ -199,6 +203,7 @@ def brier_skill(probabilities: np.ndarray, outcomes: np.ndarray) -> BrierResult:
 
 
 def wilson_interval(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """Wilson score confidence interval for a binomial proportion."""
     if n == 0:
         return (float("nan"), float("nan"))
     phat = successes / n

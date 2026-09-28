@@ -1021,6 +1021,7 @@ def build_minimum_sample_guard(
     min_sample_count: int = 10,
     min_retention_rate: float = 0.30,
 ) -> pd.DataFrame:
+    """Flag threshold settings from the sensitivity grid that leave fewer than ``min_sample_count`` events or keep less than ``min_retention_rate`` of the baseline sample, so thin evidence cannot tighten a rule."""
     columns = [
         "screening_profile",
         "screening_profile_zh",
