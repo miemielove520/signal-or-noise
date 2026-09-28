@@ -77,7 +77,7 @@ flowchart LR
 | `stats_tests.py` | Stationary bootstrap, rank IC, Brier skill, reliability, multiple-testing thresholds |
 | `research/forward_test.py` | The post-mortem: every number and figure in the report |
 
-About 35k lines of Python and 348 tests.
+About 35k lines of Python and 357 tests with 86 % line coverage (measured in CI with coverage.py).
 
 ## Quick start
 
@@ -107,7 +107,7 @@ To track your own holdings, copy `portfolio.example.csv` → `portfolio.csv` and
 
 ```text
 src/stock_selector/   the library: data, factors, analysis/, walk_forward/, paper trading, stats_tests.py
-tests/                348 unit and end-to-end tests
+tests/                357 unit, CLI and end-to-end tests
 research/             forward_test.py — regenerates every number and figure in the report
 results/              REPORT.md, summary.json, figures/, and the exported data/ behind them
 scripts/              export_results.py (pipeline → results/data), sample-data generator

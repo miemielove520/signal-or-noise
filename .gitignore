@@ -22,3 +22,4 @@ daily_update.env
 # Personal holdings — never commit. Copy the *.example files and edit locally.
 portfolio.csv
 watchlist.txt
+.coverage

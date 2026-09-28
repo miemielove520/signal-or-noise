@@ -17,7 +17,7 @@ dependencies = [
 [project.optional-dependencies]
 ml = ["scikit-learn"]
 research = ["matplotlib"]
-dev = ["pyflakes", "pytest"]
+dev = ["coverage", "pyflakes", "pytest"]
 
 [project.scripts]
 stock-selector = "stock_selector.cli:main"
