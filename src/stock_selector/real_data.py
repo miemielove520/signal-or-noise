@@ -440,33 +440,12 @@ def run_real_ticker_analysis(
     if sec_snapshot is not None:
         write_json(output_dir / "sec_fundamentals.json", sec_snapshot.to_dict())
 
-    signal_review_metadata: dict[str, object]
-    try:
-        signal_review = write_signal_review(
-            analysis=analysis,
-            prices=prices,
-            review_root=Path(output_root).parent / "signal_review",
-            source_report_path=output_dir / "ticker_analysis.md",
-        )
-        review_section = render_signal_review_section(
-            signal_review.ticker_history,
-            signal_review.summary,
-            signal_review.report_path,
-        )
-        with (output_dir / "ticker_analysis.md").open("a", encoding="utf-8") as file:
-            file.write("\n\n" + review_section)
-        signal_review_metadata = {
-            "status": "ok",
-            "review_dir": str(signal_review.review_dir),
-            "history_path": str(signal_review.history_path),
-            "report_path": str(signal_review.report_path),
-            **summarize_ticker_signal_review(signal_review.ticker_history, signal_review.summary),
-        }
-    except Exception as exc:
-        signal_review_metadata = {
-            "status": "failed",
-            "warning": str(exc),
-        }
+    signal_review_metadata = _append_signal_review(
+        analysis=analysis,
+        prices=prices,
+        review_root=Path(output_root).parent / "signal_review",
+        report_path=output_dir / "ticker_analysis.md",
+    )
 
     cache_metadata = _build_cache_metadata(
         ticker=ticker,
@@ -544,6 +523,44 @@ def run_real_ticker_analysis(
         data_readiness=data_readiness,
         cache_metadata=cache_metadata,
     )
+
+
+def _append_signal_review(
+    analysis: pd.DataFrame,
+    prices: pd.DataFrame,
+    review_root: Path,
+    report_path: Path,
+) -> dict[str, object]:
+    """Record today's signals for later review and append the review section to the report.
+
+    Failures are reported in the returned metadata instead of aborting the analysis.
+    """
+    try:
+        signal_review = write_signal_review(
+            analysis=analysis,
+            prices=prices,
+            review_root=review_root,
+            source_report_path=report_path,
+        )
+        review_section = render_signal_review_section(
+            signal_review.ticker_history,
+            signal_review.summary,
+            signal_review.report_path,
+        )
+        with report_path.open("a", encoding="utf-8") as file:
+            file.write("\n\n" + review_section)
+        return {
+            "status": "ok",
+            "review_dir": str(signal_review.review_dir),
+            "history_path": str(signal_review.history_path),
+            "report_path": str(signal_review.report_path),
+            **summarize_ticker_signal_review(signal_review.ticker_history, signal_review.summary),
+        }
+    except Exception as exc:
+        return {
+            "status": "failed",
+            "warning": str(exc),
+        }
 
 
 def normalize_ticker(ticker: str) -> str:
