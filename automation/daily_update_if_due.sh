@@ -18,4 +18,4 @@ if [ -f "$STATUS" ] && grep -q "\"finished_at\":\"$TODAY" "$STATUS"; then
   exit 0
 fi
 
-exec /bin/bash "$ROOT/daily_update.sh" >> "$ROOT/outputs/daily_update.log" 2>&1
+exec /bin/bash "$ROOT/automation/daily_update.sh" >> "$ROOT/outputs/daily_update.log" 2>&1

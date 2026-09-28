@@ -77,7 +77,7 @@ flowchart LR
 | `stats_tests.py` | Stationary bootstrap, rank IC, Brier skill, reliability, multiple-testing thresholds |
 | `research/forward_test.py` | The post-mortem: every number and figure in the report |
 
-About 35k lines of Python and 345 unit tests.
+About 35k lines of Python and 348 tests.
 
 ## Quick start
 
@@ -102,6 +102,21 @@ python3 -m venv .venv
 The synthetic demo only checks that the pipeline runs. Its metrics mean nothing.
 
 To track your own holdings, copy `portfolio.example.csv` → `portfolio.csv` and `watchlist.example.txt` → `watchlist.txt`. Both are git-ignored. Full CLI reference: [`docs/USAGE.md`](docs/USAGE.md).
+
+## Repository layout
+
+```text
+src/stock_selector/   the library: data, factors, analysis/, walk_forward/, paper trading, stats_tests.py
+tests/                348 unit and end-to-end tests (offline; network calls are stubbed)
+research/             forward_test.py — regenerates every number and figure in the report
+results/              REPORT.md, summary.json, figures/, and the exported data/ behind them
+scripts/              export_results.py (pipeline → results/data), sample-data generator
+configs/              screening rules per sector profile, backtest defaults
+universes/            ticker lists: candidates (150), market benchmarks, sector ETFs
+automation/           daily pipeline script and a macOS launchd template
+docs/                 USAGE.md (full CLI guide), POLICY_LOG.md (frozen-policy log), ROADMAP.md
+*.py (root)           thin command-line entry points: run, scan, validate, paper, ...
+```
 
 ## Known limitations
 

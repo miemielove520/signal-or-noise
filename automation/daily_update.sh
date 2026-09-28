@@ -4,8 +4,8 @@
 #
 # 完整功能已配置好（基本面趋势 + Tiingo 数据）。
 # 密钥和个人信息放在 daily_update.env（不进 git）。首次使用：
-#   cp daily_update.env.example daily_update.env  然后填入你的 token。
-cd "$(dirname "$0")" || exit 1
+#   cp automation/daily_update.env.example daily_update.env  然后填入你的 token。
+cd "$(dirname "$0")/.." || exit 1  # run from the repository root
 
 mkdir -p outputs
 RUN_MARKER="outputs/.daily_update_started"
@@ -50,20 +50,20 @@ analyze_list() {
   done < "$file"
 }
 
-analyze_list market.txt      # 大盘参考 VOO / QQQM
+analyze_list universes/market.txt      # 大盘参考 VOO / QQQM
 analyze_list watchlist.txt   # 我的持仓
 
-# 板块 ETF：下载价格供看板算「板块轮动 / 资金流」（sectors.txt 一行多个用空格分隔）。
-if [ -f sectors.txt ]; then
-  for t in $(grep -vE '^[[:space:]]*#' sectors.txt); do
+# 板块 ETF：下载价格供看板算「板块轮动 / 资金流」（universes/sectors.txt 一行多个用空格分隔）。
+if [ -f universes/sectors.txt ]; then
+  for t in $(grep -vE '^[[:space:]]*#' universes/sectors.txt); do
     echo "[$(date '+%Y-%m-%d %H:%M')] sector $t"
     "$PYTHON" run.py "$t" --no-snapshot --no-peers >/dev/null 2>&1 || note_fail "sector $t"
   done
 fi
 
 # Scan the candidate universe and retain a daily comparison journal.
-echo "[$(date '+%Y-%m-%d %H:%M')] scanning candidates_universe.txt for candidates"
-CANDIDATE_TICKERS="$(grep -vE '^[[:space:]]*#|^[[:space:]]*$' candidates_universe.txt | tr '\n' ' ')"
+echo "[$(date '+%Y-%m-%d %H:%M')] scanning universes/candidates.txt for candidates"
+CANDIDATE_TICKERS="$(grep -vE '^[[:space:]]*#|^[[:space:]]*$' universes/candidates.txt | tr '\n' ' ')"
 if [ -n "$CANDIDATE_TICKERS" ]; then
   "$PYTHON" scan.py $CANDIDATE_TICKERS --journal || note_fail "candidate scan"
 fi

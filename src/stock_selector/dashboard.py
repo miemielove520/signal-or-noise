@@ -1056,7 +1056,7 @@ def build_dashboard(
     outputs_dir: str | Path = "outputs",
     generated_at: str = "",
     watchlist_path: str | Path | None = "watchlist.txt",
-    market_path: str | Path | None = "market.txt",
+    market_path: str | Path | None = "universes/market.txt",
     prices_dir: str | Path = PRICES_DIR,
     today: date | None = None,
     portfolio_path: str | Path = "portfolio.csv",
@@ -1067,7 +1067,7 @@ def build_dashboard(
     _enrich_with_positions(summaries, portfolio_path)
     market_tickers = _read_watchlist(market_path) if market_path else []
     market = collect_ticker_summaries(outputs / "real_ticker", tickers=market_tickers or None)
-    sector_tickers = _read_watchlist("sectors.txt") if Path("sectors.txt").exists() else []
+    sector_tickers = _read_watchlist("universes/sectors.txt") if Path("universes/sectors.txt").exists() else []
     sectors = collect_sector_returns(sector_tickers, prices_dir) if sector_tickers else []
     candidates = collect_candidates(
         outputs / "scans" / "latest" / "high_probability_scan.csv",
