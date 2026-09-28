@@ -1,3 +1,5 @@
+"""Vectorised portfolio backtest: applies target weights after an execution lag, charges turnover-based transaction costs, and summarises return, volatility, Sharpe and drawdown."""
+
 from __future__ import annotations
 
 import math

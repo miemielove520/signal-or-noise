@@ -1,3 +1,5 @@
+"""Ticker universes: built-in lists, universe files, and point-in-time historical membership used to measure and correct survivorship bias."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

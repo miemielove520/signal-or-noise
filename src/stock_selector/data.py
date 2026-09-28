@@ -1,3 +1,5 @@
+"""Price and reference-data loading: local CSV readers plus a registry of download providers (Tiingo, Polygon, Alpaca, yfinance, Stooq) tried in order, with cross-source validation of close, volume and missing dates."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

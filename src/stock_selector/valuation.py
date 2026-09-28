@@ -1,3 +1,5 @@
+"""Valuation-risk context: trailing and forward P/E, PEG and free-cash-flow yield, read against growth and margins, turned into a 0–100 score and risk level."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass

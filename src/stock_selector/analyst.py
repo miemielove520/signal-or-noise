@@ -1,3 +1,5 @@
+"""Analyst-expectation context: scores target-price upside, consensus rating and coverage from the company snapshot (0–100) and flags when expectations should block new entries."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass

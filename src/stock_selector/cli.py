@@ -1,3 +1,5 @@
+"""The `stock-selector` command-line interface: one subcommand per workflow (backtest, ML run, paper trade, ticker analysis, scan, validation, run comparison, audit, downloads, signal review)."""
+
 from __future__ import annotations
 
 import argparse

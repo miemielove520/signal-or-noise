@@ -1,3 +1,5 @@
+"""Market, sector and relative-strength context: SPY/QQQ trend regime, the sector ETF matched to a company, and a ticker's strength versus the benchmarks."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

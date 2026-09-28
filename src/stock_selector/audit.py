@@ -1,3 +1,5 @@
+"""Price-data quality audit: missing or duplicate rows, unparseable values, non-positive prices, broken OHLC ranges, abnormal one-day moves, gaps and stale prices."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

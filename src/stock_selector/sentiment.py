@@ -1,3 +1,5 @@
+"""News-sentiment context: classifies recent headlines (positive, negative, high-risk, fake-catalyst, dilution) into a 0–100 score and entry-blocking risk flags."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass

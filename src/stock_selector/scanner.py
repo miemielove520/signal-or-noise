@@ -1,3 +1,5 @@
+"""Universe scanner: runs the single-ticker analysis across many tickers and ranks candidates by the strict high-probability gates."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

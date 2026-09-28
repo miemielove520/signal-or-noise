@@ -1,3 +1,5 @@
+"""Factor construction for the research pipeline: momentum, volatility, trend, liquidity, valuation, quality and macro features, cross-sectional z-scores and the weighted composite score."""
+
 from __future__ import annotations
 
 import numpy as np

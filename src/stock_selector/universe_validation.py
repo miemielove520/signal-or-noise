@@ -1,3 +1,5 @@
+"""Validate every built-in universe in one batch, rank them, and plan which universes still need more validation coverage."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

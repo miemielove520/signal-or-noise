@@ -1,3 +1,5 @@
+"""Daily monitoring of the research pipeline: data freshness, missing features, feature drift, selection turnover, candidate overlap and score concentration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

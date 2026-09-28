@@ -1,3 +1,5 @@
+"""Screening rules: quality-gate thresholds and trading rules per sector profile (AI infrastructure, semiconductors, software, ...), loaded from TOML with safe defaults."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass

@@ -1,3 +1,5 @@
+"""Earnings-event risk: finds the next/previous earnings date and turns proximity into a risk level, including a window that blocks new entries right before a report."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass

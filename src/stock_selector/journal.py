@@ -1,3 +1,5 @@
+"""Daily scan journal: stores each day's scan snapshot and reports what changed since the previous one (new tickers, status upgrades and downgrades, score changes)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

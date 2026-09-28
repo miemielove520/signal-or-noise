@@ -1,3 +1,5 @@
+"""Win-rate dashboards over walk-forward events: by horizon, entry type, profile and quality gate, plus profile health, recommended actions, blockers and a historical win-rate gate."""
+
 from __future__ import annotations
 
 from typing import Iterable

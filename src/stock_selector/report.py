@@ -1,3 +1,5 @@
+"""Markdown report for a research-pipeline backtest run."""
+
 from __future__ import annotations
 
 import pandas as pd

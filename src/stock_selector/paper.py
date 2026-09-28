@@ -1,3 +1,5 @@
+"""Paper trading: turns scan candidates into target weights, rebalances a simulated portfolio with spread-aware fills and costs, and writes orders, state and a trade report."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

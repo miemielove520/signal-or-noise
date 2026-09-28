@@ -1,3 +1,5 @@
+"""Current company snapshot from yfinance: profile, valuation and analyst fields plus recent news titles. Not point-in-time; used only for today's analysis."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone

@@ -1,3 +1,5 @@
+"""Peer comparison: picks comparable tickers from industry keyword groups (falling back to the sector) and compares their analysis scores and quality-gate results side by side."""
+
 from __future__ import annotations
 
 import pandas as pd

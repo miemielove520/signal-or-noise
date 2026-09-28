@@ -1,3 +1,5 @@
+"""Portfolio construction: rebalance calendar, equal-weight and risk-managed weights with position, sector and volatility limits, and exposure summaries."""
+
 from __future__ import annotations
 
 import math

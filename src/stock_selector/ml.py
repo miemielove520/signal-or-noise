@@ -1,3 +1,5 @@
+"""Rolling machine-learning baseline: builds a feature/label dataset of future excess returns and retrains on a trailing window before every prediction date, so labels never leak into training."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

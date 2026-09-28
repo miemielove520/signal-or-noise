@@ -1,3 +1,5 @@
+"""SEC EDGAR companyfacts: fetches and caches XBRL filings and extracts point-in-time fundamental history keyed by filing date (needs SEC_USER_AGENT)."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass

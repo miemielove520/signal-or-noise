@@ -1,3 +1,5 @@
+"""End-to-end research pipeline on local data: load, audit, build factors, score, construct portfolios and backtest (factor model and ML variant)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

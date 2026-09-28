@@ -1,3 +1,5 @@
+"""Compare two walk-forward validation runs and decide whether the newer configuration should be adopted."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

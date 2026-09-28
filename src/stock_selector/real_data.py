@@ -1,3 +1,5 @@
+"""Single-ticker analysis on live data: downloads prices and context, runs every horizon, attaches data readiness and position context, and writes the report and JSON outputs."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass

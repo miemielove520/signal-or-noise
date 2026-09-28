@@ -1,3 +1,5 @@
+"""JSON helpers that make pandas/numpy values (NaN, timestamps, numpy scalars) serialisable."""
+
 from __future__ import annotations
 
 from datetime import date, datetime

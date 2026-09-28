@@ -1,3 +1,5 @@
+"""Signal review loop: records every issued signal, checks what actually happened once its horizon has passed, and feeds that hit rate back into later analyses."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

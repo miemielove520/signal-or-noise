@@ -1,3 +1,5 @@
+"""Typed TOML configuration for the sample-data research pipeline: data paths, universe filters, factor windows, scoring weights, risk limits, backtest, ML, paper trading and monitoring."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

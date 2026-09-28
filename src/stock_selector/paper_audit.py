@@ -1,3 +1,5 @@
+"""Append-only audit trail for the paper portfolio: one record per rebalance (success or failure) and per daily valuation, plus a human-readable journal."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone

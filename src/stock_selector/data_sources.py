@@ -1,3 +1,5 @@
+"""Data-source readiness report: scores each data layer (prices, benchmarks, sector ETF, company snapshot, fundamentals, valuation, news, events, analysts), gives an overall readiness status and names the main blockers."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass

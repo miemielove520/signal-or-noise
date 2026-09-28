@@ -1,3 +1,5 @@
+"""Named walk-forward presets (quick, standard, deep, extreme) that fill in period, step and history settings."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,3 +1,5 @@
+"""Fundamental-quality context: profitability, growth, balance-sheet, cash-flow quality and margin structure from the snapshot, optionally combined with the multi-period trend from point-in-time SEC history."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
