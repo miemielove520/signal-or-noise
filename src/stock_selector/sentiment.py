@@ -8,6 +8,7 @@ from typing import Any, Iterable
 
 @dataclass(frozen=True)
 class SentimentContext:
+    """News-sentiment score (0-100), risk level, entry-block flag and the headline counts behind them."""
     ticker: str
     sentiment_score: float
     sentiment_label: str
@@ -240,6 +241,7 @@ def build_sentiment_context(
     snapshot: dict[str, Any] | None,
     source: str = "yfinance_news_titles",
 ) -> SentimentContext:
+    """Classify recent news titles from the snapshot by keyword (positive, negative, high-risk) and grade positive news for fake catalysts and dilution; returns a neutral context when no titles are available."""
     ticker = ticker.upper().strip()
     if not snapshot:
         return _unknown_context(ticker, "snapshot unavailable", source)

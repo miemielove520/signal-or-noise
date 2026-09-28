@@ -10,6 +10,7 @@ import pandas as pd
 
 @dataclass(frozen=True)
 class MarketContext:
+    """Market-background score (0-100) and status (supportive / neutral / weak) with the SPY, QQQ and VIX components."""
     market_score: float
     market_status: str
     note: str
@@ -22,6 +23,7 @@ class MarketContext:
 
 @dataclass(frozen=True)
 class RelativeStrengthContext:
+    """A ticker's return over one lookback window compared with SPY and QQQ."""
     score: float
     note: str
     note_zh: str
@@ -32,6 +34,7 @@ class RelativeStrengthContext:
 
 @dataclass(frozen=True)
 class SectorContext:
+    """The matched sector ETF's trend and the ticker's return relative to that ETF."""
     sector: str
     industry: str
     sector_etf: str
@@ -69,6 +72,7 @@ INDUSTRY_ETF_KEYWORDS = {
 
 
 def choose_sector_etf(sector: str | None, industry: str | None = None) -> str:
+    """Map a company's industry (by keyword) or sector to the sector ETF used as its benchmark."""
     sector_text = str(sector or "").lower().strip()
     industry_text = str(industry or "").lower().strip()
     for keyword, etf in INDUSTRY_ETF_KEYWORDS.items():
@@ -85,6 +89,7 @@ def build_sector_context(
     sector_etf: str | None,
     lookback_days: int = 60,
 ) -> SectorContext:
+    """Score the sector ETF's trend and the ticker's return relative to it over ``lookback_days``; neutral when no ETF data is available."""
     sector_text = str(sector or "").strip()
     industry_text = str(industry or "").strip()
     etf = str(sector_etf or "").strip().upper()
@@ -155,6 +160,7 @@ def build_sector_context(
 
 
 def build_market_context(benchmark_prices: dict[str, pd.DataFrame]) -> MarketContext:
+    """Blend SPY trend (45%), QQQ trend (35%) and a VIX score (20%) into one market score and status."""
     spy_score, spy_note, spy_warning = _trend_score(benchmark_prices.get("SPY"), "SPY")
     qqq_score, qqq_note, qqq_warning = _trend_score(benchmark_prices.get("QQQ"), "QQQ")
     vix_prices = benchmark_prices.get("^VIX")
@@ -201,6 +207,7 @@ def build_relative_strength_contexts(
     benchmark_prices: dict[str, pd.DataFrame],
     horizon_windows: dict[str, int],
 ) -> dict[str, RelativeStrengthContext]:
+    """Build one relative-strength context per horizon, each over that horizon's lookback window."""
     return {
         horizon: build_relative_strength_context(
             target_prices=target_prices,
@@ -218,6 +225,7 @@ def build_relative_strength_context(
     qqq_prices: pd.DataFrame | None,
     lookback_days: int,
 ) -> RelativeStrengthContext:
+    """Compare the ticker's return over ``lookback_days`` with SPY's and QQQ's and turn the excess into a 0-100 score."""
     target_return = _window_return(target_prices, lookback_days)
     spy_return = _window_return(spy_prices, lookback_days)
     qqq_return = _window_return(qqq_prices, lookback_days)

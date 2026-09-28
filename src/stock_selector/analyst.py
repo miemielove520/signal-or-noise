@@ -11,6 +11,7 @@ import pandas as pd
 
 @dataclass(frozen=True)
 class AnalystContext:
+    """Analyst-expectation score (0-100), risk level and entry-block flag for one ticker."""
     ticker: str
     analyst_score: float
     analyst_label: str
@@ -37,6 +38,7 @@ def build_analyst_context(
     ticker: str,
     snapshot: dict[str, Any] | None,
 ) -> AnalystContext:
+    """Score target-price upside, mean recommendation and analyst coverage from the snapshot; returns a neutral context when fewer than a quarter of the fields exist."""
     ticker = ticker.upper().strip()
     if not snapshot:
         return _unknown_context(ticker, "snapshot unavailable")

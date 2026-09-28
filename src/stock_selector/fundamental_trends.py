@@ -25,6 +25,7 @@ _GROWTH_SLOPE_THRESHOLD = 0.01
 
 @dataclass(frozen=True)
 class FundamentalTrendContext:
+    """Direction of revenue growth and margins over recent fiscal periods, with the periods used."""
     ticker: str
     status: str
     periods_used: int
@@ -49,6 +50,7 @@ def build_fundamental_trend_context(
     ticker: str | None = None,
     as_of_date: str | pd.Timestamp | None = None,
 ) -> FundamentalTrendContext:
+    """Measure multi-period revenue and margin trends from filing history, keeping only periods whose ``report_date`` is on or before ``as_of_date`` (no look-ahead)."""
     resolved_ticker = str(ticker).upper().strip() if ticker else ""
     if history is None or history.empty:
         return _insufficient(resolved_ticker, "no fundamental history available")

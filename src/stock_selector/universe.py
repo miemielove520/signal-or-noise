@@ -251,6 +251,7 @@ BUILT_IN_UNIVERSES["sector-core"] = list(
 
 @dataclass(frozen=True)
 class HistoricalUniverseMembership:
+    """Point-in-time universe records (start, end and delisting dates) used to keep only signals from dates when a ticker was actually a member."""
     records: pd.DataFrame
     source_path: Path | None = None
 
@@ -335,6 +336,7 @@ def load_universe_tickers(
     universe_name: str | None = None,
     universe_file: str | Path | None = None,
 ) -> list[str]:
+    """Combine explicit tickers, a built-in universe and a universe file into one de-duplicated list."""
     values: list[str] = []
     if universe_name:
         key = universe_name.lower().strip()

@@ -10,6 +10,7 @@ import numpy as np
 
 @dataclass(frozen=True)
 class FundamentalContext:
+    """Fundamental-quality score (0-100), quality label and the metrics behind it for one ticker."""
     ticker: str
     fundamental_score: float
     fundamental_quality: str
@@ -55,6 +56,14 @@ def build_fundamental_context(
     snapshot: dict[str, Any] | None,
     trend_context: object | None = None,
 ) -> FundamentalContext:
+    """Score business quality from the company snapshot.
+
+    Uses growth, margins, return on equity, free cash flow, leverage and
+    valuation-adjusted growth, plus cash-flow quality and margin structure. An
+    optional ``trend_context`` adds the multi-period direction from point-in-time
+    SEC history. Returns a neutral "unknown" context when fewer than a quarter of
+    the fields are available.
+    """
     ticker = ticker.upper().strip()
     if not snapshot:
         return _unknown_context(ticker, "snapshot unavailable")

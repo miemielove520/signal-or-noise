@@ -11,6 +11,7 @@ import pandas as pd
 
 @dataclass(frozen=True)
 class ValuationContext:
+    """Valuation score (0-100), risk level and entry-block flag for one ticker."""
     ticker: str
     valuation_score: float
     valuation_label: str
@@ -39,6 +40,7 @@ def build_valuation_context(
     ticker: str,
     snapshot: dict[str, Any] | None,
 ) -> ValuationContext:
+    """Score valuation from trailing/forward P/E, PEG and free-cash-flow yield, read against revenue growth and margins; returns a neutral context when the snapshot is missing."""
     ticker = ticker.upper().strip()
     if not snapshot:
         return _unknown_context(ticker, "snapshot unavailable")

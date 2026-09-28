@@ -12,6 +12,7 @@ import pandas as pd
 
 @dataclass(frozen=True)
 class EventRiskContext:
+    """Earnings-event risk for one ticker: nearest dates, days until/since, risk level and entry-block and cooldown flags."""
     ticker: str
     as_of_date: str
     next_earnings_date: str | None
@@ -41,6 +42,7 @@ def build_event_risk_context(
     source: str = "manual",
     warning: str = "",
 ) -> EventRiskContext:
+    """Turn a list of earnings dates into the event risk as of ``as_of_date`` (proximity to the next report and time since the last one)."""
     ticker = ticker.upper().strip()
     as_of = pd.Timestamp(as_of_date).normalize()
     parsed_dates = sorted(
@@ -146,6 +148,7 @@ def fetch_yfinance_event_risk(
     ticker: str,
     as_of_date: str | date | pd.Timestamp,
 ) -> EventRiskContext:
+    """Fetch earnings dates from yfinance and build the event-risk context; any failure yields a context with a warning instead of an exception."""
     ticker = ticker.upper().strip()
     warnings: list[str] = []
     candidates: list[object] = []

@@ -137,6 +137,7 @@ class TradingRules:
 
 @dataclass(frozen=True)
 class ScreeningProfile:
+    """A named rule profile (for example semiconductors) with its thresholds, trading rules and the tickers, sectors or industries it applies to."""
     name: str
     name_zh: str
     thresholds: ScreeningThresholds
@@ -201,6 +202,7 @@ class ScreeningProfile:
 
 @dataclass(frozen=True)
 class ScreeningConfig:
+    """Default thresholds plus the ordered sector profiles; ``resolve_profile`` returns the first profile that matches a ticker."""
     default_thresholds: ScreeningThresholds
     profiles: tuple[ScreeningProfile, ...] = ()
 
@@ -567,6 +569,7 @@ def default_screening_config() -> ScreeningConfig:
 
 
 def load_screening_config(path: str | Path | None) -> ScreeningConfig:
+    """Load thresholds and profiles from a TOML file, or return the built-in defaults when ``path`` is None."""
     if path is None:
         return default_screening_config()
     config_path = Path(path)
