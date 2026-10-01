@@ -1,6 +1,6 @@
-# 潜力股扫描池 / Candidate universe(150只,可自由增删)
-# 每天 13:20 PT 由 daily_update.sh 自动扫描;一行一个 ticker(勿用空格分隔多个)。
-# 该文件是唯一的每日扫描池;云端 Artifact 页面 14:45 PT 从同一次扫描结果刷新。
+# Candidate universe for the v2 forward test (150 tickers, frozen 2026-07-09).
+# One ticker per line. Scanned by automation/daily_update.sh on weekdays at 15:00 local time.
+# 候选股票池(150 只,v2 冻结于 2026-07-09);一行一个代码。
 
 AAPL
 MSFT

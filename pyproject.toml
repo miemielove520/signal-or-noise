@@ -4,8 +4,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stock-selector"
-version = "0.1.0"
-description = "Research framework for multi-factor stock selection."
+version = "1.0.0"
+description = "Multi-factor stock model, frozen real-time forward test, and statistical post-mortem (signal-or-noise)."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "miemielove520" }]
+keywords = ["statistics", "backtesting", "block bootstrap", "forecast calibration", "multiple testing", "reproducible research"]
+classifiers = [
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.13",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+]
 requires-python = ">=3.11"
 dependencies = [
   "numpy",
@@ -16,14 +26,21 @@ dependencies = [
 
 [project.optional-dependencies]
 ml = ["scikit-learn"]
-research = ["matplotlib"]
-dev = ["coverage", "pytest", "ruff"]
+research = ["markdown", "matplotlib"]
+dev = ["coverage", "ruff"]
+
+[project.urls]
+Repository = "https://github.com/miemielove520/signal-or-noise"
+Report = "https://github.com/miemielove520/signal-or-noise/blob/main/results/REPORT.md"
 
 [project.scripts]
 stock-selector = "stock_selector.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.coverage.run]
+source = ["src/stock_selector"]
 
 [tool.ruff]
 line-length = 110

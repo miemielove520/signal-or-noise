@@ -1,4 +1,6 @@
-# Stock Selector Long-Term Roadmap
+# Original engineering roadmap (May 2026)
+
+> **Status: historical.** Written in May 2026, before the forward test, and superseded by its post-mortem. For next steps see [`results/REPORT.md`](../results/REPORT.md) → *What I would do differently*, and the v3 backlog in [`POLICY_LOG.md`](POLICY_LOG.md).
 
 The goal is to build a broad but verifiable stock selection system. The core principles are reliable data, reproducible workflows, lookahead-bias prevention, backtesting before paper trading, and paper trading before live trading.
 

@@ -1,6 +1,8 @@
-# Stock Selector Research Project
+# Usage guide: CLI and daily pipeline
 
-This is a local stock selection research framework. It reads daily price data, builds factors, scores stocks, constructs risk-managed portfolios, runs backtests, produces paper-trading orders, and generates single-ticker trade plans.
+This guide documents the `stock_selector` package and the command-line tools behind *signal-or-noise*. For the research question and results, see the [README](../README.md) and [`results/REPORT.md`](../results/REPORT.md).
+
+The framework is a local stock selection research toolkit. It reads daily price data, builds factors, scores stocks, constructs risk-managed portfolios, runs backtests, produces paper-trading orders, and generates single-ticker trade plans.
 
 > This project is for research and engineering validation only. It is not financial advice. Before live trading, validate data licensing, point-in-time data, out-of-sample behavior, transaction costs, slippage, risk controls, and manual review.
 
@@ -415,22 +417,7 @@ min_rank_ic_mean = 0.0
 
 ## Project Structure
 
-```text
-configs/default.toml              Default research configuration
-run.py                            Simple real-stock analysis entry point
-data/real_prices/                 Cached real yfinance price files
-data/real_snapshots/              Cached current company snapshot fallbacks
-data/sample_prices.csv            Sample price data
-data/sample_fundamentals.csv      Sample fundamental data
-data/sample_macro.csv             Sample macro data
-data/sample_metadata.csv          Sample ticker metadata
-data/sample_portfolio_state.csv   Sample paper portfolio state
-scripts/generate_sample_data.py   Sample data generator
-src/stock_selector/               Core source code
-tests/                            Unit tests
-README.md                         Project overview (docs/USAGE.md = this guide)
-docs/ROADMAP.md                   Long-term roadmap
-```
+See [Repository layout](../README.md#repository-layout) in the README.
 
 ## Output Files
 
@@ -500,11 +487,3 @@ Each single-ticker run also updates signal review files:
 - `outputs/signal_review/signal_review.md`
 
 Signal review records the model's decision at the signal date and later fills in 5, 20, and 60 trading day close-to-close returns when enough future price data exists.
-
-## Next Priorities
-
-1. Expand SEC/FRED from readiness framework fields into validated scoring inputs.
-2. Add dataset versioning for every external source.
-3. Add sector-neutral, sentiment, event, and analyst revision factors.
-4. Expand backtesting for halts, limit moves, dividends, delistings, and survivorship bias.
-5. Add prediction explanations, drift charts, and alerts.

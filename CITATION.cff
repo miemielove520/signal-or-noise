@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you refer to this project, please cite it as below."
+title: "Signal or Noise? A Forward Test and Statistical Post-Mortem of a Multi-Factor Stock Model"
+version: 1.0.0
+date-released: 2026-10-01
+abstract: >-
+  A multi-factor US equity model returned +99% (QQQ +37%) in a walk-forward backtest
+  (March 2025 to April 2026). With its rules frozen, a $1,000 real-time paper portfolio
+  returned -24.3% from 2026-07-09 to the 2026-09-25 close while QQQ returned +3.0%.
+  A reproducible statistical post-mortem (block bootstrap, rank information
+  coefficients, Brier skill and reliability, multiple-testing, pseudo-replication and
+  power analysis) finds no evidence of skill and an implementation mismatch between
+  the backtested and the live strategy.
+type: software
+authors:
+  - alias: miemielove520
+repository-code: "https://github.com/miemielove520/signal-or-noise"
+license: MIT
+keywords:
+  - statistics
+  - forward testing
+  - backtest overfitting
+  - block bootstrap
+  - probability calibration
+  - quantitative finance
