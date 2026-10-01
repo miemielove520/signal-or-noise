@@ -18,4 +18,6 @@ if [ -f "$STATUS" ] && grep -q "\"finished_at\":\"$TODAY" "$STATUS"; then
   exit 0
 fi
 
-exec /bin/bash "$ROOT/automation/daily_update.sh" >> "$ROOT/outputs/daily_update.log" 2>&1
+# caffeinate -i keeps the Mac from idle-sleeping while the pipeline runs; without it the
+# machine slept mid-run and every download failed with DNS errors.
+exec /usr/bin/caffeinate -i /bin/bash "$ROOT/automation/daily_update.sh" >> "$ROOT/outputs/daily_update.log" 2>&1
