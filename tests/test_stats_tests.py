@@ -6,12 +6,17 @@ import pandas as pd
 from stock_selector.stats_tests import (
     bonferroni_t_threshold,
     bootstrap_statistic,
+    brier_decomposition,
     brier_skill,
+    cluster_bootstrap,
     compounded_return,
     duplication_factor,
     information_coefficients,
+    intraclass_correlation,
+    newey_west_t,
     one_sample_mean_test,
     reliability_table,
+    required_sample_size,
     simulate_window_returns,
     stationary_bootstrap_indices,
     wilson_interval,
@@ -118,3 +123,46 @@ class SampleHygieneTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AdditionalStatsTests(unittest.TestCase):
+    def test_mean_test_reports_interval_and_robust_p_values(self):
+        res = one_sample_mean_test([0.02, 0.03, 0.01, 0.04, 0.02, -0.01])
+        self.assertLess(res.ci_low, res.mean)
+        self.assertGreater(res.ci_high, res.mean)
+        self.assertAlmostEqual(res.sign_test_p_two_sided, 14 / 64)
+        self.assertTrue(0 < res.wilcoxon_p_two_sided < 1)
+
+    def test_newey_west_equals_iid_t_without_autocorrelation_lags(self):
+        x = np.random.default_rng(3).normal(0.1, 1.0, 400)
+        iid_t = x.mean() / (x.std(ddof=0) / np.sqrt(x.size))
+        self.assertAlmostEqual(newey_west_t(x, lags=0), iid_t)
+        self.assertTrue(np.isfinite(newey_west_t(x, lags=5)))
+
+    def test_required_sample_size(self):
+        # (1.96 + 0.84)^2 ≈ 7.85 observations per unit of (sd / effect)^2
+        self.assertEqual(required_sample_size(0.5, 1.0), 32)
+
+    def test_cluster_bootstrap_keeps_clusters_together(self):
+        frame = pd.DataFrame({"c": np.repeat(np.arange(10), 5), "v": np.repeat(np.arange(10.0), 5)})
+        res = cluster_bootstrap(
+            frame, "c", lambda f: f["v"].mean(), np.random.default_rng(0), n_resamples=500
+        )
+        self.assertAlmostEqual(res.estimate, 4.5)
+        self.assertLess(res.ci_low, 4.5)
+        self.assertGreater(res.ci_high, 4.5)
+
+    def test_brier_decomposition_of_perfectly_calibrated_bins(self):
+        p = [0.25] * 4 + [0.75] * 4
+        y = [1, 0, 0, 0, 1, 1, 1, 0]
+        d = brier_decomposition(p, y, [0, 0.5, 1])
+        self.assertAlmostEqual(d.reliability, 0.0)
+        self.assertAlmostEqual(d.resolution, 0.0625)
+        self.assertAlmostEqual(d.uncertainty, 0.25)
+
+    def test_intraclass_correlation_extremes(self):
+        shared = pd.DataFrame({"c": np.repeat(np.arange(6), 4), "v": np.repeat(np.arange(6.0), 4)})
+        self.assertAlmostEqual(intraclass_correlation(shared, "c", "v"), 1.0)
+        rng = np.random.default_rng(1)
+        noise = pd.DataFrame({"c": np.repeat(np.arange(200), 5), "v": rng.normal(size=1000)})
+        self.assertLess(abs(intraclass_correlation(noise, "c", "v")), 0.1)

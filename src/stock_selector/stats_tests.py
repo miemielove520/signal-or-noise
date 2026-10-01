@@ -137,7 +137,7 @@ def information_coefficients(
 
 @dataclass(frozen=True)
 class MeanTest:
-    """One-sample t-test of mean = 0 together with a sign test on the count of positive values."""
+    """One-sample t-test of mean = 0 (with its 95 % interval) and sign / Wilcoxon checks."""
 
     mean: float
     std: float
@@ -146,6 +146,10 @@ class MeanTest:
     p_value_two_sided: float
     positive_count: int
     sign_test_p_one_sided: float
+    ci_low: float = float("nan")
+    ci_high: float = float("nan")
+    sign_test_p_two_sided: float = float("nan")
+    wilcoxon_p_two_sided: float = float("nan")
 
 
 def one_sample_mean_test(values: np.ndarray | pd.Series) -> MeanTest:
@@ -161,7 +165,35 @@ def one_sample_mean_test(values: np.ndarray | pd.Series) -> MeanTest:
     positives = int((x > 0).sum())
     nonzero = int((x != 0).sum())
     p_sign = float(stats.binomtest(positives, nonzero, 0.5, alternative="greater").pvalue) if nonzero else 1.0
-    return MeanTest(mean, sd, n, float(t), p_t, positives, p_sign)
+    p_sign_two = float(stats.binomtest(positives, nonzero, 0.5).pvalue) if nonzero else 1.0
+    half = float(stats.t.ppf(0.975, df=n - 1)) * sd / math.sqrt(n)
+    p_wilcoxon = float(stats.wilcoxon(x[x != 0]).pvalue) if nonzero >= 2 else float("nan")
+    return MeanTest(
+        mean, sd, n, float(t), p_t, positives, p_sign, mean - half, mean + half, p_sign_two, p_wilcoxon
+    )
+
+
+def newey_west_t(values: np.ndarray | pd.Series, lags: int = 5) -> float:
+    """t-statistic of the mean with a Newey–West (Bartlett) long-run variance."""
+    x = np.asarray(values, dtype=float)
+    x = x[~np.isnan(x)]
+    n = x.size
+    if n <= lags + 1:
+        raise ValueError("need more observations than lags")
+    e = x - x.mean()
+    long_run = float(e @ e) / n
+    for lag in range(1, lags + 1):
+        weight = 1.0 - lag / (lags + 1)
+        long_run += 2.0 * weight * float(e[lag:] @ e[:-lag]) / n
+    return float(x.mean() / math.sqrt(long_run / n))
+
+
+def required_sample_size(effect: float, sd: float, alpha: float = 0.05, power: float = 0.8) -> int:
+    """Observations needed for a two-sided one-sample test to detect ``effect`` (normal approximation)."""
+    if effect == 0 or sd <= 0:
+        raise ValueError("effect must be non-zero and sd positive")
+    z = stats.norm.ppf(1 - alpha / 2) + stats.norm.ppf(power)
+    return int(math.ceil((z * sd / abs(effect)) ** 2))
 
 
 def bonferroni_t_threshold(n_trials: int, df: int, alpha: float = 0.05) -> float:
@@ -245,6 +277,76 @@ def reliability_table(
 # --------------------------------------------------------------------------
 # Sample-size hygiene
 # --------------------------------------------------------------------------
+
+
+def cluster_bootstrap(
+    frame: pd.DataFrame,
+    cluster_col: str,
+    statistic,
+    rng: np.random.Generator,
+    n_resamples: int = 4_000,
+    ci: float = 0.95,
+) -> BootstrapResult:
+    """Percentile CI for ``statistic(frame)`` resampling whole clusters (e.g. dates) with replacement.
+
+    Rows in the same cluster stay together, so within-cluster correlation is
+    reflected in the interval instead of being treated as independent evidence.
+    """
+    groups = [g for _, g in frame.groupby(cluster_col)]
+    if len(groups) < 2:
+        raise ValueError("need at least two clusters")
+    draws = np.empty(n_resamples)
+    for i in range(n_resamples):
+        picks = rng.integers(len(groups), size=len(groups))
+        draws[i] = statistic(pd.concat([groups[j] for j in picks], ignore_index=True))
+    alpha = (1.0 - ci) / 2.0
+    return BootstrapResult(
+        estimate=float(statistic(frame)),
+        ci_low=float(np.quantile(draws, alpha)),
+        ci_high=float(np.quantile(draws, 1.0 - alpha)),
+        p_value_le_zero=float(np.mean(draws <= 0.0)),
+        n_resamples=n_resamples,
+    )
+
+
+@dataclass(frozen=True)
+class BrierDecomposition:
+    """Murphy (1973) decomposition: Brier ≈ reliability − resolution + uncertainty (binned)."""
+
+    reliability: float
+    resolution: float
+    uncertainty: float
+    mean_forecast: float
+    base_rate: float
+
+
+def brier_decomposition(probabilities, outcomes, bins: list[float]) -> BrierDecomposition:
+    """Reliability (miscalibration), resolution (separation) and uncertainty of binned forecasts."""
+    frame = pd.DataFrame({"p": np.asarray(probabilities, float), "y": np.asarray(outcomes, float)}).dropna()
+    frame["bin"] = pd.cut(frame["p"], bins=bins, include_lowest=True)
+    base = float(frame["y"].mean())
+    n = len(frame)
+    reliability = resolution = 0.0
+    for _, g in frame.groupby("bin", observed=True):
+        weight = len(g) / n
+        reliability += weight * (g["p"].mean() - g["y"].mean()) ** 2
+        resolution += weight * (g["y"].mean() - base) ** 2
+    return BrierDecomposition(
+        float(reliability), float(resolution), base * (1 - base), float(frame["p"].mean()), base
+    )
+
+
+def intraclass_correlation(frame: pd.DataFrame, cluster_col: str, value_col: str) -> float:
+    """One-way ANOVA estimate of the share of variance shared within clusters."""
+    g = frame.groupby(cluster_col)[value_col]
+    k = g.ngroups
+    sizes = g.size()
+    n = int(sizes.sum())
+    m0 = (n - float((sizes**2).sum()) / n) / (k - 1)
+    grand = frame[value_col].mean()
+    msb = float((sizes * (g.mean() - grand) ** 2).sum()) / (k - 1)
+    msw = float(((frame[value_col] - g.transform("mean")) ** 2).sum()) / (n - k)
+    return (msb - msw) / (msb + (m0 - 1) * msw)
 
 
 def duplication_factor(frame: pd.DataFrame, key_cols: list[str]) -> float:
