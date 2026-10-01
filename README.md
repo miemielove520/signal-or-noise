@@ -3,6 +3,7 @@
 **A stock-picking model gained 99 % in a backtest. Frozen and run live for 11 weeks, it lost 24 %. This repository is the statistical investigation of why.**
 
 [![tests](https://github.com/miemielove520/signal-or-noise/actions/workflows/tests.yml/badge.svg)](https://github.com/miemielove520/signal-or-noise/actions/workflows/tests.yml)
+[![release](https://img.shields.io/github/v/release/miemielove520/signal-or-noise)](https://github.com/miemielove520/signal-or-noise/releases)
 [![python](https://img.shields.io/badge/python-3.11%20%7C%203.13-3776AB)](pyproject.toml)
 [![ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
