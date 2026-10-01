@@ -7,7 +7,7 @@ benchmark / universe prices for the forward window, so that
 ``research/forward_test.py`` can be re-run by anyone from the repo alone.
 
 Usage:
-    python scripts/export_results.py --pipeline-dir ../stock-selector-latest
+    python scripts/export_results.py --pipeline-dir <checkout of the running pipeline>
 """
 
 from __future__ import annotations
@@ -21,6 +21,10 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "results" / "data"
 
 WALK_FORWARD_RUN = "outputs/walk_forward/v2_baseline_2026-07-10"
+# The forward test was closed after the 2026-09-26 run (which used the 2026-09-25 close);
+# later runs failed while the machine slept and are not part of the experiment.
+LAST_RUN_DATE = "2026-09-26"
+VALUATION_COLUMNS = ["date", "executed_at", "status", "equity", "benchmark_ticker", "benchmark_close"]
 SIGNAL_COLUMNS = [
     "date",
     "ticker",
@@ -74,13 +78,15 @@ def export_local(pipeline: Path) -> None:
         "backtest_portfolio_vs_benchmark.csv",
     )
     _write(pd.read_csv(wf / "probability_calibration.csv"), "backtest_probability_calibration.csv")
-    _write(
-        pd.read_csv(pipeline / "outputs/paper_latest/paper_equity_history.csv"), "paper_equity_history.csv"
+    valuations = pd.read_csv(
+        pipeline / "outputs/paper_history/paper_valuations.csv", usecols=VALUATION_COLUMNS
     )
-    _write(
-        pd.read_csv(pipeline / "outputs/paper_history/paper_orders.csv", usecols=ORDER_COLUMNS),
-        "paper_orders.csv",
-    )
+    valuations = valuations[
+        valuations["status"].isin(["success", "legacy_import"]) & (valuations["date"] <= LAST_RUN_DATE)
+    ]
+    _write(valuations.drop(columns="status"), "paper_equity_history.csv")
+    orders = pd.read_csv(pipeline / "outputs/paper_history/paper_orders.csv", usecols=ORDER_COLUMNS)
+    _write(orders[orders["as_of_date"] <= LAST_RUN_DATE], "paper_orders.csv")
     universe = [
         line.strip()
         for line in (pipeline / "candidates_universe.txt").read_text().splitlines()

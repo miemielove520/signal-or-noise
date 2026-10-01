@@ -136,3 +136,26 @@ class BacktestGateTests(unittest.TestCase):
 
         r = compare_paper_to_backtest(self._perf(30, 0.03), expected_annual_return=None)
         self.assertEqual(r["gate"], "no_backtest")
+
+
+class PriceDatesForRunsTest(unittest.TestCase):
+    def test_runs_map_to_the_close_they_used(self) -> None:
+        from stock_selector.paper_tracker import price_dates_for_runs
+
+        trading_days = pd.DatetimeIndex(
+            ["2026-09-03", "2026-09-04", "2026-09-08", "2026-09-23", "2026-09-25"]
+        )
+        runs = pd.Series(
+            [
+                "2026-09-04T22:49:00Z",  # Fri 15:49 PT, after the close -> Fri
+                "2026-09-07T22:37:00Z",  # Labor Day (no trading) -> previous Fri
+                "2026-09-24T12:55:08.280209Z",  # Thu 05:55 PT, before the open -> Wed 9/23
+                "2026-09-26T13:31:27Z",  # Sat morning -> Fri 9/25
+                "2026-09-08T20:30:00Z",  # Tue 13:30 PT -> Tue
+            ]
+        )
+        dates = price_dates_for_runs(runs, trading_days)
+        self.assertEqual(
+            [d.strftime("%Y-%m-%d") for d in dates],
+            ["2026-09-04", "2026-09-04", "2026-09-23", "2026-09-25", "2026-09-08"],
+        )

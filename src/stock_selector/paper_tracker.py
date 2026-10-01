@@ -212,6 +212,32 @@ def compare_paper_to_backtest(
     return out
 
 
+def price_dates_for_runs(
+    executed_at: pd.Series,
+    trading_days: pd.DatetimeIndex,
+    market_close: str = "13:00",
+    timezone: str = "America/Los_Angeles",
+) -> pd.Series:
+    """Market date whose closing prices a pipeline run actually used.
+
+    A run on a trading day at or after ``market_close`` (local time) marks to that
+    day's close; an earlier run, or one on a weekend or holiday, uses the last
+    trading day before it. Run dates and price dates therefore differ for
+    early-morning and non-trading-day runs.
+    """
+    local = pd.to_datetime(executed_at, utc=True, format="ISO8601").dt.tz_convert(timezone)
+    days = pd.DatetimeIndex(sorted(pd.to_datetime(trading_days).normalize().unique()))
+    close_hour, close_minute = (int(part) for part in market_close.split(":"))
+    result = []
+    for stamp in local:
+        day = pd.Timestamp(stamp.date())
+        after_close = (stamp.hour, stamp.minute) >= (close_hour, close_minute)
+        cutoff = day if after_close else day - pd.Timedelta(days=1)
+        eligible = days[days <= cutoff]
+        result.append(eligible[-1] if len(eligible) else pd.NaT)
+    return pd.Series(result, index=executed_at.index, name="price_date")
+
+
 def _verdict(
     days: int,
     min_days: int,

@@ -1,9 +1,48 @@
 # 策略版本日志 / Policy Log
 
+## English summary (added October 2026 for readers)
+
+The Chinese log below is the original record, written at the time; this summary translates it. File paths are as of July 2026. After the September refactor, `src/stock_selector/analysis.py` became the package `src/stock_selector/analysis/`, and `candidates_universe.txt` became `universes/candidates.txt`.
+
+- **Rule.** Every change to the paper portfolio's strategy is logged here. While an evaluation window is open, strategy logic (scores, entries, thresholds, universe) is frozen. Bug fixes are allowed at any time.
+- **v1 (2026-07-08 → 07-09), discarded.** Ran for 2 trading days (equity $999.40) and was archived as statistically meaningless, because the scoring changed mid-test.
+- **v2 (frozen 2026-07-09).** The paper portfolio was reset to $1,000. The pre-specified evaluation window was 20 trading days (to about 2026-08-06). Changes from v1:
+  1. A confirmed volume breakout is executable even when extended above its trend baseline; only parabolic moves (beyond 2.5 × the horizon's chase limit) are refused.
+  2. The high-probability score no longer double-counts six factors already inside the signal score. New weights: signal .32, confidence .14, data quality .10, entry readiness .10, backtest quality .09, backtest trust .09, horizon alignment .08, plan quality .08.
+  3. When the chosen entry type has too few backtest trades, breakout and pullback evidence are pooled instead of failing the gate.
+  4. Operations only: a single 150-ticker universe file, and a weekday 15:00 PT pipeline with a day-over-day journal.
+- **v2 backtest baseline (2026-07-10).** 6,219 signal rows, 52.2 % 20-day win rate, sample-weighted expectation of 26.0 % a year. This is an optimistic yardstick: it includes survivorship bias and is not net of costs.
+- **Freeze-period fixes (2026-07-10, no strategy change).** Stale-price handling with warnings; failures surfaced on the dashboard; a catch-up guard for the scheduler; an immutable audit trail of every run's inputs, prices, orders, costs and positions.
+- **v2 closed (2026-09-26).** See the bilingual entry below. It includes the as-run differences found in the post-hoc audit: the calibration table was active, regime protection was off, a Labor Day rebalance happened, and run dates differ from price dates.
+- **v3 backlog (logged, never implemented).** Volatility-normalised technical thresholds; remove the cross-sectionally constant market score from the ranking; re-estimate probabilities once more samples exist.
+
+---
+
 模拟盘的"模型策略"每次变更都要在这里登记。实验窗口(20 个交易日)内策略逻辑**冻结**:
 bug 修复随时可以;打分/买点/门槛/股票池这类策略变更必须攒进下一版,窗口结束后统一发布。
 
-## v2 — 2026-07-09 起(当前)
+## v2 前向测试结束 / Forward test closed — 2026-09-26
+
+- **终点 / End point:** 最后一次成功运行是 2026-09-26 06:31 PT,使用 2026-09-25 收盘价;
+  The last successful run was 2026-09-26 06:31 PT and marked the portfolio at the 2026-09-25 close.
+  之后 9/28、9/29、9/30 三次运行都因电脑在运行中进入睡眠、网络中断而失败。没有补跑,实验在此结束。
+  The runs on 9/28–9/30 failed because the machine went to sleep mid-run; they were not re-run, and the
+  experiment was closed at that point. 分析见 / Analysis: [`results/REPORT.md`](../results/REPORT.md).
+- **实际运行与上文记录的差异 / As-run differences from the notes below** (发现于结束后的复核 / found in the post-hoc audit):
+  1. **概率校准表实际已启用。** 下文写"未启用",但 `real_data._resolve_probability_calibration_path` 在
+     `latest/` 缺少该文件时会回退到最新的 `outputs/walk_forward/*/probability_calibration.csv`,
+     即 v2 基准表(2026-07-10 16:54 生成,早于第一次 v2 调仓)。整个 v2 期间都用了它。
+     *The calibration table was in effect for all of v2 via a fallback lookup, although the notes say it was not.*
+  2. **市场状态保护实际未启用。** `paper.py` 只读取 `outputs/walk_forward/latest/market_regime_policy.csv`,
+     该文件不存在,所以 v2 期间没有市场状态保护。
+     *Market-regime protection was off for all of v2: the only path the paper engine reads did not exist.*
+  3. **9/7(劳动节,休市)也运行并调仓了**,用的是 9/4 的收盘价。分析时把同一收盘价对应的两条记录合并,保留调仓后的那条。
+     *A rebalance also ran on Labor Day at stale 9/4 prices; the analysis keeps the post-rebalance mark.*
+  4. **运行日期 ≠ 价格日期。** 9/24 和 9/26 两次在开盘前运行,用的是前一交易日收盘价;
+     分析按实际价格日期对齐(`paper_tracker.price_dates_for_runs`)。
+     *Two early-morning runs used the previous close; the analysis aligns marks on the close actually used.*
+
+## v2 — 2026-07-09 起(已结束 / closed 2026-09-26)
 
 模拟盘于 2026-07-09 重置($1000 现金起步),v2 从 2026-07-10 的 13:20 PT 调仓开始计。
 评估窗口:20 个交易日(约至 2026-08-06),期间策略冻结。
