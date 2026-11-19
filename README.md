@@ -175,10 +175,11 @@ Development happened in a private repository. The public git history starts at t
 
 ## About this project
 
-<!-- TODO (you): 3–5 sentences in your own voice. Why you started this, what you learned, what surprised you. -->
+I built this project together with Claude, an AI coding assistant (through Claude Code), between May and November 2026. It started as a personal tool to help me pick stocks, and it slowly turned into a different question: does the model's signal actually hold up once nobody is allowed to adjust it after the fact?
 
-This project was built with the help of AI coding assistants (Claude Code).
-<!-- TODO (you): describe what you designed and decided (research question, protocol, freeze rule, interpretation) vs. what the assistant implemented. -->
+We split the work. I chose the question and the rules of the experiment: which stocks to watch, freezing the policy before the live test, not tuning it mid-way, ending the test at the 2026-09-25 close, and publishing the result even though it was bad. Claude wrote most of the code, the statistical tests and the first drafts of the report. I ran the daily pipeline, checked the outputs, asked questions until I understood each method, and decided what the project should claim and what it should not.
+
+The biggest lesson was that a strong backtest is not evidence by itself. The model looked great on past data and lost to a plain index fund once it ran forward under frozen rules. Most of what I learned came from working out *why*: the live system traded far more often than the backtest assumed, and the backtest had much less independent evidence than its row count suggested.
 
 ## Citation and license
 
